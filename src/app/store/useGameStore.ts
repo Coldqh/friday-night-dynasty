@@ -1,6 +1,6 @@
 import { create } from 'zustand';
+import { simulateSeason, simulateWeek } from '../../core/season/simulateSeason';
 import { createWorld } from '../../core/world/createWorld';
-import { simWeek, simSeason } from '../../core/season/simulateSeason';
 import { GameWorld } from '../../core/world/worldTypes';
 import { loadLatestWorld, saveWorld } from '../../storage/saveGame';
 
@@ -12,6 +12,7 @@ interface GameStore {
   screen: AppScreen;
   error: string | null;
   setScreen: (screen: AppScreen) => void;
+  setSelectedTeamId: (teamId: string) => void;
   newWorld: () => Promise<void>;
   continueWorld: () => Promise<void>;
   save: () => Promise<void>;
@@ -28,20 +29,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
   error: null,
 
   setScreen: (screen) => set({ screen }),
+  setSelectedTeamId: (teamId) => set({ selectedTeamId: teamId }),
 
   newWorld: async () => {
     const world = createWorld({ seed: DEFAULT_SEED });
-    set({ world, selectedTeamId: world.teams[0]?.id ?? null, screen: 'dashboard', error: null });
+    set({
+      world,
+      selectedTeamId: world.teams[0]?.id ?? null,
+      screen: 'dashboard',
+      error: null
+    });
     await saveWorld(world);
   },
 
   continueWorld: async () => {
     const loaded = await loadLatestWorld();
+
     if (!loaded) {
       set({ error: 'Сохранение не найдено. Создай новый мир.' });
       return;
     }
-    set({ world: loaded, selectedTeamId: loaded.teams[0]?.id ?? null, screen: 'dashboard', error: null });
+
+    set({
+      world: loaded,
+      selectedTeamId: loaded.teams[0]?.id ?? null,
+      screen: 'dashboard',
+      error: null
+    });
   },
 
   save: async () => {
@@ -52,7 +66,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   simNextWeek: async () => {
     const world = get().world;
     if (!world) return;
-    const updated = simWeek(world);
+
+    const updated = simulateWeek(world);
     set({ world: updated });
     await saveWorld(updated);
   },
@@ -60,7 +75,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   simFullSeason: async () => {
     const world = get().world;
     if (!world) return;
-    const updated = simSeason(world);
+
+    const updated = simulateSeason(world);
     set({ world: updated });
     await saveWorld(updated);
   }

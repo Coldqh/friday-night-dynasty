@@ -1,23 +1,31 @@
 import { Card } from '../components/Card';
 import { useGameStore } from '../store/useGameStore';
-import { calculateRankings } from '../../core/rankings/calculateRankings';
 
 export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
-  const rankings = calculateRankings(world);
+  const standings = world.season.standings;
 
   return (
-    <Card title="State Rankings">
+    <Card title="Standings">
       <div className="table compact-table">
-        <div className="table-head grid-rankings">
-          <span>#</span><span>Команда</span><span>W-L</span><span>Power</span>
+        <div className="table-head grid-standings">
+          <span>#</span>
+          <span>Команда</span>
+          <span>W-L</span>
+          <span>PF</span>
+          <span>PA</span>
+          <span>Diff</span>
         </div>
-        {rankings.map((entry, index) => (
-          <div className="table-row grid-rankings" key={entry.team.id}>
-            <span>{index + 1}</span>
-            <span>{entry.team.name}</span>
-            <span>{entry.team.wins}-{entry.team.losses}</span>
-            <strong>{entry.rating}</strong>
+        {standings.map((entry) => (
+          <div className="table-row grid-standings" key={entry.teamId}>
+            <span>{entry.rank}</span>
+            <span>{entry.teamName}</span>
+            <span>
+              {entry.wins}-{entry.losses}
+            </span>
+            <span>{entry.pointsFor}</span>
+            <span>{entry.pointsAgainst}</span>
+            <strong>{entry.pointDifferential}</strong>
           </div>
         ))}
       </div>

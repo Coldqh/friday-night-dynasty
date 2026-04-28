@@ -1,12 +1,31 @@
 export type Phase = 'regular' | 'playoffs' | 'offseason';
+export type MatchStage = 'regular' | 'semifinal' | 'final';
 export type Position = 'QB' | 'RB' | 'WR' | 'TE' | 'OL' | 'DL' | 'LB' | 'CB' | 'S' | 'K';
 export type ClassYear = 'FR' | 'SO' | 'JR' | 'SR';
 export type OffenseStyle = 'balanced' | 'runHeavy' | 'passHeavy' | 'spread' | 'powerRun';
 export type DefenseStyle = 'balanced' | 'aggressive' | 'conservative' | 'blitzHeavy';
 
-export interface StateRegion { id: string; name: string; }
-export interface City { id: string; stateId: string; name: string; population: number; footballCulture: number; }
-export interface School { id: string; cityId: string; name: string; mascot: string; prestige: number; facilities: number; }
+export interface StateRegion {
+  id: string;
+  name: string;
+}
+
+export interface City {
+  id: string;
+  stateId: string;
+  name: string;
+  population: number;
+  footballCulture: number;
+}
+
+export interface School {
+  id: string;
+  cityId: string;
+  name: string;
+  mascot: string;
+  prestige: number;
+  facilities: number;
+}
 
 export interface Coach {
   id: string;
@@ -42,8 +61,8 @@ export interface Player {
   age: number;
   classYear: ClassYear;
   position: Position;
-  heightInches: number;
-  weightLbs: number;
+  height: number;
+  weight: number;
   overall: number;
   potential: number;
   workEthic: number;
@@ -57,11 +76,26 @@ export interface Player {
   careerStats: PlayerStats;
 }
 
+export interface TeamHistoryEntry {
+  year: number;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  madePlayoffs: boolean;
+  wonTitle: boolean;
+  note: string;
+}
+
 export interface Team {
   id: string;
   schoolId: string;
   cityId: string;
   coachId: string;
+  schoolName: string;
+  cityName: string;
+  mascot: string;
+  prestige: number;
   name: string;
   shortName: string;
   offenseStyle: OffenseStyle;
@@ -71,34 +105,102 @@ export interface Team {
   losses: number;
   pointsFor: number;
   pointsAgainst: number;
+  offenseRating: number;
+  defenseRating: number;
+  overallRating: number;
+  roster: string[];
+  playerIds: string[];
+  history: TeamHistoryEntry[];
   rivalryIds: string[];
 }
 
-export interface GameResult {
-  homeScore: number;
-  awayScore: number;
-  homeYards: number;
-  awayYards: number;
-  turnoversHome: number;
-  turnoversAway: number;
-  mvpPlayerId: string | null;
-  summary: string;
+export interface GameKeyPlayer {
+  playerId: string;
+  teamId: string;
+  name: string;
+  position: Position;
+  statLine: string;
 }
 
 export interface ScheduledGame {
   id: string;
+  stage: MatchStage;
   week: number;
   homeTeamId: string;
   awayTeamId: string;
-  result: GameResult | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  winnerId: string | null;
+  loserId: string | null;
+  summary: string;
+  keyPlayers: GameKeyPlayer[];
+  mvpPlayerId: string | null;
 }
 
-export interface ScheduleWeek { week: number; games: ScheduledGame[]; }
-export interface SeasonState { schedule: ScheduleWeek[]; playoffGames: ScheduledGame[]; championTeamId: string | null; }
+export interface ScheduleWeek {
+  week: number;
+  games: ScheduledGame[];
+}
 
-export interface NewsItem { id: string; year: number; week: number; headline: string; body: string; }
-export interface SeasonHistory { year: number; championTeamId: string; championName: string; mvpPlayerId: string | null; mvpName: string; note: string; }
-export interface WorldHistory { seasons: SeasonHistory[]; }
+export interface TeamStanding {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  pointDifferential: number;
+  overallRating: number;
+}
+
+export interface SeasonHistoryEntry {
+  id: string;
+  year: number;
+  week: number;
+  headline: string;
+  body: string;
+  gameId: string | null;
+}
+
+export interface SeasonState {
+  year: number;
+  currentWeek: number;
+  regularSeasonWeeks: number;
+  schedule: ScheduleWeek[];
+  completedGames: ScheduledGame[];
+  standings: TeamStanding[];
+  playoffTeams: string[];
+  playoffGames: ScheduledGame[];
+  championId: string | null;
+  championTeamId: string | null;
+  historyEntries: SeasonHistoryEntry[];
+}
+
+export interface NewsItem {
+  id: string;
+  year: number;
+  week: number;
+  headline: string;
+  body: string;
+}
+
+export interface SeasonHistory {
+  year: number;
+  championId: string;
+  championTeamId: string;
+  championName: string;
+  runnerUpName: string;
+  finalScore: string;
+  finalSummary: string;
+  mvpPlayerId: string | null;
+  mvpName: string;
+  note: string;
+}
+
+export interface WorldHistory {
+  seasons: SeasonHistory[];
+}
 
 export interface GameWorld {
   id: string;

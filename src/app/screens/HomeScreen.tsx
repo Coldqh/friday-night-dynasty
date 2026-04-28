@@ -20,8 +20,10 @@ export function HomeScreen() {
 
       <Card>
         <div className="button-stack">
-          <Button onClick={newWorld}>Новый мир</Button>
-          <Button variant="ghost" onClick={continueWorld}>Продолжить</Button>
+          <Button onClick={newWorld}>New World</Button>
+          <Button variant="ghost" onClick={continueWorld}>
+            Продолжить
+          </Button>
         </div>
         {error && <p className="error-text">{error}</p>}
       </Card>

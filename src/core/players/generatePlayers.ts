@@ -1,27 +1,59 @@
 import { firstNames, lastNames, traits } from '../../content/names';
 import { makeId, SeededRng } from '../random/rng';
-import { City, ClassYear, Player, Position, School, Team } from '../world/worldTypes';
+import { City, ClassYear, Player, PlayerStats, Position, School, Team } from '../world/worldTypes';
 
 const rosterPlan: Array<[Position, number]> = [
-  ['QB', 2], ['RB', 4], ['WR', 6], ['TE', 2], ['OL', 8],
-  ['DL', 6], ['LB', 4], ['CB', 4], ['S', 3], ['K', 1]
+  ['QB', 2],
+  ['RB', 4],
+  ['WR', 6],
+  ['TE', 2],
+  ['OL', 8],
+  ['DL', 6],
+  ['LB', 4],
+  ['CB', 4],
+  ['S', 3],
+  ['K', 1]
 ];
 
 const classYears: ClassYear[] = ['FR', 'SO', 'JR', 'SR'];
 
-export function emptyStats() {
-  return { passingYards: 0, rushingYards: 0, receivingYards: 0, tackles: 0, sacks: 0, touchdowns: 0, interceptions: 0 };
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
 }
 
-export function generatePlayersForTeam({ rng, team, school, city }: { rng: SeededRng; team: Team; school: School; city: City }): Player[] {
+export function emptyStats(): PlayerStats {
+  return {
+    passingYards: 0,
+    rushingYards: 0,
+    receivingYards: 0,
+    tackles: 0,
+    sacks: 0,
+    touchdowns: 0,
+    interceptions: 0
+  };
+}
+
+export function generatePlayersForTeam({
+  rng,
+  team,
+  school,
+  city
+}: {
+  rng: SeededRng;
+  team: Team;
+  school: School;
+  city: City;
+}): Player[] {
   const players: Player[] = [];
+  const programBoost = Math.round((school.prestige + city.footballCulture - 110) / 8);
 
   rosterPlan.forEach(([position, count]) => {
-    for (let i = 0; i < count; i += 1) {
+    for (let index = 0; index < count; index += 1) {
       const classYear = rng.pick(classYears);
-      const base = rng.int(38, 78);
-      const potential = Math.min(99, base + rng.int(5, 28));
-      const selectedTraits = rng.shuffle(traits).slice(0, rng.int(0, 2));
+      const base = clamp(rng.int(38, 76) + programBoost, 35, 88);
+      const potential = clamp(base + rng.int(6, 24), base + 2, 99);
+      const selectedTraits = rng.shuffle(traits).slice(0, rng.int(1, 2));
+
       players.push({
         id: makeId('player', rng),
         teamId: team.id,
@@ -29,11 +61,18 @@ export function generatePlayersForTeam({ rng, team, school, city }: { rng: Seede
         cityId: city.id,
         firstName: rng.pick(firstNames),
         lastName: rng.pick(lastNames),
-        age: classYear === 'FR' ? 14 : classYear === 'SO' ? 15 : classYear === 'JR' ? 16 : 17,
+        age:
+          classYear === 'FR'
+            ? rng.int(14, 15)
+            : classYear === 'SO'
+              ? rng.int(15, 16)
+              : classYear === 'JR'
+                ? rng.int(16, 17)
+                : rng.int(17, 18),
         classYear,
         position,
-        heightInches: rng.int(position === 'OL' || position === 'DL' ? 72 : 66, position === 'OL' ? 79 : 76),
-        weightLbs: rng.int(position === 'OL' || position === 'DL' ? 230 : 150, position === 'OL' ? 330 : 245),
+        height: rng.int(position === 'OL' || position === 'DL' ? 72 : 66, position === 'OL' ? 79 : 76),
+        weight: rng.int(position === 'OL' || position === 'DL' ? 230 : 150, position === 'OL' ? 330 : 245),
         overall: base,
         potential,
         workEthic: rng.int(25, 95),
