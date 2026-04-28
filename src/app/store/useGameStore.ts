@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { simulateSeason, simulateWeek } from '../../core/season/simulateSeason';
 import { createWorld } from '../../core/world/createWorld';
+import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 import { GameWorld } from '../../core/world/worldTypes';
 import { loadLatestWorld, saveWorld } from '../../storage/saveGame';
 
@@ -32,7 +33,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSelectedTeamId: (teamId) => set({ selectedTeamId: teamId }),
 
   newWorld: async () => {
-    const world = createWorld({ seed: DEFAULT_SEED });
+    const world = normalizeWorldState(createWorld({ seed: DEFAULT_SEED }));
     set({
       world,
       selectedTeamId: world.teams[0]?.id ?? null,
@@ -49,10 +50,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ error: 'Сохранение не найдено. Создай новый мир.' });
       return;
     }
+    const world = normalizeWorldState(loaded);
 
     set({
-      world: loaded,
-      selectedTeamId: loaded.teams[0]?.id ?? null,
+      world,
+      selectedTeamId: world.teams[0]?.id ?? null,
       screen: 'dashboard',
       error: null
     });
@@ -67,7 +69,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const world = get().world;
     if (!world) return;
 
-    const updated = simulateWeek(world);
+    const updated = normalizeWorldState(simulateWeek(normalizeWorldState(world)));
     set({ world: updated });
     await saveWorld(updated);
   },
@@ -76,7 +78,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const world = get().world;
     if (!world) return;
 
-    const updated = simulateSeason(world);
+    const updated = normalizeWorldState(simulateSeason(normalizeWorldState(world)));
     set({ world: updated });
     await saveWorld(updated);
   }

@@ -3,6 +3,7 @@ import { getHistorySnapshot } from '../../core/history/getHistorySnapshot';
 import { simulateSeason } from '../../core/season/simulateSeason';
 import { getTeamRoster } from '../../core/teams/getTeamRoster';
 import { createWorld } from '../../core/world/createWorld';
+import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 import { validateWorldIntegrity } from '../../core/world/validateWorldIntegrity';
 
 describe('world consistency', () => {
@@ -56,5 +57,50 @@ describe('world consistency', () => {
     expect(simulated.history.titleGames).toHaveLength(1);
     expect(simulated.season.seasonLog.length).toBeGreaterThan(0);
     expect(getHistorySnapshot(mutated)).toEqual(baseline);
+  });
+
+  it('normalizes legacy save data into the current world shape', () => {
+    const world = createWorld({ seed: 780 });
+    const legacy = structuredClone(world) as typeof world & {
+      season: typeof world.season & { historyEntries?: typeof world.season.seasonLog };
+      history: typeof world.history & {
+        seasons?: Array<{
+          year: number;
+          championId: string;
+          championTeamId: string;
+          championName: string;
+          runnerUpName: string;
+          finalScore: string;
+          finalSummary: string;
+          note: string;
+        }>;
+      };
+    };
+
+    legacy.teams[0].playerIds = [];
+    legacy.teams[0].roster = world.players.filter((player) => player.teamId === legacy.teams[0].id).map((player) => player.id);
+    legacy.season.historyEntries = [...legacy.season.seasonLog];
+    delete (legacy.season as { seasonLog?: typeof world.season.seasonLog }).seasonLog;
+    legacy.history.seasons = [
+      {
+        year: 2025,
+        championId: 'team_legacy',
+        championTeamId: 'team_legacy',
+        championName: 'Legacy High Tigers',
+        runnerUpName: 'Legacy Central Wolves',
+        finalScore: '28-21',
+        finalSummary: 'Legacy High closed the game with a late touchdown.',
+        note: 'Legacy High won the state title.'
+      }
+    ];
+    delete (legacy.history as { champions?: typeof world.history.champions }).champions;
+    delete (legacy.history as { titleGames?: typeof world.history.titleGames }).titleGames;
+
+    const normalized = normalizeWorldState(legacy);
+
+    expect(normalized.teams[0].playerIds).toEqual(legacy.teams[0].roster);
+    expect(normalized.season.seasonLog.length).toBeGreaterThan(0);
+    expect(normalized.history.champions).toHaveLength(1);
+    expect(normalized.history.titleGames).toHaveLength(1);
   });
 });
