@@ -216,6 +216,10 @@ button {
   grid-template-columns: 0.3fr 1.6fr 0.7fr 0.55fr 0.55fr 0.7fr;
 }
 
+.grid-profile-roster {
+  grid-template-columns: 1.45fr 0.5fr 0.65fr 0.55fr 0.55fr 1.3fr;
+}
+
 .grid-team-schedule {
   grid-template-columns: 0.85fr 1.5fr 0.9fr 0.7fr 0.8fr;
 }
@@ -268,6 +272,26 @@ button {
   background: rgba(139, 199, 255, 0.12);
 }
 
+.tab-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tab-chip {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.tab-chip.active {
+  border-color: rgba(139, 199, 255, 0.35);
+  background: rgba(139, 199, 255, 0.16);
+}
+
 .identity-tier {
   display: inline-flex;
   width: fit-content;
@@ -289,6 +313,20 @@ button {
   gap: 12px;
 }
 
+.table-row-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.table-row-button.active {
+  border-radius: 12px;
+  background: rgba(139, 199, 255, 0.1);
+}
+
 .bottom-nav {
   position: fixed;
   left: 50%;
@@ -296,7 +334,7 @@ button {
   transform: translateX(-50%);
   width: min(720px, 100%);
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   padding: 8px;
   background: rgba(7, 11, 19, 0.94);
@@ -338,9 +376,18 @@ button {
     font-size: 13px;
   }
 
+  .grid-profile-roster {
+    grid-template-columns: 1.25fr 0.5fr 0.6fr 0.5fr 0.5fr 1.1fr;
+    font-size: 13px;
+  }
+
   .grid-team-schedule {
     grid-template-columns: 0.8fr 1.25fr 0.85fr 0.65fr 0.75fr;
     font-size: 13px;
+  }
+
+  .tab-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .schedule-row {

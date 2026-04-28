@@ -5,15 +5,37 @@ import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 import { GameWorld } from '../../core/world/worldTypes';
 import { loadLatestWorld, saveWorld } from '../../storage/saveGame';
 
-export type AppScreen = 'dashboard' | 'roster' | 'schedule' | 'rankings' | 'news' | 'history';
+export type AppScreen =
+  | 'dashboard'
+  | 'roster'
+  | 'teamProfile'
+  | 'schedule'
+  | 'rankings'
+  | 'news'
+  | 'history';
+export type TeamProfileTab = 'overview' | 'roster' | 'schedule' | 'history';
+
+export function resolveSelectedTeamId(world: GameWorld | null, selectedTeamId: string | null): string | null {
+  if (!world || world.teams.length === 0) {
+    return null;
+  }
+
+  if (selectedTeamId && world.teams.some((team) => team.id === selectedTeamId)) {
+    return selectedTeamId;
+  }
+
+  return world.teams[0]?.id ?? null;
+}
 
 interface GameStore {
   world: GameWorld | null;
   selectedTeamId: string | null;
+  teamProfileTab: TeamProfileTab;
   screen: AppScreen;
   error: string | null;
   setScreen: (screen: AppScreen) => void;
-  setSelectedTeamId: (teamId: string) => void;
+  selectTeam: (teamId: string) => void;
+  setTeamProfileTab: (tab: TeamProfileTab) => void;
   newWorld: () => Promise<void>;
   continueWorld: () => Promise<void>;
   save: () => Promise<void>;
@@ -26,17 +48,30 @@ const DEFAULT_SEED = 982451653;
 export const useGameStore = create<GameStore>((set, get) => ({
   world: null,
   selectedTeamId: null,
+  teamProfileTab: 'overview',
   screen: 'dashboard',
   error: null,
 
-  setScreen: (screen) => set({ screen }),
-  setSelectedTeamId: (teamId) => set({ selectedTeamId: teamId }),
+  setScreen: (screen) =>
+    set((state) => ({
+      screen,
+      selectedTeamId:
+        screen === 'teamProfile' || screen === 'schedule' || screen === 'history'
+          ? resolveSelectedTeamId(state.world, state.selectedTeamId)
+          : state.selectedTeamId
+    })),
+  selectTeam: (teamId) =>
+    set((state) => ({
+      selectedTeamId: resolveSelectedTeamId(state.world, teamId)
+    })),
+  setTeamProfileTab: (tab) => set({ teamProfileTab: tab }),
 
   newWorld: async () => {
     const world = normalizeWorldState(createWorld({ seed: DEFAULT_SEED }));
     set({
       world,
-      selectedTeamId: world.teams[0]?.id ?? null,
+      selectedTeamId: resolveSelectedTeamId(world, null),
+      teamProfileTab: 'overview',
       screen: 'dashboard',
       error: null
     });
@@ -54,7 +89,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       world,
-      selectedTeamId: world.teams[0]?.id ?? null,
+      selectedTeamId: resolveSelectedTeamId(world, null),
+      teamProfileTab: 'overview',
       screen: 'dashboard',
       error: null
     });
@@ -70,7 +106,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!world) return;
 
     const updated = normalizeWorldState(simulateWeek(normalizeWorldState(world)));
-    set({ world: updated });
+    set((state) => ({
+      world: updated,
+      selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId)
+    }));
     await saveWorld(updated);
   },
 
@@ -79,7 +118,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!world) return;
 
     const updated = normalizeWorldState(simulateSeason(normalizeWorldState(world)));
-    set({ world: updated });
+    set((state) => ({
+      world: updated,
+      selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId)
+    }));
     await saveWorld(updated);
   }
 }));
