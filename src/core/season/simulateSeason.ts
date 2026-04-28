@@ -25,7 +25,7 @@ function addNews(world: GameWorld, rng: SeededRng, headline: string, body: strin
   });
 }
 
-function addHistoryEntry(
+function addSeasonLogEntry(
   world: GameWorld,
   rng: SeededRng,
   headline: string,
@@ -33,7 +33,7 @@ function addHistoryEntry(
   gameId: string | null = null,
   week = world.season.currentWeek
 ) {
-  world.season.historyEntries.unshift({
+  world.season.seasonLog.unshift({
     id: makeId('history', rng),
     year: world.season.year,
     week,
@@ -134,7 +134,7 @@ function simulatePlayoffRound(world: GameWorld, rng: SeededRng, games: Scheduled
     applyPlayerUpdates(world, result.playerUpdates);
     world.season.completedGames.push(game);
     world.season.playoffGames.push(game);
-    addHistoryEntry(world, rng, historyHeadline, game.summary, game.id, game.week);
+    addSeasonLogEntry(world, rng, historyHeadline, game.summary, game.id, game.week);
   });
 
   addNews(world, rng, headline, games[games.length - 1]?.summary ?? headline, games[0]?.week ?? world.season.currentWeek);
@@ -171,7 +171,7 @@ function advanceOffseason(world: GameWorld): GameWorld {
     playoffGames: [],
     championId: null,
     championTeamId: null,
-    historyEntries: [
+    seasonLog: [
       {
         id: makeId('history', rng),
         year: world.season.year + 1,
@@ -208,7 +208,7 @@ export function simulateWeek(input: GameWorld): GameWorld {
       ensurePlayoffField(world);
       world.phase = 'playoffs';
       addNews(world, rng, 'Playoff field is set', 'The top four teams in Texoma are heading to the state semifinals.');
-      addHistoryEntry(world, rng, 'Final four locked', 'The regular season is complete and the playoff field is set.');
+      addSeasonLogEntry(world, rng, 'Final four locked', 'The regular season is complete and the playoff field is set.');
       syncSeasonPointers(world);
       return world;
     }
@@ -247,7 +247,7 @@ export function simulateWeek(input: GameWorld): GameWorld {
       `Week ${week.week + 1} complete`,
       topGame.summary || `${leader?.shortName ?? 'Texoma'} moved through another Friday night slate.`
     );
-    addHistoryEntry(
+    addSeasonLogEntry(
       world,
       rng,
       `Week ${week.week + 1} complete`,
@@ -260,7 +260,7 @@ export function simulateWeek(input: GameWorld): GameWorld {
       ensurePlayoffField(world);
       world.phase = 'playoffs';
       addNews(world, rng, 'Playoff field is set', 'The regular season closed and the top four teams punched their playoff ticket.');
-      addHistoryEntry(world, rng, 'Playoff field is set', 'Texoma now turns to semifinal football.');
+      addSeasonLogEntry(world, rng, 'Playoff field is set', 'Texoma now turns to semifinal football.');
     }
 
     return world;
@@ -345,7 +345,7 @@ export function simulateWeek(input: GameWorld): GameWorld {
       `${champion?.shortName ?? 'A school'} finished the run with a win in the Texoma state final.`,
       championship.week
     );
-    addHistoryEntry(world, rng, 'Champion crowned', championship.summary, championship.id, championship.week);
+    addSeasonLogEntry(world, rng, 'Champion crowned', championship.summary, championship.id, championship.week);
   }
 
   return world;

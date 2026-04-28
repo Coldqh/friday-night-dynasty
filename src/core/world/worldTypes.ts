@@ -154,7 +154,7 @@ export interface TeamStanding {
   overallRating: number;
 }
 
-export interface SeasonHistoryEntry {
+export interface SeasonLogEntry {
   id: string;
   year: number;
   week: number;
@@ -174,7 +174,7 @@ export interface SeasonState {
   playoffGames: ScheduledGame[];
   championId: string | null;
   championTeamId: string | null;
-  historyEntries: SeasonHistoryEntry[];
+  seasonLog: SeasonLogEntry[];
 }
 
 export interface NewsItem {
@@ -185,21 +185,33 @@ export interface NewsItem {
   body: string;
 }
 
-export interface SeasonHistory {
+export interface ChampionHistoryEntry {
   year: number;
   championId: string;
   championTeamId: string;
   championName: string;
+  runnerUpId: string | null;
   runnerUpName: string;
+  finalGameId: string | null;
   finalScore: string;
   finalSummary: string;
-  mvpPlayerId: string | null;
-  mvpName: string;
   note: string;
 }
 
+export interface TitleGameHistoryEntry {
+  year: number;
+  gameId: string;
+  championId: string;
+  championName: string;
+  runnerUpId: string | null;
+  runnerUpName: string;
+  finalScore: string;
+  summary: string;
+}
+
 export interface WorldHistory {
-  seasons: SeasonHistory[];
+  champions: ChampionHistoryEntry[];
+  titleGames: TitleGameHistoryEntry[];
 }
 
 export interface GameWorld {

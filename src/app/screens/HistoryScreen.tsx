@@ -1,45 +1,51 @@
 import { Card } from '../components/Card';
+import { getHistorySnapshot } from '../../core/history/getHistorySnapshot';
 import { useGameStore } from '../store/useGameStore';
 
 export function HistoryScreen() {
   const world = useGameStore((state) => state.world)!;
+  const history = getHistorySnapshot(world);
 
   return (
     <div className="stack">
-      <Card title="История сезона">
-        {world.season.historyEntries.length === 0 ? (
-          <p className="muted">История сезона появится после первых симулированных недель.</p>
+      <Card title="Чемпионы штата">
+        {history.champions.length === 0 ? (
+          <p className="muted">Пока нет завершённых сезонов. Просимулируй сезон до чемпиона.</p>
         ) : (
           <div className="list">
-            {world.season.historyEntries.map((entry) => (
-              <div className="history-item" key={entry.id}>
-                <div className="eyebrow">
-                  {entry.year} / Week {entry.week + 1}
-                </div>
-                <h3>{entry.headline}</h3>
-                <p>{entry.body}</p>
+            {history.champions.map((season) => (
+              <div className="history-item" key={`${season.year}-${season.championId}`}>
+                <div className="eyebrow">{season.year}</div>
+                <h3>{season.championName}</h3>
+                <p>
+                  Финал штата: <strong>{season.finalScore}</strong>
+                </p>
+                <p>Runner-up: {season.runnerUpName}</p>
+                <p>{season.finalSummary}</p>
               </div>
             ))}
           </div>
         )}
       </Card>
 
-      <Card title="Чемпионы штата">
-        {world.history.seasons.length === 0 ? (
-          <p className="muted">Пока нет завершённых сезонов. Просимулируй сезон до чемпиона.</p>
+      <Card title="Финалы штата">
+        {history.titleGames.length === 0 ? (
+          <p className="muted">Финал штата появится здесь после завершения сезона.</p>
         ) : (
           <div className="list">
-            {world.history.seasons.map((season) => (
-              <div className="history-item" key={season.year}>
+            {history.titleGames.map((game) => (
+              <div className="history-item" key={game.gameId}>
+                <div className="eyebrow">{game.year}</div>
                 <h3>
-                  {season.year}: {season.championName}
+                  {game.championName} vs {game.runnerUpName}
                 </h3>
                 <p>
-                  Финал: <strong>{season.finalScore}</strong>
+                  Champion: <strong>{game.championName}</strong>
                 </p>
-                <p>Runner-up: {season.runnerUpName}</p>
-                <p>MVP: {season.mvpName}</p>
-                <p>{season.finalSummary}</p>
+                <p>
+                  Финальный счёт: <strong>{game.finalScore}</strong>
+                </p>
+                <p>{game.summary}</p>
               </div>
             ))}
           </div>

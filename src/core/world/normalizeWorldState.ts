@@ -1,0 +1,108 @@
+import { GameWorld, SeasonLogEntry, WorldHistory } from './worldTypes';
+
+type LegacySeasonHistory = {
+  year: number;
+  championId?: string;
+  championTeamId?: string;
+  championName?: string;
+  runnerUpId?: string | null;
+  runnerUpName?: string;
+  finalGameId?: string | null;
+  finalScore?: string;
+  finalSummary?: string;
+  note?: string;
+};
+
+type LegacyWorld = GameWorld & {
+  season: GameWorld['season'] & {
+    historyEntries?: SeasonLogEntry[];
+  };
+  history: Partial<WorldHistory> & {
+    seasons?: LegacySeasonHistory[];
+  };
+};
+
+function toChampionHistory(season: LegacySeasonHistory) {
+  return {
+    year: season.year,
+    championId: season.championId ?? season.championTeamId ?? 'unknown',
+    championTeamId: season.championTeamId ?? season.championId ?? 'unknown',
+    championName: season.championName ?? 'Unknown Champion',
+    runnerUpId: season.runnerUpId ?? null,
+    runnerUpName: season.runnerUpName ?? 'Unknown Runner-Up',
+    finalGameId: season.finalGameId ?? null,
+    finalScore: season.finalScore ?? 'No final score recorded',
+    finalSummary: season.finalSummary ?? 'No final summary recorded',
+    note: season.note ?? `${season.championName ?? 'A team'} claimed the state title.`
+  };
+}
+
+function toTitleGameHistory(season: LegacySeasonHistory) {
+  return {
+    year: season.year,
+    gameId: season.finalGameId ?? `title-game-${season.year}`,
+    championId: season.championId ?? season.championTeamId ?? 'unknown',
+    championName: season.championName ?? 'Unknown Champion',
+    runnerUpId: season.runnerUpId ?? null,
+    runnerUpName: season.runnerUpName ?? 'Unknown Runner-Up',
+    finalScore: season.finalScore ?? 'No final score recorded',
+    summary: season.finalSummary ?? 'No final summary recorded'
+  };
+}
+
+export function normalizeWorldState(input: GameWorld): GameWorld {
+  const world = structuredClone(input) as LegacyWorld;
+  const playersByTeam = new Map<string, string[]>();
+
+  world.players.forEach((player) => {
+    if (!playersByTeam.has(player.teamId)) {
+      playersByTeam.set(player.teamId, []);
+    }
+
+    playersByTeam.get(player.teamId)!.push(player.id);
+  });
+
+  world.teams = world.teams.map((team) => {
+    const playerIds =
+      Array.isArray(team.playerIds) && team.playerIds.length > 0
+        ? [...team.playerIds]
+        : Array.isArray(team.roster) && team.roster.length > 0
+          ? [...team.roster]
+          : [...(playersByTeam.get(team.id) ?? [])];
+
+    return {
+      ...team,
+      playerIds,
+      roster: [...playerIds]
+    };
+  });
+
+  const legacySeasons = Array.isArray(world.history?.seasons) ? world.history.seasons : [];
+  const champions =
+    Array.isArray(world.history?.champions) && world.history.champions.length > 0
+      ? world.history.champions
+      : legacySeasons.map(toChampionHistory);
+  const titleGames =
+    Array.isArray(world.history?.titleGames) && world.history.titleGames.length > 0
+      ? world.history.titleGames
+      : legacySeasons.map(toTitleGameHistory);
+  const seasonLog =
+    Array.isArray(world.season.seasonLog) && world.season.seasonLog.length > 0
+      ? world.season.seasonLog
+      : Array.isArray(world.season.historyEntries)
+        ? world.season.historyEntries
+        : [];
+
+  return {
+    ...world,
+    teams: world.teams,
+    season: {
+      ...world.season,
+      seasonLog
+    },
+    history: {
+      champions,
+      titleGames
+    }
+  };
+}

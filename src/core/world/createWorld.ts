@@ -139,7 +139,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
       playoffGames: [],
       championId: null,
       championTeamId: null,
-      historyEntries: [
+      seasonLog: [
         {
           id: makeId('history', rng),
           year: 2026,
@@ -151,6 +151,9 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
       ]
     },
     news: [kickoffNews],
-    history: { seasons: [] }
+    history: {
+      champions: [],
+      titleGames: []
+    }
   };
 }

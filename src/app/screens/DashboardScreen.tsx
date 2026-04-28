@@ -91,6 +91,24 @@ export function DashboardScreen() {
         )}
       </Card>
 
+      <Card title="Recent season events">
+        {world.season.seasonLog.length === 0 ? (
+          <p className="muted">Сезонный журнал начнёт заполняться после первой недели.</p>
+        ) : (
+          <div className="list">
+            {world.season.seasonLog.slice(0, 5).map((entry) => (
+              <div className="history-item" key={entry.id}>
+                <div className="eyebrow">
+                  {entry.year} / Week {entry.week + 1}
+                </div>
+                <strong>{entry.headline}</strong>
+                <p>{entry.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       <Card title="Последний сюжет">
         <div className="list">
           {world.news.slice(0, 3).map((item) => (
