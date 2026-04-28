@@ -1,5 +1,5 @@
 import { SeededRng, makeId } from '../random/rng';
-import { cityNames, mascots } from '../content/names';
+import { cityNames, mascots } from '../../content/names';
 import { generateCoach } from '../coaches/generateCoach';
 import { generatePlayersForTeam } from '../players/generatePlayers';
 import { generateSchedule } from '../schedule/generateSchedule';

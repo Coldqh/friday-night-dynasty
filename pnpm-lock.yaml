@@ -8,39 +8,39 @@ importers:
 
   .:
     dependencies:
-      '@vitejs/plugin-react':
-        specifier: latest
-        version: 6.0.1(vite@8.0.10)
       dexie:
-        specifier: latest
+        specifier: 4.4.2
         version: 4.4.2
       react:
-        specifier: latest
+        specifier: 19.2.5
         version: 19.2.5
       react-dom:
-        specifier: latest
+        specifier: 19.2.5
         version: 19.2.5(react@19.2.5)
-      vite:
-        specifier: latest
-        version: 8.0.10
       zod:
-        specifier: latest
+        specifier: 4.3.6
         version: 4.3.6
       zustand:
-        specifier: latest
+        specifier: 5.0.12
         version: 5.0.12(@types/react@19.2.14)(react@19.2.5)
     devDependencies:
       '@types/react':
-        specifier: latest
+        specifier: 19.2.14
         version: 19.2.14
       '@types/react-dom':
-        specifier: latest
+        specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      '@vitejs/plugin-react':
+        specifier: 6.0.1
+        version: 6.0.1(vite@8.0.10)
       typescript:
-        specifier: latest
+        specifier: 6.0.3
         version: 6.0.3
+      vite:
+        specifier: 8.0.10
+        version: 8.0.10
       vitest:
-        specifier: latest
+        specifier: 4.1.5
         version: 4.1.5(vite@8.0.10)
 
 packages:
