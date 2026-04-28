@@ -1,4 +1,4 @@
-import { firstNames, lastNames } from '../content/names';
+import { firstNames, lastNames } from '../../content/names';
 import { makeId, SeededRng } from '../random/rng';
 import { Coach } from '../world/worldTypes';
 
