@@ -17,7 +17,8 @@ describe('season simulation', () => {
 
     expect(updated.phase).toBe('offseason');
     expect(updated.season.championId).not.toBeNull();
-    expect(updated.history.seasons).toHaveLength(1);
+    expect(updated.history.champions).toHaveLength(1);
+    expect(updated.history.titleGames).toHaveLength(1);
   });
 
   it('standings remain populated through the season', () => {
@@ -26,5 +27,14 @@ describe('season simulation', () => {
 
     expect(updated.season.standings.length).toBeGreaterThan(0);
     expect(updated.season.playoffGames).toHaveLength(3);
+  });
+
+  it('keeps a season log separate from world history', () => {
+    const world = createWorld({ seed: 654 });
+    const updated = simulateSeason(world);
+
+    expect(updated.season.seasonLog.length).toBeGreaterThan(0);
+    expect(updated.history.champions[0]?.year).toBe(updated.season.year);
+    expect(updated.history.titleGames[0]?.year).toBe(updated.season.year);
   });
 });

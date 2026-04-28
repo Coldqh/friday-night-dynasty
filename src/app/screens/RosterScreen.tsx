@@ -1,4 +1,5 @@
 import { Card } from '../components/Card';
+import { getTeamRoster } from '../../core/teams/getTeamRoster';
 import { useGameStore } from '../store/useGameStore';
 
 export function RosterScreen() {
@@ -6,9 +7,7 @@ export function RosterScreen() {
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
   const setSelectedTeamId = useGameStore((state) => state.setSelectedTeamId);
   const team = world.teams.find((item) => item.id === selectedTeamId) ?? world.teams[0];
-  const players = world.players
-    .filter((player) => player.teamId === team.id)
-    .sort((left, right) => right.overall - left.overall);
+  const players = getTeamRoster(world, team.id).sort((left, right) => right.overall - left.overall);
 
   return (
     <div className="stack">
