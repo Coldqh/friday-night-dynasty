@@ -1,3 +1,4 @@
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { getTeamSchedule } from '../../core/teams/getTeamSchedule';
 import { useGameStore } from '../store/useGameStore';
@@ -5,6 +6,8 @@ import { useGameStore } from '../store/useGameStore';
 export function ScheduleScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
+  const setScreen = useGameStore((state) => state.setScreen);
+  const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const schedule = getTeamSchedule(world, team.id);
   const notes = schedule.filter((game) => game.summary);
@@ -18,6 +21,17 @@ export function ScheduleScreen() {
             <span>OFF {team.offenseRating}</span>
             <span>DEF {team.defenseRating}</span>
             <span>OVR {team.overallRating}</span>
+          </div>
+          <div className="button-row">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setTeamProfileTab('schedule');
+                setScreen('teamProfile');
+              }}
+            >
+              Open Team Profile
+            </Button>
           </div>
           <div className="table compact-table">
             <div className="table-head grid-team-schedule">

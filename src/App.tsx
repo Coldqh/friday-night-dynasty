@@ -2,6 +2,7 @@ import { Layout } from './app/components/Layout';
 import { HomeScreen } from './app/screens/HomeScreen';
 import { DashboardScreen } from './app/screens/DashboardScreen';
 import { RosterScreen } from './app/screens/RosterScreen';
+import { TeamProfileScreen } from './app/screens/TeamProfileScreen';
 import { ScheduleScreen } from './app/screens/ScheduleScreen';
 import { RankingsScreen } from './app/screens/RankingsScreen';
 import { NewsScreen } from './app/screens/NewsScreen';
@@ -20,6 +21,7 @@ export function App() {
     <Layout>
       {screen === 'dashboard' && <DashboardScreen />}
       {screen === 'roster' && <RosterScreen />}
+      {screen === 'teamProfile' && <TeamProfileScreen />}
       {screen === 'schedule' && <ScheduleScreen />}
       {screen === 'rankings' && <RankingsScreen />}
       {screen === 'news' && <NewsScreen />}

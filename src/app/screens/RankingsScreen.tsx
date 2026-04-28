@@ -3,10 +3,15 @@ import { useGameStore } from '../store/useGameStore';
 
 export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
+  const selectedTeamId = useGameStore((state) => state.selectedTeamId);
+  const selectTeam = useGameStore((state) => state.selectTeam);
+  const setScreen = useGameStore((state) => state.setScreen);
+  const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
   const standings = world.season.standings;
 
   return (
     <Card title="Standings">
+      <p className="muted">Нажми на команду, чтобы открыть отдельный Team Profile.</p>
       <div className="table compact-table">
         <div className="table-head grid-standings">
           <span>#</span>
@@ -17,7 +22,19 @@ export function RankingsScreen() {
           <span>Diff</span>
         </div>
         {standings.map((entry) => (
-          <div className="table-row grid-standings" key={entry.teamId}>
+          <button
+            className={
+              entry.teamId === selectedTeamId
+                ? 'table-row grid-standings table-row-button active'
+                : 'table-row grid-standings table-row-button'
+            }
+            key={entry.teamId}
+            onClick={() => {
+              selectTeam(entry.teamId);
+              setTeamProfileTab('overview');
+              setScreen('teamProfile');
+            }}
+          >
             <span>{entry.rank}</span>
             <span>{entry.teamName}</span>
             <span>
@@ -26,7 +43,7 @@ export function RankingsScreen() {
             <span>{entry.pointsFor}</span>
             <span>{entry.pointsAgainst}</span>
             <strong>{entry.pointDifferential}</strong>
-          </div>
+          </button>
         ))}
       </div>
     </Card>
