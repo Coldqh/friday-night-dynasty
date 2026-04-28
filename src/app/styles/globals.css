@@ -94,6 +94,11 @@ button {
   margin: 6px 0;
 }
 
+.profile-title {
+  font-size: 28px;
+  margin: 0;
+}
+
 .home-screen {
   min-height: 100vh;
   display: grid;
@@ -211,6 +216,10 @@ button {
   grid-template-columns: 0.3fr 1.6fr 0.7fr 0.55fr 0.55fr 0.7fr;
 }
 
+.grid-team-schedule {
+  grid-template-columns: 0.85fr 1.5fr 0.9fr 0.7fr 0.8fr;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -257,6 +266,16 @@ button {
 .team-chip.active {
   border-color: rgba(139, 199, 255, 0.35);
   background: rgba(139, 199, 255, 0.12);
+}
+
+.identity-tier {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(139, 199, 255, 0.16);
+  color: #e9f5ff;
+  font-weight: 700;
 }
 
 .schedule-week {
@@ -316,6 +335,11 @@ button {
 
   .grid-standings {
     grid-template-columns: 0.25fr 1.4fr 0.65fr 0.5fr 0.5fr 0.65fr;
+    font-size: 13px;
+  }
+
+  .grid-team-schedule {
+    grid-template-columns: 0.8fr 1.25fr 0.85fr 0.65fr 0.75fr;
     font-size: 13px;
   }
 
