@@ -2,12 +2,24 @@ import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../core/world/createWorld';
 
 describe('world generation', () => {
-  it('creates a living state foundation', () => {
+  it('creates 16 teams for the living state', () => {
     const world = createWorld({ seed: 123 });
+
     expect(world.cities).toHaveLength(8);
     expect(world.schools).toHaveLength(16);
     expect(world.teams).toHaveLength(16);
-    expect(world.players).toHaveLength(640);
     expect(world.season.schedule).toHaveLength(10);
+  });
+
+  it('gives every team a full roster and precomputed standings', () => {
+    const world = createWorld({ seed: 456 });
+
+    world.teams.forEach((team) => {
+      expect(team.playerIds.length).toBeGreaterThanOrEqual(35);
+      expect(team.playerIds.length).toBeLessThanOrEqual(45);
+      expect(world.players.some((player) => player.teamId === team.id)).toBe(true);
+    });
+
+    expect(world.season.standings.length).toBeGreaterThan(0);
   });
 });

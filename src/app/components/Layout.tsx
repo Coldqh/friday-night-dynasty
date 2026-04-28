@@ -3,9 +3,9 @@ import { useGameStore, AppScreen } from '../store/useGameStore';
 
 const tabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'dashboard', label: 'Мир' },
-  { id: 'roster', label: 'Ростер' },
+  { id: 'roster', label: 'Команды' },
   { id: 'schedule', label: 'Сезон' },
-  { id: 'rankings', label: 'Рейтинг' },
+  { id: 'rankings', label: 'Таблица' },
   { id: 'news', label: 'Новости' },
   { id: 'history', label: 'История' }
 ];
