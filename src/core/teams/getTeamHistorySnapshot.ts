@@ -49,8 +49,8 @@ export function getTeamHistorySnapshot(world: GameWorld, teamId: string): TeamHi
     history,
     totalHistoricalWins,
     totalHistoricalLosses,
-    titlesCount: team.history.filter((season) => season.wonTitle).length,
-    playoffAppearancesCount: team.history.filter((season) => season.madePlayoffs).length,
-    lastSeasonEntry: team.history.length > 0 ? team.history[team.history.length - 1] : null
+    titlesCount: team.history.filter((season) => season.titleWon || season.wonTitle).length,
+    playoffAppearancesCount: team.history.filter((season) => season.playoffAppearance || season.madePlayoffs).length,
+    lastSeasonEntry: history[0] ?? null
   };
 }

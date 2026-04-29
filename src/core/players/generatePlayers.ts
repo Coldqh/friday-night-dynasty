@@ -2,7 +2,7 @@ import { firstNames, lastNames, traits } from '../../content/names';
 import { makeId, SeededRng } from '../random/rng';
 import { City, ClassYear, Player, PlayerStats, Position, School, Team } from '../world/worldTypes';
 
-const rosterPlan: Array<[Position, number]> = [
+export const ROSTER_PLAN: Array<[Position, number]> = [
   ['QB', 2],
   ['RB', 4],
   ['WR', 6],
@@ -47,7 +47,7 @@ export function generatePlayersForTeam({
   const players: Player[] = [];
   const programBoost = Math.round((school.prestige + city.footballCulture - 110) / 8);
 
-  rosterPlan.forEach(([position, count]) => {
+  ROSTER_PLAN.forEach(([position, count]) => {
     for (let index = 0; index < count; index += 1) {
       const classYear = rng.pick(classYears);
       const base = clamp(rng.int(38, 76) + programBoost, 35, 88);

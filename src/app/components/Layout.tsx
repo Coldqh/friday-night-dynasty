@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
-import { useGameStore, AppScreen } from '../store/useGameStore';
+import { AppScreen, useGameStore } from '../store/useGameStore';
 
 const tabs: Array<{ id: AppScreen; label: string }> = [
-  { id: 'dashboard', label: 'Мир' },
-  { id: 'roster', label: 'Команды' },
-  { id: 'teamProfile', label: 'Команда' },
-  { id: 'schedule', label: 'Календарь' },
-  { id: 'rankings', label: 'Таблица' },
-  { id: 'news', label: 'Новости' },
-  { id: 'history', label: 'История' }
+  { id: 'dashboard', label: 'World' },
+  { id: 'roster', label: 'Teams' },
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'rankings', label: 'Standings' },
+  { id: 'news', label: 'News' },
+  { id: 'history', label: 'History' }
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -21,7 +20,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="topbar">
         <div>
           <div className="eyebrow">Friday Night Dynasty</div>
-          <h1>{world?.state.name ?? 'Новый штат'}</h1>
+          <h1>{world?.state.name ?? 'New State'}</h1>
         </div>
         <div className="year-pill">{world?.currentYear}</div>
       </header>

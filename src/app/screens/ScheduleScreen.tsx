@@ -6,8 +6,7 @@ import { useGameStore } from '../store/useGameStore';
 export function ScheduleScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
-  const setScreen = useGameStore((state) => state.setScreen);
-  const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
+  const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const schedule = getTeamSchedule(world, team.id);
   const notes = schedule.filter((game) => game.summary);
@@ -22,17 +21,13 @@ export function ScheduleScreen() {
             <span>DEF {team.defenseRating}</span>
             <span>OVR {team.overallRating}</span>
           </div>
+
           <div className="button-row">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setTeamProfileTab('schedule');
-                setScreen('teamProfile');
-              }}
-            >
+            <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'schedule', 'schedule')}>
               Open Team Profile
             </Button>
           </div>
+
           <div className="table compact-table">
             <div className="table-head grid-team-schedule">
               <span>Week</span>
@@ -41,6 +36,7 @@ export function ScheduleScreen() {
               <span>Result</span>
               <span>Score</span>
             </div>
+
             {schedule.map((game) => (
               <div className="table-row grid-team-schedule" key={game.gameId}>
                 <span>

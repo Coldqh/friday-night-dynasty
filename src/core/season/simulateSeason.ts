@@ -1,10 +1,8 @@
 import { recordSeasonHistory } from '../history/recordSeasonHistory';
-import { emptyStats } from '../players/generatePlayers';
 import { makeId, SeededRng } from '../random/rng';
-import { generateSchedule } from '../schedule/generateSchedule';
 import { calculateStandings } from '../standings/calculateStandings';
 import { simulateGame, PlayerGameUpdate } from '../games/simulateGame';
-import { GameWorld, ScheduledGame, Team } from '../world/worldTypes';
+import { GameWorld, ScheduledGame } from '../world/worldTypes';
 
 function cloneWorld(world: GameWorld): GameWorld {
   return structuredClone(world);
@@ -108,7 +106,9 @@ function archiveTeamSeasons(world: GameWorld) {
       pointsFor: team.pointsFor,
       pointsAgainst: team.pointsAgainst,
       madePlayoffs,
+      playoffAppearance: madePlayoffs,
       wonTitle,
+      titleWon: wonTitle,
       note: wonTitle
         ? `${team.shortName} won the Texoma title.`
         : madePlayoffs
@@ -140,65 +140,12 @@ function simulatePlayoffRound(world: GameWorld, rng: SeededRng, games: Scheduled
   addNews(world, rng, headline, games[games.length - 1]?.summary ?? headline, games[0]?.week ?? world.season.currentWeek);
 }
 
-function resetTeamSeason(world: GameWorld) {
-  world.teams.forEach((team) => {
-    team.wins = 0;
-    team.losses = 0;
-    team.pointsFor = 0;
-    team.pointsAgainst = 0;
-  });
-}
-
-function resetPlayerSeasonStats(world: GameWorld) {
-  world.players.forEach((player) => {
-    player.seasonStats = emptyStats();
-  });
-}
-
-function advanceOffseason(world: GameWorld): GameWorld {
-  const rng = new SeededRng(world.seed + (world.season.year + 1) * 999);
-
-  resetTeamSeason(world);
-  resetPlayerSeasonStats(world);
-  world.season = {
-    year: world.season.year + 1,
-    currentWeek: 0,
-    regularSeasonWeeks: 10,
-    schedule: generateSchedule({ rng, teams: world.teams, weeks: 10 }),
-    completedGames: [],
-    standings: calculateStandings(world.teams),
-    playoffTeams: [],
-    playoffGames: [],
-    championId: null,
-    championTeamId: null,
-    seasonLog: [
-      {
-        id: makeId('history', rng),
-        year: world.season.year + 1,
-        week: 0,
-        headline: 'A new season begins',
-        body: 'Texoma resets the board for another 10-week sprint toward the state final.',
-        gameId: null
-      }
-    ]
-  };
-  world.phase = 'regular';
-  syncSeasonPointers(world);
-  addNews(
-    world,
-    rng,
-    'New season begins',
-    'The towns of Texoma reset the standings and open another Friday night chase.'
-  );
-  return world;
-}
-
 export function simulateWeek(input: GameWorld): GameWorld {
   const world = cloneWorld(input);
   const rng = new SeededRng(world.seed + world.season.year * 100 + world.season.currentWeek * 17);
 
   if (world.phase === 'offseason') {
-    return advanceOffseason(world);
+    return world;
   }
 
   if (world.phase === 'regular') {

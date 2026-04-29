@@ -4,23 +4,23 @@ import { useGameStore } from '../store/useGameStore';
 export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
-  const selectTeam = useGameStore((state) => state.selectTeam);
-  const setScreen = useGameStore((state) => state.setScreen);
-  const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
+  const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const standings = world.season.standings;
 
   return (
     <Card title="Standings">
-      <p className="muted">Нажми на команду, чтобы открыть отдельный Team Profile.</p>
+      <p className="muted">Tap any team to open its program profile.</p>
+
       <div className="table compact-table">
         <div className="table-head grid-standings">
           <span>#</span>
-          <span>Команда</span>
+          <span>Team</span>
           <span>W-L</span>
           <span>PF</span>
           <span>PA</span>
           <span>Diff</span>
         </div>
+
         {standings.map((entry) => (
           <button
             className={
@@ -29,11 +29,7 @@ export function RankingsScreen() {
                 : 'table-row grid-standings table-row-button'
             }
             key={entry.teamId}
-            onClick={() => {
-              selectTeam(entry.teamId);
-              setTeamProfileTab('overview');
-              setScreen('teamProfile');
-            }}
+            onClick={() => openTeamProfile(entry.teamId, 'overview', 'rankings')}
           >
             <span>{entry.rank}</span>
             <span>{entry.teamName}</span>
