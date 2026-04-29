@@ -1,17 +1,22 @@
 import { GameWorld, TitleGameHistoryEntry } from '../world/worldTypes';
-
-function sortByYearDescending<T extends { year: number }>(entries: T[]): T[] {
-  return [...entries].sort((left, right) => right.year - left.year);
-}
+import { getLeagueHistorySnapshot } from './getLeagueHistorySnapshot';
 
 export interface HistorySnapshot {
   champions: GameWorld['history']['champions'];
   titleGames: TitleGameHistoryEntry[];
+  totalSeasonsCompleted: number;
+  latestChampion: GameWorld['history']['champions'][number] | null;
+  latestTitleGame: TitleGameHistoryEntry | null;
 }
 
 export function getHistorySnapshot(world: GameWorld): HistorySnapshot {
+  const snapshot = getLeagueHistorySnapshot(world);
+
   return {
-    champions: sortByYearDescending(world.history.champions),
-    titleGames: sortByYearDescending(world.history.titleGames)
+    champions: snapshot.champions,
+    titleGames: snapshot.titleGames,
+    totalSeasonsCompleted: snapshot.totalSeasonsCompleted,
+    latestChampion: snapshot.latestChampion,
+    latestTitleGame: snapshot.latestTitleGame
   };
 }

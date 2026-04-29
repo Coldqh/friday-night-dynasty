@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { navigationTabs } from '../../app/components/Layout';
+import { scheduleFilters } from '../../app/screens/ScheduleScreen';
 import { useGameStore, resolveSelectedTeamId } from '../../app/store/useGameStore';
 import { createWorld } from '../../core/world/createWorld';
 
@@ -132,5 +134,18 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.getState().closeTeamProfile();
 
     expect(useGameStore.getState().screen).toBe('schedule');
+  });
+
+  it('navigation labels expose News and History without any Game Log wording', () => {
+    expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
+    expect(navigationTabs.some((tab) => tab.label === 'News')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'History')).toBe(true);
+  });
+
+  it('schedule filters are reduced to All Games and Completed', () => {
+    expect(scheduleFilters).toEqual([
+      { id: 'all', label: 'All Games' },
+      { id: 'completed', label: 'Completed' }
+    ]);
   });
 });
