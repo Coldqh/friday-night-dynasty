@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AppScreen, useGameStore } from '../store/useGameStore';
 
 export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
-  { id: 'dashboard', label: 'World' },
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'roster', label: 'Teams' },
   { id: 'schedule', label: 'Schedule' },
   { id: 'rankings', label: 'Standings' },

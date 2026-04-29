@@ -385,6 +385,29 @@ button:disabled {
   color: #aab8d3;
 }
 
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 214, 102, 0.14);
+  color: #ffe6a4;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag-chip.subdued {
+  background: rgba(139, 199, 255, 0.12);
+  color: #dce8f8;
+}
+
 .schedule-team-button {
   width: fit-content;
   border: 0;

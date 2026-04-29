@@ -1,4 +1,5 @@
 import { getWeeklySlate } from '../schedule/getWeeklySlate';
+import { getWeekStakes } from '../stakes/getWeekStakes';
 import { makeId, SeededRng } from '../random/rng';
 import { GameWorld, ScheduledGame, StateHeadline, StateHeadlineType, TeamStanding } from '../world/worldTypes';
 
@@ -186,6 +187,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
 export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
   const rng = new SeededRng(world.seed + world.season.year * 37 + world.season.currentWeek * 19 + world.season.completedGames.length);
   const slate = getWeeklySlate(world);
+  const weekStakes = getWeekStakes(world);
   const standings = world.season.standings;
   const headlines: StateHeadline[] = [];
   const seenKeys = new Set<string>();
@@ -209,16 +211,33 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     const awayStanding = standings.find((entry) => entry.teamId === gameOfTheWeek.awayTeamId);
     const homeStanding = standings.find((entry) => entry.teamId === gameOfTheWeek.homeTeamId);
     const isFinal = gameOfTheWeek.status === 'Final';
+    const headlineType: StateHeadlineType = isFinal
+      ? gameOfTheWeek.isRivalry
+        ? 'rivalry'
+        : 'recap'
+      : gameOfTheWeek.isRivalry
+        ? 'rivalry'
+        : gameOfTheWeek.stakes.includes('Undefeated Watch')
+          ? 'undefeatedWatch'
+          : gameOfTheWeek.stakes.includes('Playoff Race')
+            ? 'playoffRace'
+            : gameOfTheWeek.stakes.includes('Late-season Must Win')
+              ? 'mustWin'
+              : gameOfTheWeek.stakes.length > 0
+                ? 'lateSeason'
+                : 'preview';
 
     pushHeadline(
       createHeadline(world, rng, {
-        type: isFinal ? 'recap' : 'preview',
+        type: headlineType,
         title: isFinal
           ? `${gameOfTheWeek.awayTeamName} at ${gameOfTheWeek.homeTeamName} lived up to the spotlight`
-          : `Game of the Week: ${gameOfTheWeek.awayTeamName} at ${gameOfTheWeek.homeTeamName}`,
+          : gameOfTheWeek.isRivalry
+            ? `Rivalry week tension builds as ${gameOfTheWeek.awayTeamName} meets ${gameOfTheWeek.homeTeamName}`
+            : `Game of the Week: ${gameOfTheWeek.awayTeamName} at ${gameOfTheWeek.homeTeamName}`,
         body: isFinal
           ? gameOfTheWeek.summary || `${gameOfTheWeek.winnerName ?? 'The winner'} closed the headline matchup ${gameOfTheWeek.score}.`
-          : `${gameOfTheWeek.reason}. Records: ${getTeamRecord(awayStanding)} vs ${getTeamRecord(homeStanding)}.`,
+          : `${gameOfTheWeek.reason}. Records: ${getTeamRecord(awayStanding)} vs ${getTeamRecord(homeStanding)}.${gameOfTheWeek.shortLabel ? ` ${gameOfTheWeek.shortLabel}.` : ''}`,
         teamIds: [gameOfTheWeek.awayTeamId, gameOfTheWeek.homeTeamId],
         gameId: gameOfTheWeek.gameId,
         week: gameOfTheWeek.week
@@ -235,7 +254,7 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     const names = undefeatedTeams.map((entry) => entry.teamName).join(' and ');
     pushHeadline(
       createHeadline(world, rng, {
-        type: 'general',
+        type: 'undefeatedWatch',
         title: 'Undefeated watch is on',
         body: `${names} still carry perfect records into the next Friday night slate.`,
         teamIds: undefeatedTeams.map((entry) => entry.teamId)
@@ -243,14 +262,59 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     );
   }
 
-  if (world.phase === 'regular' && standings.length >= 5) {
+  if (weekStakes.playoffRaceGames.length > 0) {
     const bubbleTeams = standings.slice(2, 6);
     pushHeadline(
       createHeadline(world, rng, {
-        type: 'playoff',
+        type: 'playoffRace',
         title: 'The playoff race is tightening',
         body: `${bubbleTeams.map((entry) => `${entry.teamName} (${entry.wins}-${entry.losses})`).join(', ')} are all fighting for the final four.`,
         teamIds: bubbleTeams.map((entry) => entry.teamId)
+      })
+    );
+  }
+
+  if (weekStakes.mustWinGames.length > 0) {
+    const mustWinGame = weekStakes.mustWinGames[0];
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'mustWin',
+        title: `${mustWinGame.awayTeamName} and ${mustWinGame.homeTeamName} face a must-win spotlight`,
+        body: `${mustWinGame.shortLabel ?? 'Late-season Must Win'} pressure is hanging over this clash in Week ${mustWinGame.week + 1}.`,
+        teamIds: [mustWinGame.awayTeamId, mustWinGame.homeTeamId],
+        gameId: mustWinGame.gameId,
+        week: mustWinGame.week
+      })
+    );
+  }
+
+  if (weekStakes.rivalryGames.length > 0) {
+    const rivalryGame = weekStakes.rivalryGames[0];
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: rivalryGame.status === 'Final' ? 'rivalry' : 'rivalry',
+        title:
+          rivalryGame.status === 'Final'
+            ? `${rivalryGame.winnerName ?? rivalryGame.homeTeamName} survives rivalry heat`
+            : `Rivalry heat is rising between ${rivalryGame.awayTeamName} and ${rivalryGame.homeTeamName}`,
+        body:
+          rivalryGame.status === 'Final'
+            ? rivalryGame.summary || `${rivalryGame.winnerName ?? 'A program'} won a rivalry battle ${rivalryGame.score}.`
+            : `${rivalryGame.shortLabel ?? 'Rivalry Game'} takes center stage in Week ${rivalryGame.week + 1}.`,
+        teamIds: [rivalryGame.awayTeamId, rivalryGame.homeTeamId],
+        gameId: rivalryGame.gameId,
+        week: rivalryGame.week
+      })
+    );
+  }
+
+  if (world.phase === 'regular' && world.season.currentWeek >= Math.max(0, world.season.regularSeasonWeeks - 3)) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'lateSeason',
+        title: `Late-season pressure is building across ${world.state.name}`,
+        body: weekStakes.summary,
+        teamIds: []
       })
     );
   }

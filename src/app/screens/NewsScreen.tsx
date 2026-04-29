@@ -1,12 +1,14 @@
 import { Card } from '../components/Card';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
+import { getWeekStakes } from '../../core/stakes/getWeekStakes';
 import { useGameStore } from '../store/useGameStore';
 
 export function NewsScreen() {
   const world = useGameStore((state) => state.world)!;
   const headlines = generateWeeklyHeadlines(world);
   const slate = getWeeklySlate(world);
+  const weekStakes = getWeekStakes(world);
   const recentLogEntries = world.season.seasonLog.slice(0, 8);
 
   return (
@@ -17,6 +19,7 @@ export function NewsScreen() {
           <span>Week {world.phase === 'offseason' ? 'Season Complete' : world.season.currentWeek + 1}</span>
           <span>{world.phase === 'regular' ? 'Friday Night Slate' : world.phase === 'playoffs' ? 'Playoff Push' : 'Offseason Reset'}</span>
         </div>
+        <p className="muted">{weekStakes.summary}</p>
       </Card>
 
       <Card title="Game of the Week">
@@ -28,8 +31,12 @@ export function NewsScreen() {
             <h3>
               {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
             </h3>
+            <div className="tag-row">
+              {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{slate.gameOfTheWeek.shortLabel}</span> : null}
+              <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
+            </div>
             <p>
-              {slate.gameOfTheWeek.reason} / {slate.gameOfTheWeek.status} / {slate.gameOfTheWeek.score}
+              {slate.gameOfTheWeek.status} / {slate.gameOfTheWeek.score}
             </p>
             {slate.gameOfTheWeek.summary ? <p>{slate.gameOfTheWeek.summary}</p> : null}
           </article>

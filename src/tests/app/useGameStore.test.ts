@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { navigationTabs } from '../../app/components/Layout';
+import { getDashboardStatusPills } from '../../app/screens/DashboardScreen';
 import { scheduleFilters } from '../../app/screens/ScheduleScreen';
 import { useGameStore, resolveSelectedTeamId } from '../../app/store/useGameStore';
 import { createWorld } from '../../core/world/createWorld';
@@ -138,6 +139,8 @@ describe('useGameStore team profile navigation', () => {
 
   it('navigation labels expose News and History without any Game Log wording', () => {
     expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
+    expect(navigationTabs.some((tab) => tab.label === 'World')).toBe(false);
+    expect(navigationTabs.some((tab) => tab.label === 'Dashboard')).toBe(true);
     expect(navigationTabs.some((tab) => tab.label === 'News')).toBe(true);
     expect(navigationTabs.some((tab) => tab.label === 'History')).toBe(true);
   });
@@ -147,5 +150,12 @@ describe('useGameStore team profile navigation', () => {
       { id: 'all', label: 'All Games' },
       { id: 'completed', label: 'Completed' }
     ]);
+  });
+
+  it('dashboard status pills no longer expose Completed Games', () => {
+    const pills = getDashboardStatusPills('Regular Season', 16);
+
+    expect(pills).toEqual(['Regular Season', '16 Teams']);
+    expect(pills.some((pill) => /completed games/i.test(pill))).toBe(false);
   });
 });

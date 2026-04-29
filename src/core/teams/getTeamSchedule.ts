@@ -1,4 +1,5 @@
 import { GameWorld, MatchStage, ScheduledGame } from '../world/worldTypes';
+import { isRivalryGame } from '../rivalries/isRivalryGame';
 
 export interface TeamScheduleEntry {
   gameId: string;
@@ -12,6 +13,8 @@ export interface TeamScheduleEntry {
   opponentScore: number | null;
   score: string;
   summary: string;
+  isRivalry: boolean;
+  shortLabel: string | null;
 }
 
 function createScheduleEntry(world: GameWorld, teamId: string, game: ScheduledGame): TeamScheduleEntry | null {
@@ -39,7 +42,9 @@ function createScheduleEntry(world: GameWorld, teamId: string, game: ScheduledGa
     teamScore,
     opponentScore,
     score: played ? `${teamScore}-${opponentScore}` : 'TBD',
-    summary: game.summary
+    summary: game.summary,
+    isRivalry: isRivalryGame(world, game),
+    shortLabel: isRivalryGame(world, game) ? 'Rivalry' : null
   };
 }
 

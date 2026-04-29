@@ -20,6 +20,7 @@ export function TeamProfileScreen() {
   const teamProfileTab = useGameStore((state) => state.teamProfileTab);
   const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
   const closeTeamProfile = useGameStore((state) => state.closeTeamProfile);
+  const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const identity = getTeamIdentityProfile(world, team.id);
   const leaders = getTeamLeaders(world, team.id);
@@ -28,6 +29,22 @@ export function TeamProfileScreen() {
   const history = getTeamHistorySnapshot(world, team.id);
   const standing = world.season.standings.find((entry) => entry.teamId === team.id);
   const recentNotes = [...schedule].filter((game) => game.summary).slice(-4).reverse();
+  const rivals = team.rivalryIds
+    .map((rivalId) => {
+      const rivalTeam = world.teams.find((entry) => entry.id === rivalId);
+      const rivalStanding = world.season.standings.find((entry) => entry.teamId === rivalId);
+
+      if (!rivalTeam) {
+        return null;
+      }
+
+      return {
+        team: rivalTeam,
+        record: rivalStanding ? `${rivalStanding.wins}-${rivalStanding.losses}` : `${rivalTeam.wins}-${rivalTeam.losses}`
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+    .slice(0, 3);
   const leaderRows = [
     { label: 'Best QB', player: leaders.quarterback },
     { label: 'Best RB', player: leaders.runningBack },
@@ -42,7 +59,7 @@ export function TeamProfileScreen() {
       <Card title="Team Profile">
         <div className="stack compact-stack">
           <div className="eyebrow">
-            {team.schoolName} · {team.cityName} · {team.mascot}
+            {team.schoolName} / {team.cityName} / {team.mascot}
           </div>
           <h3 className="profile-title">{team.name}</h3>
           <div className="stat-strip">
@@ -99,7 +116,7 @@ export function TeamProfileScreen() {
                     <strong>{label}</strong>
                     <p className="muted">
                       {player
-                        ? `${player.firstName} ${player.lastName} · ${player.position} · ${player.classYear}`
+                        ? `${player.firstName} ${player.lastName} / ${player.position} / ${player.classYear}`
                         : 'No player available in this role yet.'}
                     </p>
                   </div>
@@ -107,6 +124,26 @@ export function TeamProfileScreen() {
                 </div>
               ))}
             </div>
+          </Card>
+
+          <Card title="Rivals">
+            {rivals.length === 0 ? (
+              <p className="muted">No major rivalries yet.</p>
+            ) : (
+              <div className="list">
+                {rivals.map((rival) => (
+                  <div className="list-row" key={rival.team.id}>
+                    <div>
+                      <strong>{rival.team.shortName}</strong>
+                      <p className="muted">{rival.record}</p>
+                    </div>
+                    <Button variant="ghost" onClick={() => openTeamProfile(rival.team.id, 'overview')}>
+                      Open Rival
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card title="Recent Team Notes">
@@ -118,9 +155,9 @@ export function TeamProfileScreen() {
                   <div className="history-item" key={`${game.gameId}-note`}>
                     <div className="eyebrow">
                       Week {game.week + 1}
-                      {game.stage !== 'regular' ? ` · ${game.stage}` : ''}
+                      {game.stage !== 'regular' ? ` / ${game.stage}` : ''}
                     </div>
-                    <strong>{game.opponentName}</strong>
+                    <strong>{game.isRivalry ? `${game.opponentName} / Rivalry` : game.opponentName}</strong>
                     <p>{game.summary}</p>
                   </div>
                 ))}
@@ -171,9 +208,9 @@ export function TeamProfileScreen() {
               <div className="table-row grid-team-schedule" key={game.gameId}>
                 <span>
                   W{game.week + 1}
-                  {game.stage !== 'regular' ? ` · ${game.stage}` : ''}
+                  {game.stage !== 'regular' ? ` / ${game.stage}` : ''}
                 </span>
-                <span>{game.opponentName}</span>
+                <span>{game.isRivalry ? `${game.opponentName} / Rivalry` : game.opponentName}</span>
                 <span>{game.homeAway}</span>
                 <strong>{game.result ?? 'TBD'}</strong>
                 <strong>{game.score}</strong>
@@ -214,7 +251,7 @@ export function TeamProfileScreen() {
                       {season.wins}-{season.losses}
                     </strong>
                     <p>
-                      PF {season.pointsFor} · PA {season.pointsAgainst}
+                      PF {season.pointsFor} / PA {season.pointsAgainst}
                     </p>
                     <p>{season.note}</p>
                   </div>
