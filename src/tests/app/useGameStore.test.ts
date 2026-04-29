@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { navigationTabs } from '../../app/components/Layout';
 import { getDashboardStatusPills } from '../../app/screens/DashboardScreen';
+import { historySections } from '../../app/screens/HistoryScreen';
+import { newsSections } from '../../app/screens/NewsScreen';
 import { scheduleFilters } from '../../app/screens/ScheduleScreen';
 import { useGameStore, resolveSelectedTeamId } from '../../app/store/useGameStore';
 import { createWorld } from '../../core/world/createWorld';
@@ -157,5 +159,15 @@ describe('useGameStore team profile navigation', () => {
 
     expect(pills).toEqual(['Regular Season', '16 Teams']);
     expect(pills.some((pill) => /completed games/i.test(pill))).toBe(false);
+  });
+
+  it('history and news sections stay clean and avoid old debug-heavy panels', () => {
+    expect(historySections).toEqual(['League History', 'State Champions']);
+    expect(historySections).not.toContain('State Finals');
+    expect(historySections).not.toContain('League Timeline');
+
+    expect(newsSections).toEqual(['State News', 'Latest Headlines']);
+    expect(newsSections).not.toContain('Game of the Week');
+    expect(newsSections).not.toContain('Season Journal');
   });
 });

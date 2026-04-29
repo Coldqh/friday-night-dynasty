@@ -237,9 +237,23 @@ export interface TitleGameHistoryEntry {
   summary: string;
 }
 
+export interface RivalryGameResult {
+  id: string;
+  year: number;
+  week: number;
+  stage: MatchStage;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number;
+  awayScore: number;
+  winnerId: string | null;
+  summary: string;
+}
+
 export interface WorldHistory {
   champions: ChampionHistoryEntry[];
   titleGames: TitleGameHistoryEntry[];
+  rivalryResults: RivalryGameResult[];
 }
 
 export interface GameWorld {

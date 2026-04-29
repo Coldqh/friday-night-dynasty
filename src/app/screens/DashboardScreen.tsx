@@ -2,7 +2,6 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
-import { getWeekStakes } from '../../core/stakes/getWeekStakes';
 import { useGameStore } from '../store/useGameStore';
 
 function getSeasonStatusLabel({
@@ -39,7 +38,6 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const slate = getWeeklySlate(world);
-  const weekStakes = getWeekStakes(world);
   const headlines = generateWeeklyHeadlines(world).slice(0, 5);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
@@ -124,35 +122,6 @@ export function DashboardScreen() {
               </div>
             ) : (
               <p className="muted">This week's headliner will appear once a slate is available.</p>
-            )}
-          </Card>
-
-          <Card title="Weekly Slate">
-            {slate.notableGames.length === 0 ? (
-              <p className="muted">{weekStakes.summary}</p>
-            ) : (
-              <div className="stack compact-stack">
-                <p className="muted">{weekStakes.summary}</p>
-                <div className="list">
-                  {slate.notableGames.map((game) => (
-                    <div className="history-item" key={`${game.gameId}-notable`}>
-                      <div className="eyebrow">
-                        Week {game.week + 1} / {game.stageLabel}
-                      </div>
-                      <strong>
-                        {game.awayTeamName} at {game.homeTeamName}
-                      </strong>
-                      <div className="tag-row">
-                        {game.shortLabel ? <span className="tag-chip">{game.shortLabel}</span> : null}
-                        <span className="tag-chip subdued">{game.reason}</span>
-                      </div>
-                      <p>
-                        {game.status} / {game.score}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
           </Card>
         </>

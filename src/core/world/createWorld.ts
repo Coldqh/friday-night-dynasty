@@ -177,7 +177,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     news: [kickoffNews],
     history: {
       champions: [],
-      titleGames: []
+      titleGames: [],
+      rivalryResults: []
     }
   };
 }
