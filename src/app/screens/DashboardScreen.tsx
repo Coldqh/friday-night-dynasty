@@ -1,44 +1,69 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { useGameStore } from '../store/useGameStore';
+
+function getSeasonStatusLabel({
+  phase,
+  currentWeek,
+  completedGames
+}: {
+  phase: 'regular' | 'playoffs' | 'offseason';
+  currentWeek: number;
+  completedGames: number;
+}) {
+  if (phase === 'offseason') {
+    return 'Season Complete';
+  }
+
+  if (phase === 'playoffs') {
+    return 'Playoffs';
+  }
+
+  if (currentWeek === 0 && completedGames === 0) {
+    return 'Preseason';
+  }
+
+  return 'Regular Season';
+}
 
 export function DashboardScreen() {
   const world = useGameStore((state) => state.world)!;
   const simNextWeek = useGameStore((state) => state.simNextWeek);
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
-  const leader = world.season.standings[0];
-  const champion = world.teams.find((team) => team.id === world.season.championId);
+  const slate = getWeeklySlate(world);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
-  const playoffField = world.season.playoffTeams
-    .map((teamId) => world.teams.find((team) => team.id === teamId))
-    .filter((team): team is NonNullable<typeof team> => team !== undefined);
+  const topStandings = world.season.standings.slice(0, 5);
+  const seasonStatus = getSeasonStatusLabel({
+    phase: world.phase,
+    currentWeek: world.season.currentWeek,
+    completedGames: world.season.completedGames.length
+  });
 
   return (
     <div className="stack">
-      <Card title="Living State">
+      <Card title="Season State">
         <div className="dashboard-grid">
           <div>
             <div className="eyebrow">Year</div>
             <p className="big-number">{world.season.year}</p>
           </div>
           <div>
-            <div className="eyebrow">Week</div>
-            <p className="big-number">
-              {world.phase === 'regular'
-                ? `${world.season.currentWeek + 1}`
-                : world.phase === 'playoffs'
-                  ? 'Playoffs'
-                  : 'Complete'}
-            </p>
+            <div className="eyebrow">Current Week</div>
+            <p className="big-number">{world.phase === 'offseason' ? 'Done' : world.season.currentWeek + 1}</p>
           </div>
           <div>
-            <div className="eyebrow">Teams</div>
-            <p className="big-number">{world.teams.length}</p>
+            <div className="eyebrow">Regular Season</div>
+            <p className="big-number">{world.season.regularSeasonWeeks}</p>
           </div>
         </div>
 
-        <p className="muted">Season phase: {world.phase}</p>
+        <div className="stat-strip">
+          <span>{seasonStatus}</span>
+          <span>{world.teams.length} Teams</span>
+          <span>{world.season.completedGames.length} Games Logged</span>
+        </div>
 
         <div className="button-row">
           <Button disabled={world.phase === 'offseason'} onClick={simNextWeek}>
@@ -56,36 +81,8 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="State Leader">
-        {leader ? (
-          <div className="stack compact-stack">
-            <div className="list-row">
-              <span>{leader.teamName}</span>
-              <strong>
-                {leader.wins}-{leader.losses}
-              </strong>
-            </div>
-            <div className="stat-strip">
-              <span>PF {leader.pointsFor}</span>
-              <span>PA {leader.pointsAgainst}</span>
-              <span>Diff {leader.pointDifferential}</span>
-              <span>OVR {leader.overallRating}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="muted">Standings will appear after the world is created.</p>
-        )}
-      </Card>
-
-      <Card title={champion ? 'Season Champion' : latestChampion ? 'Latest Champion' : 'Playoff Race'}>
-        {champion ? (
-          <div className="stack compact-stack">
-            <strong>{champion.name}</strong>
-            <p className="muted">
-              {champion.shortName} finished the season on top and is now recorded in world history.
-            </p>
-          </div>
-        ) : latestChampion ? (
+      {world.phase === 'offseason' && latestChampion ? (
+        <Card title="Champion">
           <div className="stack compact-stack">
             <strong>{latestChampion.championName}</strong>
             <p className="muted">
@@ -96,27 +93,76 @@ export function DashboardScreen() {
               <span>Final {latestChampion.finalScore}</span>
             </div>
           </div>
-        ) : playoffField.length > 0 ? (
+        </Card>
+      ) : (
+        <>
+          <Card title="Game of the Week">
+            {slate.gameOfTheWeek ? (
+              <div className="stack compact-stack">
+                <div className="eyebrow">
+                  Week {slate.currentWeek + 1} / {slate.gameOfTheWeek.stageLabel}
+                </div>
+                <strong>
+                  {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
+                </strong>
+                <div className="stat-strip">
+                  <span>{slate.gameOfTheWeek.reason}</span>
+                  <span>{slate.gameOfTheWeek.status}</span>
+                  <span>{slate.gameOfTheWeek.score}</span>
+                </div>
+                {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
+              </div>
+            ) : (
+              <p className="muted">This week's headliner will appear once a slate is available.</p>
+            )}
+          </Card>
+
+          <Card title="Weekly Slate">
+            {slate.notableGames.length === 0 ? (
+              <p className="muted">No additional featured matchups are available for this week yet.</p>
+            ) : (
+              <div className="list">
+                {slate.notableGames.map((game) => (
+                  <div className="history-item" key={`${game.gameId}-notable`}>
+                    <div className="eyebrow">
+                      Week {game.week + 1} / {game.stageLabel}
+                    </div>
+                    <strong>
+                      {game.awayTeamName} at {game.homeTeamName}
+                    </strong>
+                    <p>
+                      {game.reason} / {game.status} / {game.score}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      <Card title="Standings Snapshot">
+        {topStandings.length === 0 ? (
+          <p className="muted">Standings will appear once the season starts moving.</p>
+        ) : (
           <div className="list">
-            {playoffField.map((team, index) => (
-              <div className="list-row" key={team.id}>
+            {topStandings.map((entry) => (
+              <div className="list-row" key={entry.teamId}>
                 <span>
-                  #{index + 1} {team.shortName}
+                  #{entry.rank} {entry.teamName}
                 </span>
                 <strong>
-                  {team.wins}-{team.losses}
+                  {entry.wins}-{entry.losses} / Diff {entry.pointDifferential}
                 </strong>
               </div>
             ))}
           </div>
-        ) : (
-          <p className="muted">The top four teams will appear here once the regular season is complete.</p>
         )}
       </Card>
 
-      <Card title="Recent season events">
+      <Card title="Recent Events">
         {world.season.seasonLog.length === 0 ? (
-          <p className="muted">The season log will refill once the new season begins.</p>
+          <p className="muted">The season log will populate once games and story beats hit the calendar.</p>
         ) : (
           <div className="list">
             {world.season.seasonLog.slice(0, 5).map((entry) => (
@@ -130,17 +176,6 @@ export function DashboardScreen() {
             ))}
           </div>
         )}
-      </Card>
-
-      <Card title="Latest Headlines">
-        <div className="list">
-          {world.news.slice(0, 3).map((item) => (
-            <div className="news-item" key={item.id}>
-              <strong>{item.headline}</strong>
-              <p>{item.body}</p>
-            </div>
-          ))}
-        </div>
       </Card>
     </div>
   );

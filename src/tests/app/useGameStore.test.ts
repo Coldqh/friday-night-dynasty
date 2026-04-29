@@ -109,4 +109,28 @@ describe('useGameStore team profile navigation', () => {
     expect(useGameStore.getState().selectedTeamId).toBe(targetTeamId);
     expect(useGameStore.getState().previousScreenBeforeTeamProfile).toBe('roster');
   });
+
+  it('schedule can open team profile on the schedule tab and close back to schedule', () => {
+    const world = createWorld({ seed: 994 });
+    const targetTeamId = world.teams[4].id;
+
+    useGameStore.setState({
+      world,
+      selectedTeamId: world.teams[0].id,
+      teamProfileTab: 'overview',
+      screen: 'schedule',
+      previousScreenBeforeTeamProfile: null,
+      error: null
+    });
+
+    useGameStore.getState().openTeamProfile(targetTeamId, 'schedule', 'schedule');
+
+    expect(useGameStore.getState().screen).toBe('teamProfile');
+    expect(useGameStore.getState().teamProfileTab).toBe('schedule');
+    expect(useGameStore.getState().previousScreenBeforeTeamProfile).toBe('schedule');
+
+    useGameStore.getState().closeTeamProfile();
+
+    expect(useGameStore.getState().screen).toBe('schedule');
+  });
 });
