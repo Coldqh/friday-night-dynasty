@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { getRivalryRecord } from '../../core/rivalries/getRivalryRecord';
 import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
 import { getTeamIdentityProfile } from '../../core/teams/getTeamIdentityProfile';
 import { getTeamLeaders } from '../../core/teams/getTeamLeaders';
@@ -13,6 +14,52 @@ const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
   { id: 'schedule', label: 'Schedule' },
   { id: 'history', label: 'History' }
 ];
+
+function formatSeriesRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, gamesPlayed: number) {
+  if (gamesPlayed === 0) {
+    return 'No games played yet';
+  }
+
+  if (teamWins === rivalWins) {
+    return `Series tied ${teamWins}-${rivalWins}`;
+  }
+
+  return teamWins > rivalWins
+    ? `${teamName} leads ${teamWins}-${rivalWins}`
+    : `${rivalName} leads ${rivalWins}-${teamWins}`;
+}
+
+function formatLastGame(
+  teamNames: { teamId: string; rivalId: string; teamName: string; rivalName: string },
+  record: ReturnType<typeof getRivalryRecord>
+) {
+  if (!record.lastGame) {
+    return 'No rivalry history yet.';
+  }
+
+  const winnerName =
+    record.lastGame.winnerId === teamNames.teamId
+      ? teamNames.teamName
+      : record.lastGame.winnerId === teamNames.rivalId
+        ? teamNames.rivalName
+        : null;
+
+  const score = `${record.lastGame.awayScore}-${record.lastGame.homeScore}`;
+  const resultNote = winnerName ? `${winnerName} won ${score}.` : `Finished ${score}.`;
+
+  return `${record.lastGame.year} / ${resultNote}`;
+}
+
+function formatStreak(teamNames: { teamId: string; rivalId: string; teamName: string; rivalName: string }, record: ReturnType<typeof getRivalryRecord>) {
+  if (!record.currentStreak) {
+    return 'No active streak';
+  }
+
+  const streakOwner =
+    record.currentStreak.teamId === teamNames.teamId ? teamNames.teamName : teamNames.rivalName;
+
+  return `${streakOwner} won last ${record.currentStreak.wins}`;
+}
 
 export function TeamProfileScreen() {
   const world = useGameStore((state) => state.world)!;
@@ -40,7 +87,8 @@ export function TeamProfileScreen() {
 
       return {
         team: rivalTeam,
-        record: rivalStanding ? `${rivalStanding.wins}-${rivalStanding.losses}` : `${rivalTeam.wins}-${rivalTeam.losses}`
+        record: rivalStanding ? `${rivalStanding.wins}-${rivalStanding.losses}` : `${rivalTeam.wins}-${rivalTeam.losses}`,
+        rivalryRecord: getRivalryRecord(world, team.id, rivalTeam.id)
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
@@ -132,11 +180,41 @@ export function TeamProfileScreen() {
             ) : (
               <div className="list">
                 {rivals.map((rival) => (
-                  <div className="list-row" key={rival.team.id}>
-                    <div>
-                      <strong>{rival.team.shortName}</strong>
-                      <p className="muted">{rival.record}</p>
-                    </div>
+                  <div className="history-item" key={rival.team.id}>
+                    <div className="eyebrow">Current record {rival.record}</div>
+                    <strong>{rival.team.shortName}</strong>
+                    <p>
+                      {formatSeriesRecord(
+                        team.shortName,
+                        rival.team.shortName,
+                        rival.rivalryRecord.teamWins,
+                        rival.rivalryRecord.rivalWins,
+                        rival.rivalryRecord.gamesPlayed
+                      )}
+                    </p>
+                    <p className="muted">
+                      Games played {rival.rivalryRecord.gamesPlayed}
+                      {rival.rivalryRecord.gamesPlayed > 0 ? ` / Last game ${formatLastGame(
+                        {
+                          teamId: team.id,
+                          rivalId: rival.team.id,
+                          teamName: team.shortName,
+                          rivalName: rival.team.shortName
+                        },
+                        rival.rivalryRecord
+                      )}` : ' / No rivalry history yet.'}
+                    </p>
+                    <p className="muted">
+                      {formatStreak(
+                        {
+                          teamId: team.id,
+                          rivalId: rival.team.id,
+                          teamName: team.shortName,
+                          rivalName: rival.team.shortName
+                        },
+                        rival.rivalryRecord
+                      )}
+                    </p>
                     <Button variant="ghost" onClick={() => openTeamProfile(rival.team.id, 'overview')}>
                       Open Rival
                     </Button>

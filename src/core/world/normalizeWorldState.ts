@@ -1,4 +1,4 @@
-import { GameWorld, SeasonLogEntry, TeamHistoryEntry, WorldHistory } from './worldTypes';
+import { GameWorld, RivalryGameResult, SeasonLogEntry, TeamHistoryEntry, WorldHistory } from './worldTypes';
 
 type LegacySeasonHistory = {
   year: number;
@@ -23,6 +23,8 @@ type LegacyWorld = GameWorld & {
 };
 
 type LegacyTeamHistoryEntry = Partial<TeamHistoryEntry> & Pick<TeamHistoryEntry, 'year' | 'wins' | 'losses' | 'pointsFor' | 'pointsAgainst' | 'note'>;
+type LegacyRivalryGameResult = Partial<RivalryGameResult> &
+  Pick<RivalryGameResult, 'id' | 'year' | 'homeTeamId' | 'awayTeamId' | 'homeScore' | 'awayScore'>;
 
 function normalizeTeamHistoryEntry(entry: LegacyTeamHistoryEntry): TeamHistoryEntry {
   const playoffAppearance = entry.playoffAppearance ?? entry.madePlayoffs ?? false;
@@ -39,6 +41,21 @@ function normalizeTeamHistoryEntry(entry: LegacyTeamHistoryEntry): TeamHistoryEn
     wonTitle: titleWon,
     titleWon,
     note: entry.note
+  };
+}
+
+function normalizeRivalryGameResult(entry: LegacyRivalryGameResult): RivalryGameResult {
+  return {
+    id: entry.id,
+    year: entry.year,
+    week: entry.week ?? 0,
+    stage: entry.stage ?? 'regular',
+    homeTeamId: entry.homeTeamId,
+    awayTeamId: entry.awayTeamId,
+    homeScore: entry.homeScore,
+    awayScore: entry.awayScore,
+    winnerId: entry.winnerId ?? null,
+    summary: entry.summary ?? ''
   };
 }
 
@@ -109,6 +126,9 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     Array.isArray(world.history?.titleGames) && world.history.titleGames.length > 0
       ? world.history.titleGames
       : legacySeasons.map(toTitleGameHistory);
+  const rivalryResults = Array.isArray(world.history?.rivalryResults)
+    ? world.history.rivalryResults.map((entry) => normalizeRivalryGameResult(entry as LegacyRivalryGameResult))
+    : [];
   const seasonLog =
     Array.isArray(world.season.seasonLog) && world.season.seasonLog.length > 0
       ? world.season.seasonLog
@@ -125,7 +145,8 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     },
     history: {
       champions,
-      titleGames
+      titleGames,
+      rivalryResults
     }
   };
 }

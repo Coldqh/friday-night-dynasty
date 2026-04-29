@@ -1,4 +1,39 @@
-import { GameWorld, WorldHistory } from '../world/worldTypes';
+import { isRivalryGame } from '../rivalries/isRivalryGame';
+import { GameWorld, RivalryGameResult, ScheduledGame, WorldHistory } from '../world/worldTypes';
+
+const STAGE_ORDER = {
+  regular: 0,
+  semifinal: 1,
+  final: 2
+} as const;
+
+function toRivalryGameResult(world: GameWorld, game: ScheduledGame): RivalryGameResult | null {
+  if (game.homeScore === null || game.awayScore === null || !isRivalryGame(world, game)) {
+    return null;
+  }
+
+  return {
+    id: game.id,
+    year: world.season.year,
+    week: game.week,
+    stage: game.stage,
+    homeTeamId: game.homeTeamId,
+    awayTeamId: game.awayTeamId,
+    homeScore: game.homeScore,
+    awayScore: game.awayScore,
+    winnerId: game.winnerId,
+    summary: game.summary
+  };
+}
+
+function compareRivalryResults(left: RivalryGameResult, right: RivalryGameResult) {
+  return (
+    left.year - right.year ||
+    left.week - right.week ||
+    STAGE_ORDER[left.stage] - STAGE_ORDER[right.stage] ||
+    left.id.localeCompare(right.id)
+  );
+}
 
 export function recordSeasonHistory(world: GameWorld): WorldHistory {
   const champion = world.teams.find((team) => team.id === world.season.championId);
@@ -18,6 +53,21 @@ export function recordSeasonHistory(world: GameWorld): WorldHistory {
       : null;
   const champions = world.history.champions.filter((entry) => entry.year !== world.season.year);
   const titleGames = world.history.titleGames.filter((entry) => entry.year !== world.season.year);
+  const rivalryResultsMap = new Map<string, RivalryGameResult>();
+
+  world.history.rivalryResults.forEach((entry) => {
+    rivalryResultsMap.set(entry.id, entry);
+  });
+
+  world.season.completedGames
+    .map((game) => toRivalryGameResult(world, game))
+    .forEach((entry) => {
+      if (entry) {
+        rivalryResultsMap.set(entry.id, entry);
+      }
+    });
+
+  const rivalryResults = [...rivalryResultsMap.values()].sort(compareRivalryResults);
 
   return {
     champions: [
@@ -52,6 +102,7 @@ export function recordSeasonHistory(world: GameWorld): WorldHistory {
             summary: finalGame.summary || 'No final summary recorded'
           }
         ]
-      : titleGames
+      : titleGames,
+    rivalryResults
   };
 }

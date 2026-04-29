@@ -102,5 +102,6 @@ describe('world consistency', () => {
     expect(normalized.season.seasonLog.length).toBeGreaterThan(0);
     expect(normalized.history.champions).toHaveLength(1);
     expect(normalized.history.titleGames).toHaveLength(1);
+    expect(normalized.history.rivalryResults).toEqual([]);
   });
 });
