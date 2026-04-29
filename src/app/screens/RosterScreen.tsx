@@ -4,26 +4,25 @@ import { useGameStore } from '../store/useGameStore';
 
 export function RosterScreen() {
   const world = useGameStore((state) => state.world)!;
-  const selectedTeamId = useGameStore((state) => state.selectedTeamId);
   const selectTeam = useGameStore((state) => state.selectTeam);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
 
   return (
     <Card title="Teams">
       <p className="muted">
-        Pick a program to make it active, then open the full team profile for roster, schedule and history.
+        Browse the state programs, set one as your active team, or jump straight into its full profile.
       </p>
 
       <div className="team-grid">
         {world.teams.map((team) => (
-          <div className={team.id === selectedTeamId ? 'team-chip active' : 'team-chip'} key={team.id}>
+          <div className="team-chip" key={team.id}>
             <button className="team-chip-button" onClick={() => selectTeam(team.id)}>
               <strong>{team.shortName}</strong>
               <span>
-                {team.schoolName} · {team.cityName}
+                {team.schoolName} / {team.cityName}
               </span>
               <span>
-                {team.wins}-{team.losses} · OVR {team.overallRating}
+                {team.wins}-{team.losses} / OVR {team.overallRating}
               </span>
             </button>
 

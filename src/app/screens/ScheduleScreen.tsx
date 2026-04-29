@@ -1,76 +1,101 @@
-import { Button } from '../components/Button';
+import { useState } from 'react';
 import { Card } from '../components/Card';
-import { getTeamSchedule } from '../../core/teams/getTeamSchedule';
+import { getFullSchedule } from '../../core/schedule/getFullSchedule';
 import { useGameStore } from '../store/useGameStore';
+
+type ScheduleFilter = 'all' | 'currentWeek' | 'completed' | 'upcoming' | 'playoffs';
+
+const scheduleFilters: Array<{ id: ScheduleFilter; label: string }> = [
+  { id: 'all', label: 'All Games' },
+  { id: 'currentWeek', label: 'Current Week' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'upcoming', label: 'Upcoming' }
+];
 
 export function ScheduleScreen() {
   const world = useGameStore((state) => state.world)!;
-  const selectedTeamId = useGameStore((state) => state.selectedTeamId);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
-  const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
-  const schedule = getTeamSchedule(world, team.id);
-  const notes = schedule.filter((game) => game.summary);
+  const [filter, setFilter] = useState<ScheduleFilter>('all');
+  const fullSchedule = getFullSchedule(world);
+  const hasPlayoffGames = fullSchedule.some((game) => game.stage !== 'regular');
+  const filters = hasPlayoffGames ? [...scheduleFilters, { id: 'playoffs' as const, label: 'Playoffs' }] : scheduleFilters;
+  const filteredSchedule = fullSchedule.filter((game) => {
+    switch (filter) {
+      case 'currentWeek':
+        return game.week === world.season.currentWeek;
+      case 'completed':
+        return game.status === 'Final';
+      case 'upcoming':
+        return game.status === 'Upcoming';
+      case 'playoffs':
+        return game.stage !== 'regular';
+      default:
+        return true;
+    }
+  });
 
   return (
     <div className="stack">
-      <Card title={`${team.shortName} Schedule`}>
+      <Card title="Texoma Schedule">
         <div className="stack compact-stack">
           <div className="stat-strip">
-            <span>Record {team.wins}-{team.losses}</span>
-            <span>OFF {team.offenseRating}</span>
-            <span>DEF {team.defenseRating}</span>
-            <span>OVR {team.overallRating}</span>
+            <span>Year {world.season.year}</span>
+            <span>Week {world.season.currentWeek + 1}</span>
+            <span>{world.phase === 'regular' ? 'Regular Season' : world.phase === 'playoffs' ? 'Playoffs' : 'Season Complete'}</span>
           </div>
 
-          <div className="button-row">
-            <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'schedule', 'schedule')}>
-              Open Team Profile
-            </Button>
-          </div>
-
-          <div className="table compact-table">
-            <div className="table-head grid-team-schedule">
-              <span>Week</span>
-              <span>Opponent</span>
-              <span>Home/Away</span>
-              <span>Result</span>
-              <span>Score</span>
-            </div>
-
-            {schedule.map((game) => (
-              <div className="table-row grid-team-schedule" key={game.gameId}>
-                <span>
-                  W{game.week + 1}
-                  {game.stage !== 'regular' ? ` · ${game.stage}` : ''}
-                </span>
-                <span>{game.opponentName}</span>
-                <span>{game.homeAway}</span>
-                <strong>{game.result ?? 'TBD'}</strong>
-                <strong>{game.score}</strong>
-              </div>
+          <div className="filter-row">
+            {filters.map((option) => (
+              <button
+                key={option.id}
+                className={filter === option.id ? 'filter-chip active' : 'filter-chip'}
+                onClick={() => setFilter(option.id)}
+              >
+                {option.label}
+              </button>
             ))}
           </div>
         </div>
       </Card>
 
-      <Card title="Game Notes">
-        {schedule.length === 0 ? (
-          <p className="muted">This program does not have any scheduled games yet.</p>
-        ) : notes.length === 0 ? (
-          <p className="muted">Game notes will appear here once this team starts playing its schedule.</p>
+      <Card title="Statewide Slate">
+        {filteredSchedule.length === 0 ? (
+          <p className="muted">No games match this view right now.</p>
         ) : (
-          <div className="list">
-            {notes.map((game) => (
-              <div className="schedule-row" key={`${game.gameId}-summary`}>
-                <div>
-                  <div className="eyebrow">
-                    Week {game.week + 1}
-                    {game.stage !== 'regular' ? ` · ${game.stage}` : ''}
-                  </div>
-                  <strong>{game.opponentName}</strong>
-                  <p className="muted">{game.summary}</p>
+          <div className="stack compact-stack">
+            <div className="table-head grid-full-schedule">
+              <span>Week</span>
+              <span>Stage</span>
+              <span>Away</span>
+              <span>Home</span>
+              <span>Status</span>
+              <span>Score</span>
+              <span>Winner</span>
+            </div>
+
+            {filteredSchedule.map((game) => (
+              <div className="schedule-card-row" key={game.gameId}>
+                <div className="grid-full-schedule schedule-card-grid">
+                  <span>W{game.week + 1}</span>
+                  <span>{game.stageLabel}</span>
+                  <button
+                    className="schedule-team-button"
+                    onClick={() => openTeamProfile(game.awayTeamId, 'schedule', 'schedule')}
+                  >
+                    {game.awayTeamName}
+                  </button>
+                  <button
+                    className="schedule-team-button"
+                    onClick={() => openTeamProfile(game.homeTeamId, 'schedule', 'schedule')}
+                  >
+                    {game.homeTeamName}
+                  </button>
+                  <span>{game.status}</span>
+                  <strong>{game.score}</strong>
+                  <strong>{game.winnerName ?? 'N/A'}</strong>
                 </div>
-                <strong>{game.score}</strong>
+
+                {game.summary ? <p className="schedule-summary">{game.summary}</p> : null}
               </div>
             ))}
           </div>

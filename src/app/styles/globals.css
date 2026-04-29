@@ -284,7 +284,7 @@ button:disabled {
   cursor: pointer;
 }
 
-.team-chip.active {
+.team-chip:hover {
   border-color: rgba(139, 199, 255, 0.35);
   background: rgba(139, 199, 255, 0.12);
 }
@@ -330,6 +330,26 @@ button:disabled {
   gap: 12px;
 }
 
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+}
+
+.filter-chip.active {
+  border-color: rgba(139, 199, 255, 0.35);
+  background: rgba(139, 199, 255, 0.16);
+}
+
 .table-row-button {
   width: 100%;
   border: 0;
@@ -339,9 +359,46 @@ button:disabled {
   cursor: pointer;
 }
 
-.table-row-button.active {
+.table-row-button:hover {
   border-radius: 12px;
   background: rgba(139, 199, 255, 0.1);
+}
+
+.grid-full-schedule {
+  display: grid;
+  grid-template-columns: 0.65fr 1fr 1.25fr 1.25fr 0.8fr 0.8fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.schedule-card-row {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.schedule-card-grid {
+  font-size: 14px;
+}
+
+.schedule-summary {
+  margin: 6px 0 0;
+  color: #aab8d3;
+}
+
+.schedule-team-button {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #dce8f8;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.schedule-team-button:hover {
+  color: #8bc7ff;
+  text-decoration: underline;
 }
 
 .bottom-nav {
@@ -401,6 +458,11 @@ button:disabled {
   .grid-team-schedule {
     grid-template-columns: 0.8fr 1.25fr 0.85fr 0.65fr 0.75fr;
     font-size: 13px;
+  }
+
+  .grid-full-schedule {
+    grid-template-columns: 0.7fr 0.95fr 1.05fr 1.05fr 0.8fr 0.75fr 0.95fr;
+    font-size: 12px;
   }
 
   .tab-row {

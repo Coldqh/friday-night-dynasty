@@ -3,7 +3,6 @@ import { useGameStore } from '../store/useGameStore';
 
 export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
-  const selectedTeamId = useGameStore((state) => state.selectedTeamId);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const standings = world.season.standings;
 
@@ -23,11 +22,7 @@ export function RankingsScreen() {
 
         {standings.map((entry) => (
           <button
-            className={
-              entry.teamId === selectedTeamId
-                ? 'table-row grid-standings table-row-button active'
-                : 'table-row grid-standings table-row-button'
-            }
+            className="table-row grid-standings table-row-button"
             key={entry.teamId}
             onClick={() => openTeamProfile(entry.teamId, 'overview', 'rankings')}
           >
