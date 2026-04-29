@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppScreen, useGameStore } from '../store/useGameStore';
 
-const tabs: Array<{ id: AppScreen; label: string }> = [
+export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'dashboard', label: 'World' },
   { id: 'roster', label: 'Teams' },
   { id: 'schedule', label: 'Schedule' },
@@ -28,7 +28,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <main className="screen">{children}</main>
 
       <nav className="bottom-nav">
-        {tabs.map((tab) => (
+        {navigationTabs.map((tab) => (
           <button
             key={tab.id}
             className={screen === tab.id ? 'nav-button active' : 'nav-button'}

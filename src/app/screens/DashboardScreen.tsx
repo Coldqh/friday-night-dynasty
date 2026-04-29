@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { useGameStore } from '../store/useGameStore';
 
@@ -33,8 +34,10 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const slate = getWeeklySlate(world);
+  const headlines = generateWeeklyHeadlines(world).slice(0, 5);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
+  const recentSeasonEntries = world.season.seasonLog.slice(0, 5);
   const seasonStatus = getSeasonStatusLabel({
     phase: world.phase,
     currentWeek: world.season.currentWeek,
@@ -62,7 +65,7 @@ export function DashboardScreen() {
         <div className="stat-strip">
           <span>{seasonStatus}</span>
           <span>{world.teams.length} Teams</span>
-          <span>{world.season.completedGames.length} Games Logged</span>
+          <span>{world.season.completedGames.length} Completed Games</span>
         </div>
 
         <div className="button-row">
@@ -141,6 +144,24 @@ export function DashboardScreen() {
         </>
       )}
 
+      <Card title="Latest Headlines">
+        {headlines.length === 0 ? (
+          <p className="muted">No major headlines yet. Sim a week to bring the state to life.</p>
+        ) : (
+          <div className="list">
+            {headlines.map((headline) => (
+              <div className="history-item" key={headline.id}>
+                <div className="eyebrow">
+                  {headline.type.toUpperCase()} / Week {headline.week + 1}
+                </div>
+                <strong>{headline.title}</strong>
+                <p>{headline.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       <Card title="Standings Snapshot">
         {topStandings.length === 0 ? (
           <p className="muted">Standings will appear once the season starts moving.</p>
@@ -160,12 +181,12 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Recent Events">
-        {world.season.seasonLog.length === 0 ? (
-          <p className="muted">The season log will populate once games and story beats hit the calendar.</p>
+      <Card title="Season Journal">
+        {recentSeasonEntries.length === 0 ? (
+          <p className="muted">The season journal will populate once games and story beats hit the calendar.</p>
         ) : (
           <div className="list">
-            {world.season.seasonLog.slice(0, 5).map((entry) => (
+            {recentSeasonEntries.map((entry) => (
               <div className="history-item" key={entry.id}>
                 <div className="eyebrow">
                   {entry.year} / Week {entry.week + 1}

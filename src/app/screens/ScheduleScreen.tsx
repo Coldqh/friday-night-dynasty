@@ -1,38 +1,22 @@
 import { useState } from 'react';
 import { Card } from '../components/Card';
-import { getFullSchedule } from '../../core/schedule/getFullSchedule';
+import { getCompletedSchedule, getUpcomingSchedule } from '../../core/schedule/getFullSchedule';
 import { useGameStore } from '../store/useGameStore';
 
-type ScheduleFilter = 'all' | 'currentWeek' | 'completed' | 'upcoming' | 'playoffs';
+type ScheduleFilter = 'all' | 'completed';
 
-const scheduleFilters: Array<{ id: ScheduleFilter; label: string }> = [
+export const scheduleFilters: Array<{ id: ScheduleFilter; label: string }> = [
   { id: 'all', label: 'All Games' },
-  { id: 'currentWeek', label: 'Current Week' },
-  { id: 'completed', label: 'Completed' },
-  { id: 'upcoming', label: 'Upcoming' }
+  { id: 'completed', label: 'Completed' }
 ];
 
 export function ScheduleScreen() {
   const world = useGameStore((state) => state.world)!;
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const [filter, setFilter] = useState<ScheduleFilter>('all');
-  const fullSchedule = getFullSchedule(world);
-  const hasPlayoffGames = fullSchedule.some((game) => game.stage !== 'regular');
-  const filters = hasPlayoffGames ? [...scheduleFilters, { id: 'playoffs' as const, label: 'Playoffs' }] : scheduleFilters;
-  const filteredSchedule = fullSchedule.filter((game) => {
-    switch (filter) {
-      case 'currentWeek':
-        return game.week === world.season.currentWeek;
-      case 'completed':
-        return game.status === 'Final';
-      case 'upcoming':
-        return game.status === 'Upcoming';
-      case 'playoffs':
-        return game.stage !== 'regular';
-      default:
-        return true;
-    }
-  });
+  const upcomingSchedule = getUpcomingSchedule(world);
+  const completedSchedule = getCompletedSchedule(world);
+  const filteredSchedule = filter === 'all' ? upcomingSchedule : completedSchedule;
 
   return (
     <div className="stack">
@@ -45,7 +29,7 @@ export function ScheduleScreen() {
           </div>
 
           <div className="filter-row">
-            {filters.map((option) => (
+            {scheduleFilters.map((option) => (
               <button
                 key={option.id}
                 className={filter === option.id ? 'filter-chip active' : 'filter-chip'}
@@ -60,7 +44,13 @@ export function ScheduleScreen() {
 
       <Card title="Statewide Slate">
         {filteredSchedule.length === 0 ? (
-          <p className="muted">No games match this view right now.</p>
+          <p className="muted">
+            {filter === 'all'
+              ? world.phase === 'offseason'
+                ? 'Season complete. The next live slate will appear after the offseason advance.'
+                : 'No upcoming games are on the board right now.'
+              : 'No completed games have been recorded yet.'}
+          </p>
         ) : (
           <div className="stack compact-stack">
             <div className="table-head grid-full-schedule">
@@ -92,7 +82,7 @@ export function ScheduleScreen() {
                   </button>
                   <span>{game.status}</span>
                   <strong>{game.score}</strong>
-                  <strong>{game.winnerName ?? 'N/A'}</strong>
+                  <strong>{game.winnerName ?? 'Upcoming'}</strong>
                 </div>
 
                 {game.summary ? <p className="schedule-summary">{game.summary}</p> : null}

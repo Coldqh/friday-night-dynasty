@@ -165,6 +165,27 @@ export interface SeasonLogEntry {
   gameId: string | null;
 }
 
+export type StateHeadlineType =
+  | 'preview'
+  | 'recap'
+  | 'upset'
+  | 'blowout'
+  | 'playoff'
+  | 'champion'
+  | 'offseason'
+  | 'general';
+
+export interface StateHeadline {
+  id: string;
+  year: number;
+  week: number;
+  type: StateHeadlineType;
+  title: string;
+  body: string;
+  teamIds: string[];
+  gameId: string | null;
+}
+
 export interface SeasonState {
   year: number;
   currentWeek: number;

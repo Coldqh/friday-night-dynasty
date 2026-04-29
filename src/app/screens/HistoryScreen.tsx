@@ -1,66 +1,65 @@
-import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { getHistorySnapshot } from '../../core/history/getHistorySnapshot';
-import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
+import { getLeagueHistorySnapshot } from '../../core/history/getLeagueHistorySnapshot';
 import { useGameStore } from '../store/useGameStore';
 
 export function HistoryScreen() {
   const world = useGameStore((state) => state.world)!;
-  const selectedTeamId = useGameStore((state) => state.selectedTeamId);
-  const openTeamProfile = useGameStore((state) => state.openTeamProfile);
-  const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
-  const history = getTeamHistorySnapshot(world, team.id);
-  const stateHistory = getHistorySnapshot(world);
-  const titleAppearances = stateHistory.titleGames.filter(
-    (game) => game.championId === team.id || game.runnerUpId === team.id
-  );
+  const history = getLeagueHistorySnapshot(world);
 
   return (
     <div className="stack">
-      <Card title={`${team.shortName} Program History`}>
+      <Card title="League History">
         <div className="stack compact-stack">
           <div className="stat-strip">
-            <span>Current {history.currentSeasonRecord.label}</span>
-            <span>
-              All-time {history.totalHistoricalWins}-{history.totalHistoricalLosses}
-            </span>
-            <span>Titles {history.titlesCount}</span>
-            <span>Playoffs {history.playoffAppearancesCount}</span>
+            <span>Seasons completed {history.totalSeasonsCompleted}</span>
+            <span>State finals {history.titleGames.length}</span>
+            <span>Latest champion {history.latestChampion?.championName ?? 'TBD'}</span>
           </div>
 
-          <div className="button-row">
-            <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'history', 'history')}>
-              Open Team Profile
-            </Button>
-          </div>
-
-          {history.history.length === 0 ? (
-            <p className="muted">This program is still writing its first chapter.</p>
-          ) : (
-            <div className="list">
-              {history.history.map((season) => (
-                <div className="history-item" key={`${team.id}-${season.year}`}>
-                  <div className="eyebrow">{season.year}</div>
-                  <h3>
-                    {season.wins}-{season.losses}
-                  </h3>
-                  <p>
-                    PF {season.pointsFor} · PA {season.pointsAgainst}
-                  </p>
-                  <p>{season.note}</p>
-                </div>
-              ))}
+          {history.latestChampion ? (
+            <div className="history-item">
+              <div className="eyebrow">Latest title run</div>
+              <h3>{history.latestChampion.championName}</h3>
+              <p>
+                {history.latestChampion.year} / {history.latestChampion.runnerUpName} / {history.latestChampion.finalScore}
+              </p>
+              <p>{history.latestChampion.finalSummary}</p>
             </div>
+          ) : (
+            <p className="muted">Texoma is still waiting on its first completed championship season.</p>
           )}
         </div>
       </Card>
 
-      <Card title="State Final Appearances">
-        {titleAppearances.length === 0 ? (
-          <p className="muted">This program is still waiting for its first state final appearance.</p>
+      <Card title="State Champions">
+        {history.champions.length === 0 ? (
+          <p className="muted">No champions have been crowned yet.</p>
         ) : (
           <div className="list">
-            {titleAppearances.map((game) => (
+            {history.champions.map((entry) => (
+              <div className="history-item" key={`champion-${entry.year}`}>
+                <div className="eyebrow">{entry.year}</div>
+                <h3>{entry.championName}</h3>
+                <p>
+                  Champion: <strong>{entry.championName}</strong>
+                </p>
+                <p>Runner-up: {entry.runnerUpName}</p>
+                <p>
+                  Final score: <strong>{entry.finalScore}</strong>
+                </p>
+                <p>{entry.finalSummary}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card title="State Finals">
+        {history.titleGames.length === 0 ? (
+          <p className="muted">State final results will land here once the first championship is played.</p>
+        ) : (
+          <div className="list">
+            {history.titleGames.map((game) => (
               <div className="history-item" key={game.gameId}>
                 <div className="eyebrow">{game.year}</div>
                 <h3>
@@ -79,6 +78,20 @@ export function HistoryScreen() {
           </div>
         )}
       </Card>
+
+      {history.timeline.length > 0 && (
+        <Card title="League Timeline">
+          <div className="list">
+            {history.timeline.map((entry) => (
+              <div className="history-item" key={entry.id}>
+                <div className="eyebrow">{entry.year}</div>
+                <strong>{entry.title}</strong>
+                <p>{entry.body}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
