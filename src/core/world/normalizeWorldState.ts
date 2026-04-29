@@ -1,4 +1,4 @@
-import { GameWorld, SeasonLogEntry, WorldHistory } from './worldTypes';
+import { GameWorld, SeasonLogEntry, TeamHistoryEntry, WorldHistory } from './worldTypes';
 
 type LegacySeasonHistory = {
   year: number;
@@ -21,6 +21,26 @@ type LegacyWorld = GameWorld & {
     seasons?: LegacySeasonHistory[];
   };
 };
+
+type LegacyTeamHistoryEntry = Partial<TeamHistoryEntry> & Pick<TeamHistoryEntry, 'year' | 'wins' | 'losses' | 'pointsFor' | 'pointsAgainst' | 'note'>;
+
+function normalizeTeamHistoryEntry(entry: LegacyTeamHistoryEntry): TeamHistoryEntry {
+  const playoffAppearance = entry.playoffAppearance ?? entry.madePlayoffs ?? false;
+  const titleWon = entry.titleWon ?? entry.wonTitle ?? false;
+
+  return {
+    year: entry.year,
+    wins: entry.wins,
+    losses: entry.losses,
+    pointsFor: entry.pointsFor,
+    pointsAgainst: entry.pointsAgainst,
+    madePlayoffs: playoffAppearance,
+    playoffAppearance,
+    wonTitle: titleWon,
+    titleWon,
+    note: entry.note
+  };
+}
 
 function toChampionHistory(season: LegacySeasonHistory) {
   return {
@@ -73,7 +93,10 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     return {
       ...team,
       playerIds,
-      roster: [...playerIds]
+      roster: [...playerIds],
+      history: Array.isArray(team.history)
+        ? team.history.map((entry) => normalizeTeamHistoryEntry(entry as LegacyTeamHistoryEntry))
+        : []
     };
   });
 

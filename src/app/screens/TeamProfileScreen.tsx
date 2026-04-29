@@ -19,7 +19,7 @@ export function TeamProfileScreen() {
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
   const teamProfileTab = useGameStore((state) => state.teamProfileTab);
   const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
-  const setScreen = useGameStore((state) => state.setScreen);
+  const closeTeamProfile = useGameStore((state) => state.closeTeamProfile);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const identity = getTeamIdentityProfile(world, team.id);
   const leaders = getTeamLeaders(world, team.id);
@@ -42,7 +42,7 @@ export function TeamProfileScreen() {
       <Card title="Team Profile">
         <div className="stack compact-stack">
           <div className="eyebrow">
-            {team.cityName} · {team.mascot}
+            {team.schoolName} · {team.cityName} · {team.mascot}
           </div>
           <h3 className="profile-title">{team.name}</h3>
           <div className="stat-strip">
@@ -51,14 +51,13 @@ export function TeamProfileScreen() {
             <span>OVR {team.overallRating}</span>
             <span>OFF {team.offenseRating}</span>
             <span>DEF {team.defenseRating}</span>
+            <span>{team.offenseStyle}</span>
+            <span>{team.defenseStyle}</span>
             <span>{identity.programTier}</span>
           </div>
           <div className="button-row">
-            <Button variant="ghost" onClick={() => setScreen('roster')}>
-              Back to Teams
-            </Button>
-            <Button variant="ghost" onClick={() => setScreen('rankings')}>
-              Back to Standings
+            <Button variant="ghost" onClick={closeTeamProfile}>
+              Back
             </Button>
           </div>
         </div>
@@ -87,7 +86,7 @@ export function TeamProfileScreen() {
               <p className="muted">
                 {standing
                   ? `${team.shortName} is currently #${standing.rank} in the state at ${standing.wins}-${standing.losses}, with ${standing.pointsFor} points scored and ${standing.pointsAgainst} allowed.`
-                  : `${team.shortName} is still settling into the current season.`}
+                  : `${team.shortName} is settling into a fresh season.`}
               </p>
             </div>
           </Card>

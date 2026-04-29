@@ -83,7 +83,9 @@ export interface TeamHistoryEntry {
   pointsFor: number;
   pointsAgainst: number;
   madePlayoffs: boolean;
+  playoffAppearance: boolean;
   wonTitle: boolean;
+  titleWon: boolean;
   note: string;
 }
 

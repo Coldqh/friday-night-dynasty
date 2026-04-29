@@ -7,8 +7,7 @@ import { useGameStore } from '../store/useGameStore';
 export function HistoryScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
-  const setScreen = useGameStore((state) => state.setScreen);
-  const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
+  const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const history = getTeamHistorySnapshot(world, team.id);
   const stateHistory = getHistorySnapshot(world);
@@ -28,17 +27,13 @@ export function HistoryScreen() {
             <span>Titles {history.titlesCount}</span>
             <span>Playoffs {history.playoffAppearancesCount}</span>
           </div>
+
           <div className="button-row">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setTeamProfileTab('history');
-                setScreen('teamProfile');
-              }}
-            >
+            <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'history', 'history')}>
               Open Team Profile
             </Button>
           </div>
+
           {history.history.length === 0 ? (
             <p className="muted">This program is still writing its first chapter.</p>
           ) : (
