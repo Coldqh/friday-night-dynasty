@@ -171,6 +171,11 @@ export type StateHeadlineType =
   | 'upset'
   | 'blowout'
   | 'playoff'
+  | 'playoffRace'
+  | 'undefeatedWatch'
+  | 'mustWin'
+  | 'lateSeason'
+  | 'rivalry'
   | 'champion'
   | 'offseason'
   | 'general';

@@ -16,6 +16,34 @@ import {
   Team
 } from './worldTypes';
 
+function assignRivalries(teams: Team[]) {
+  const teamsByCity = new Map<string, Team[]>();
+
+  teams.forEach((team) => {
+    const cityTeams = teamsByCity.get(team.cityId) ?? [];
+    cityTeams.push(team);
+    teamsByCity.set(team.cityId, cityTeams);
+  });
+
+  teams.forEach((team) => {
+    team.rivalryIds = [];
+  });
+
+  teamsByCity.forEach((cityTeams) => {
+    if (cityTeams.length < 2) {
+      return;
+    }
+
+    const [first, second] = cityTeams;
+    if (!first || !second) {
+      return;
+    }
+
+    first.rivalryIds = [second.id];
+    second.rivalryIds = [first.id];
+  });
+}
+
 export function createWorld({ seed }: { seed: number }): GameWorld {
   const rng = new SeededRng(seed);
   const state = { id: 'state_texoma', name: 'Texoma' };
@@ -101,11 +129,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     team.playerIds = roster;
   });
 
-  teams.forEach((team) => {
-    team.rivalryIds = teams
-      .filter((candidate) => candidate.cityId === team.cityId && candidate.id !== team.id)
-      .map((candidate) => candidate.id);
-  });
+  assignRivalries(teams);
 
   const schedule = generateSchedule({ rng, teams, weeks: 10 });
   const kickoffNews = {

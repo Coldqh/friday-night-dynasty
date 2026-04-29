@@ -2,6 +2,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
+import { getWeekStakes } from '../../core/stakes/getWeekStakes';
 import { useGameStore } from '../store/useGameStore';
 
 function getSeasonStatusLabel({
@@ -28,12 +29,17 @@ function getSeasonStatusLabel({
   return 'Regular Season';
 }
 
+export function getDashboardStatusPills(seasonStatus: string, teamCount: number) {
+  return [seasonStatus, `${teamCount} Teams`];
+}
+
 export function DashboardScreen() {
   const world = useGameStore((state) => state.world)!;
   const simNextWeek = useGameStore((state) => state.simNextWeek);
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const slate = getWeeklySlate(world);
+  const weekStakes = getWeekStakes(world);
   const headlines = generateWeeklyHeadlines(world).slice(0, 5);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
@@ -63,9 +69,9 @@ export function DashboardScreen() {
         </div>
 
         <div className="stat-strip">
-          <span>{seasonStatus}</span>
-          <span>{world.teams.length} Teams</span>
-          <span>{world.season.completedGames.length} Completed Games</span>
+          {getDashboardStatusPills(seasonStatus, world.teams.length).map((item) => (
+            <span key={item}>{item}</span>
+          ))}
         </div>
 
         <div className="button-row">
@@ -108,10 +114,11 @@ export function DashboardScreen() {
                 <strong>
                   {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
                 </strong>
-                <div className="stat-strip">
-                  <span>{slate.gameOfTheWeek.reason}</span>
-                  <span>{slate.gameOfTheWeek.status}</span>
-                  <span>{slate.gameOfTheWeek.score}</span>
+                <div className="tag-row">
+                  {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{slate.gameOfTheWeek.shortLabel}</span> : null}
+                  <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
+                  <span className="tag-chip subdued">{slate.gameOfTheWeek.status}</span>
+                  <span className="tag-chip subdued">{slate.gameOfTheWeek.score}</span>
                 </div>
                 {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
               </div>
@@ -122,22 +129,29 @@ export function DashboardScreen() {
 
           <Card title="Weekly Slate">
             {slate.notableGames.length === 0 ? (
-              <p className="muted">No additional featured matchups are available for this week yet.</p>
+              <p className="muted">{weekStakes.summary}</p>
             ) : (
-              <div className="list">
-                {slate.notableGames.map((game) => (
-                  <div className="history-item" key={`${game.gameId}-notable`}>
-                    <div className="eyebrow">
-                      Week {game.week + 1} / {game.stageLabel}
+              <div className="stack compact-stack">
+                <p className="muted">{weekStakes.summary}</p>
+                <div className="list">
+                  {slate.notableGames.map((game) => (
+                    <div className="history-item" key={`${game.gameId}-notable`}>
+                      <div className="eyebrow">
+                        Week {game.week + 1} / {game.stageLabel}
+                      </div>
+                      <strong>
+                        {game.awayTeamName} at {game.homeTeamName}
+                      </strong>
+                      <div className="tag-row">
+                        {game.shortLabel ? <span className="tag-chip">{game.shortLabel}</span> : null}
+                        <span className="tag-chip subdued">{game.reason}</span>
+                      </div>
+                      <p>
+                        {game.status} / {game.score}
+                      </p>
                     </div>
-                    <strong>
-                      {game.awayTeamName} at {game.homeTeamName}
-                    </strong>
-                    <p>
-                      {game.reason} / {game.status} / {game.score}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </Card>
@@ -181,9 +195,9 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Season Journal">
+      <Card title="Recent Events">
         {recentSeasonEntries.length === 0 ? (
-          <p className="muted">The season journal will populate once games and story beats hit the calendar.</p>
+          <p className="muted">Recent events will populate once games and story beats hit the calendar.</p>
         ) : (
           <div className="list">
             {recentSeasonEntries.map((entry) => (
