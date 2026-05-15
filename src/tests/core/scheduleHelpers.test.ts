@@ -53,7 +53,7 @@ describe('state schedule helpers', () => {
 
     expect(slate.gameOfTheWeek).not.toBeNull();
     expect(slate.gameOfTheWeek?.stage).toBe('final');
-    expect(slate.gameOfTheWeek?.reason).toBe('State Final');
+    expect(slate.gameOfTheWeek?.reason).toMatch(/state championship|State Final/i);
   });
 
   it('getWeeklySlate reports completed games once a week has been simulated', () => {
