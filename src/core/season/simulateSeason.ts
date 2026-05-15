@@ -1,5 +1,6 @@
 import { recordSeasonHistory } from '../history/recordSeasonHistory';
 import { makeId, SeededRng } from '../random/rng';
+import { toRankingSnapshot } from '../rankings/calculateRankings';
 import { calculateStandings } from '../standings/calculateStandings';
 import { simulateGame, PlayerGameUpdate } from '../games/simulateGame';
 import { GameWorld, ScheduledGame } from '../world/worldTypes';
@@ -147,6 +148,8 @@ export function simulateWeek(input: GameWorld): GameWorld {
   if (world.phase === 'offseason') {
     return world;
   }
+
+  world.season.previousRankings = toRankingSnapshot(world);
 
   if (world.phase === 'regular') {
     const week = world.season.schedule[world.season.currentWeek];

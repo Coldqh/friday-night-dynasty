@@ -1,5 +1,7 @@
+import { calculateProgramMomentum } from '../momentum/calculateProgramMomentum';
 import { getWeeklySlate } from '../schedule/getWeeklySlate';
 import { getWeekStakes } from '../stakes/getWeekStakes';
+import { getPollPressure } from '../rankings/getPollPressure';
 import { makeId, SeededRng } from '../random/rng';
 import { GameWorld, ScheduledGame, StateHeadline, StateHeadlineType, TeamStanding } from '../world/worldTypes';
 
@@ -189,6 +191,11 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
   const slate = getWeeklySlate(world);
   const weekStakes = getWeekStakes(world);
   const standings = world.season.standings;
+  const pollPressure = getPollPressure(world);
+  const momentumByTeam = world.teams.map((team) => ({
+    team,
+    momentum: calculateProgramMomentum(world, team.id)
+  }));
   const headlines: StateHeadline[] = [];
   const seenKeys = new Set<string>();
 
@@ -327,6 +334,61 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
         title: 'The state title race is down to the heavyweights',
         body: `${contenders.map((entry) => entry.teamName).join(', ')} are the programs still chasing the crown.`,
         teamIds: contenders.map((entry) => entry.teamId)
+      })
+    );
+  }
+
+  const hottestProgram = [...momentumByTeam].sort((left, right) => right.momentum.score - left.momentum.score)[0];
+  if (hottestProgram && hottestProgram.momentum.score >= 25) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'momentum',
+        title: `${hottestProgram.team.shortName} is building real momentum`,
+        body: `${hottestProgram.team.shortName} looks ${hottestProgram.momentum.label.toLowerCase()} after ${hottestProgram.momentum.reasons.join(', ').toLowerCase()}.`,
+        teamIds: [hottestProgram.team.id]
+      })
+    );
+  }
+
+  const coldProgram = [...momentumByTeam].sort((left, right) => left.momentum.score - right.momentum.score)[0];
+  if (coldProgram && coldProgram.momentum.score <= -20) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'momentum',
+        title: `${coldProgram.team.shortName} is under pressure`,
+        body: `${coldProgram.team.shortName} feels shaky after ${coldProgram.momentum.reasons.join(', ').toLowerCase()}.`,
+        teamIds: [coldProgram.team.id]
+      })
+    );
+  }
+
+  const topMover = pollPressure.find((entry) => entry.movement === 'up' && entry.movementAmount >= 2);
+  if (topMover) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'pollPressure',
+        title: `${topMover.teamName} surges in the rankings`,
+        body: topMover.reason,
+        teamIds: [topMover.teamId]
+      })
+    );
+  }
+
+  const pressureProgram = pollPressure.find(
+    (entry) => entry.pressureLabel === 'Must Respond' || entry.pressureLabel === 'Playoff Bubble' || entry.pressureLabel === 'Outside Looking In'
+  );
+  if (pressureProgram) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'pollPressure',
+        title:
+          pressureProgram.pressureLabel === 'Playoff Bubble'
+            ? `${pressureProgram.teamName} is fighting for playoff air`
+            : pressureProgram.pressureLabel === 'Outside Looking In'
+              ? `${pressureProgram.teamName} is chasing the playoff line`
+              : `${pressureProgram.teamName} must answer quickly`,
+        body: pressureProgram.reason,
+        teamIds: [pressureProgram.teamId]
       })
     );
   }

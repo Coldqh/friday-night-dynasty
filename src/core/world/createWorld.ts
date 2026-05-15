@@ -159,6 +159,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
       schedule,
       completedGames: [],
       standings: calculateStandings(teams),
+      previousRankings: [],
       playoffTeams: [],
       playoffGames: [],
       championId: null,

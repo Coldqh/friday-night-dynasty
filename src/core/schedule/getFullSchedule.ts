@@ -1,3 +1,4 @@
+import { formatTeamContext } from '../teams/formatTeamContext';
 import { GameWorld, MatchStage, ScheduledGame, Team } from '../world/worldTypes';
 
 export type FullScheduleStatus = 'Upcoming' | 'Final';
@@ -9,8 +10,10 @@ export interface FullScheduleEntry {
   stageLabel: 'Regular Season' | 'Semifinal' | 'State Final';
   awayTeamId: string;
   awayTeamName: string;
+  awayTeamContextLabel: string;
   homeTeamId: string;
   homeTeamName: string;
+  homeTeamContextLabel: string;
   awayScore: number | null;
   homeScore: number | null;
   winnerId: string | null;
@@ -62,6 +65,8 @@ function getTeamName(team: Team | undefined) {
 function createFullScheduleEntry(world: GameWorld, game: ScheduledGame): FullScheduleEntry {
   const homeTeam = world.teams.find((team) => team.id === game.homeTeamId);
   const awayTeam = world.teams.find((team) => team.id === game.awayTeamId);
+  const homeContext = formatTeamContext(world, game.homeTeamId);
+  const awayContext = formatTeamContext(world, game.awayTeamId);
   const winnerName = game.winnerId ? getTeamName(world.teams.find((team) => team.id === game.winnerId)) : null;
   const played = game.homeScore !== null && game.awayScore !== null;
 
@@ -72,14 +77,16 @@ function createFullScheduleEntry(world: GameWorld, game: ScheduledGame): FullSch
     stageLabel: getStageLabel(game.stage),
     awayTeamId: game.awayTeamId,
     awayTeamName: getTeamName(awayTeam),
+    awayTeamContextLabel: awayContext.fullContextLabel,
     homeTeamId: game.homeTeamId,
     homeTeamName: getTeamName(homeTeam),
+    homeTeamContextLabel: homeContext.fullContextLabel,
     awayScore: game.awayScore,
     homeScore: game.homeScore,
     winnerId: game.winnerId,
     winnerName,
     summary: game.summary,
-    score: played ? `${game.awayScore}-${game.homeScore}` : 'Upcoming',
+    score: played ? `${game.awayScore}-${game.homeScore}` : '',
     status: played ? 'Final' : 'Upcoming'
   };
 }
@@ -94,13 +101,24 @@ export function getFullSchedule(world: GameWorld): FullScheduleEntry[] {
 export function getUpcomingSchedule(world: GameWorld): FullScheduleEntry[] {
   const fullSchedule = getFullSchedule(world);
   const upcomingGames = fullSchedule.filter((game) => game.status === 'Upcoming');
+  const playoffGames = fullSchedule.filter((game) => game.stage !== 'regular');
 
   if (upcomingGames.length > 0) {
     const currentWeekGames = upcomingGames.filter((game) => game.week === world.season.currentWeek);
     const anchorWeek =
       currentWeekGames.length > 0 ? world.season.currentWeek : Math.min(...upcomingGames.map((game) => game.week));
 
-    return upcomingGames.filter((game) => game.week >= anchorWeek).sort(compareScheduleAscending);
+    const coreUpcoming = upcomingGames.filter((game) => game.week >= anchorWeek);
+    const mergedGames =
+      playoffGames.length > 0
+        ? [...coreUpcoming, ...playoffGames.filter((game) => !coreUpcoming.some((item) => item.gameId === game.gameId))]
+        : coreUpcoming;
+
+    return mergedGames.sort(compareScheduleAscending);
+  }
+
+  if (playoffGames.length > 0) {
+    return [...playoffGames].sort(compareScheduleDescending);
   }
 
   if (world.phase === 'offseason') {

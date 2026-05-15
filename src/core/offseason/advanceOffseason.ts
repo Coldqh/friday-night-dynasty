@@ -178,6 +178,7 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     schedule: generateSchedule({ rng, teams: world.teams, weeks: world.season.regularSeasonWeeks }),
     completedGames: [],
     standings: calculateStandings(world.teams),
+    previousRankings: [],
     playoffTeams: [],
     playoffGames: [],
     championId: null,

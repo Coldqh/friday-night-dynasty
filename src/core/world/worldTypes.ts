@@ -156,6 +156,12 @@ export interface TeamStanding {
   overallRating: number;
 }
 
+export interface RankingSnapshotEntry {
+  teamId: string;
+  rank: number;
+  rating: number;
+}
+
 export interface SeasonLogEntry {
   id: string;
   year: number;
@@ -170,6 +176,8 @@ export type StateHeadlineType =
   | 'recap'
   | 'upset'
   | 'blowout'
+  | 'momentum'
+  | 'pollPressure'
   | 'playoff'
   | 'playoffRace'
   | 'undefeatedWatch'
@@ -198,6 +206,7 @@ export interface SeasonState {
   schedule: ScheduleWeek[];
   completedGames: ScheduledGame[];
   standings: TeamStanding[];
+  previousRankings: RankingSnapshotEntry[];
   playoffTeams: string[];
   playoffGames: ScheduledGame[];
   championId: string | null;

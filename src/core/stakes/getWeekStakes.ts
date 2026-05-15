@@ -9,12 +9,13 @@ export type WeekStakeLabel =
   | 'Undefeated Watch'
   | 'Top-Four Showdown'
   | 'Playoff Race'
-  | 'Late-season Must Win';
+  | 'Late-season Must Win'
+  | 'Evenly Matched Programs';
 
 export interface WeekStakeGame extends FullScheduleEntry {
   isRivalry: boolean;
   stakes: WeekStakeLabel[];
-  shortLabel: WeekStakeLabel | null;
+  shortLabel: string | null;
   priorityScore: number;
 }
 
@@ -85,14 +86,16 @@ function createProjectedGame(
     stageLabel: getProjectedStageLabel(stage),
     awayTeamId,
     awayTeamName: awayTeam?.shortName ?? 'Unknown Team',
+    awayTeamContextLabel: awayTeam ? `${awayTeam.shortName} (${awayTeam.wins}-${awayTeam.losses}, OVR ${awayTeam.overallRating})` : 'Unknown Team (0-0, OVR --)',
     homeTeamId,
     homeTeamName: homeTeam?.shortName ?? 'Unknown Team',
+    homeTeamContextLabel: homeTeam ? `${homeTeam.shortName} (${homeTeam.wins}-${homeTeam.losses}, OVR ${homeTeam.overallRating})` : 'Unknown Team (0-0, OVR --)',
     awayScore: null,
     homeScore: null,
     winnerId: null,
     winnerName: null,
     summary,
-    score: 'Upcoming',
+    score: '',
     status: 'Upcoming'
   };
 }
@@ -166,45 +169,84 @@ function buildStakeLabels(world: GameWorld, game: FullScheduleEntry): WeekStakeL
   const homeStanding = world.season.standings.find((entry) => entry.teamId === game.homeTeamId);
   const lateSeasonRegular =
     world.phase === 'regular' && world.season.currentWeek >= Math.max(0, world.season.regularSeasonWeeks - 3);
-  const labels: WeekStakeLabel[] = [];
+  const labels = new Set<WeekStakeLabel>();
   const bestRank = Math.min(awayStanding?.rank ?? 99, homeStanding?.rank ?? 99);
   const worstRank = Math.max(awayStanding?.rank ?? 99, homeStanding?.rank ?? 99);
+  const overallGap = Math.abs((awayTeam?.overallRating ?? 0) - (homeTeam?.overallRating ?? 0));
   const unbeatenGame =
-    (awayTeam?.wins ?? 0) >= 2 &&
-    (homeTeam?.wins ?? 0) >= 2 &&
+    ((awayTeam?.wins ?? 0) >= 2 || (homeTeam?.wins ?? 0) >= 2) &&
     ((awayTeam?.losses ?? 1) === 0 || (homeTeam?.losses ?? 1) === 0);
 
   if (game.stage === 'final') {
-    labels.push('State Final');
+    labels.add('State Final');
   } else if (game.stage === 'semifinal') {
-    labels.push('Playoff Semifinal');
+    labels.add('Playoff Semifinal');
   }
 
   if (isRivalryGame(world, game)) {
-    labels.push('Rivalry Game');
+    labels.add('Rivalry Game');
   }
 
   if (unbeatenGame) {
-    labels.push('Undefeated Watch');
+    labels.add('Undefeated Watch');
   }
 
   if (bestRank <= 4 && worstRank <= 4) {
-    labels.push('Top-Four Showdown');
+    labels.add('Top-Four Showdown');
   }
 
   if (lateSeasonRegular && bestRank <= 6 && worstRank <= 10) {
-    labels.push('Playoff Race');
+    labels.add('Playoff Race');
   }
 
-  if (lateSeasonRegular && [4, 5, 6, 7, 8].includes(awayStanding?.rank ?? -1)) {
-    labels.push('Late-season Must Win');
+  if (lateSeasonRegular && ([4, 5, 6, 7, 8].includes(awayStanding?.rank ?? -1) || [4, 5, 6, 7, 8].includes(homeStanding?.rank ?? -1))) {
+    labels.add('Late-season Must Win');
   }
 
-  if (lateSeasonRegular && [4, 5, 6, 7, 8].includes(homeStanding?.rank ?? -1) && !labels.includes('Late-season Must Win')) {
-    labels.push('Late-season Must Win');
+  if (overallGap <= 3) {
+    labels.add('Evenly Matched Programs');
   }
 
-  return labels;
+  return [...labels];
+}
+
+function getPrimaryStakeLabel(stakes: WeekStakeLabel[]) {
+  if (stakes.includes('State Final')) {
+    return 'State Final';
+  }
+
+  if (stakes.includes('Playoff Semifinal')) {
+    return 'Playoff Semifinal';
+  }
+
+  if (
+    stakes.includes('Rivalry Game') &&
+    (stakes.includes('Playoff Race') || stakes.includes('Late-season Must Win') || stakes.includes('Top-Four Showdown'))
+  ) {
+    return 'Rivalry with Playoff Pressure';
+  }
+
+  if (stakes.includes('Rivalry Game')) {
+    return 'Rivalry Game';
+  }
+
+  if (stakes.includes('Undefeated Watch')) {
+    return 'Unbeaten Watch';
+  }
+
+  if (stakes.includes('Playoff Race')) {
+    return 'Playoff Race';
+  }
+
+  if (stakes.includes('Top-Four Showdown')) {
+    return 'Top-Four Showdown';
+  }
+
+  if (stakes.includes('Evenly Matched Programs')) {
+    return 'Evenly Matched Programs';
+  }
+
+  return stakes[0] ?? null;
 }
 
 function getPriorityScore(world: GameWorld, game: FullScheduleEntry, stakes: WeekStakeLabel[]) {
@@ -217,17 +259,19 @@ function getPriorityScore(world: GameWorld, game: FullScheduleEntry, stakes: Wee
       case 'State Final':
         return sum + 1000;
       case 'Playoff Semifinal':
-        return sum + 650;
+        return sum + 700;
       case 'Rivalry Game':
-        return sum + 230;
+        return sum + 240;
       case 'Undefeated Watch':
-        return sum + 180;
+        return sum + 190;
       case 'Top-Four Showdown':
         return sum + 170;
       case 'Playoff Race':
-        return sum + 140;
+        return sum + 150;
       case 'Late-season Must Win':
-        return sum + 110;
+        return sum + 120;
+      case 'Evenly Matched Programs':
+        return sum + 70;
       default:
         return sum;
     }
@@ -251,14 +295,14 @@ function buildStakeGame(world: GameWorld, game: FullScheduleEntry): WeekStakeGam
     ...game,
     isRivalry: stakes.includes('Rivalry Game'),
     stakes,
-    shortLabel: stakes[0] ?? null,
+    shortLabel: getPrimaryStakeLabel(stakes),
     priorityScore: getPriorityScore(world, game, stakes)
   };
 }
 
 function getSummary(world: GameWorld, gamesThisWeek: WeekStakeGame[]) {
   if (world.phase === 'offseason') {
-    return 'The title race is over, but the state still remembers the biggest games from the final run.';
+    return 'The title race is over, but the state is still carrying the mood of the final run.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('State Final'))) {
@@ -267,6 +311,10 @@ function getSummary(world: GameWorld, gamesThisWeek: WeekStakeGame[]) {
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Playoff Semifinal'))) {
     return 'The final four are fighting for a trip to the state final.';
+  }
+
+  if (gamesThisWeek.some((game) => game.shortLabel === 'Rivalry with Playoff Pressure')) {
+    return 'Rivalry heat and playoff pressure are colliding in the same spotlight.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Rivalry Game'))) {
@@ -288,7 +336,10 @@ export function getWeekStakes(world: GameWorld): WeekStakes {
   const { currentWeek, gamesThisWeek } = getActiveWeekGames(world);
   const annotatedGames = gamesThisWeek
     .map((game) => buildStakeGame(world, game))
-    .sort((left, right) => right.priorityScore - left.priorityScore || left.awayTeamName.localeCompare(right.awayTeamName));
+    .sort(
+      (left, right) =>
+        right.priorityScore - left.priorityScore || left.awayTeamName.localeCompare(right.awayTeamName)
+    );
   const topStakeGame = annotatedGames[0] ?? null;
 
   return {

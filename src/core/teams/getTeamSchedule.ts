@@ -1,5 +1,6 @@
 import { GameWorld, MatchStage, ScheduledGame } from '../world/worldTypes';
 import { isRivalryGame } from '../rivalries/isRivalryGame';
+import { formatTeamContext } from './formatTeamContext';
 
 export interface TeamScheduleEntry {
   gameId: string;
@@ -7,6 +8,7 @@ export interface TeamScheduleEntry {
   stage: MatchStage;
   opponentTeamId: string;
   opponentName: string;
+  opponentContextLabel: string;
   homeAway: 'Home' | 'Away';
   result: 'W' | 'L' | null;
   teamScore: number | null;
@@ -27,6 +29,7 @@ function createScheduleEntry(world: GameWorld, teamId: string, game: ScheduledGa
 
   const opponentTeamId = isHome ? game.awayTeamId : game.homeTeamId;
   const opponent = world.teams.find((team) => team.id === opponentTeamId);
+  const opponentContext = formatTeamContext(world, opponentTeamId);
   const teamScore = isHome ? game.homeScore : game.awayScore;
   const opponentScore = isHome ? game.awayScore : game.homeScore;
   const played = teamScore !== null && opponentScore !== null;
@@ -37,6 +40,7 @@ function createScheduleEntry(world: GameWorld, teamId: string, game: ScheduledGa
     stage: game.stage,
     opponentTeamId,
     opponentName: opponent?.shortName ?? 'Unknown Opponent',
+    opponentContextLabel: opponentContext.fullContextLabel,
     homeAway: isHome ? 'Home' : 'Away',
     result: game.winnerId ? (game.winnerId === teamId ? 'W' : 'L') : null,
     teamScore,

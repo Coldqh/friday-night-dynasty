@@ -141,7 +141,8 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     teams: world.teams,
     season: {
       ...world.season,
-      seasonLog
+      seasonLog,
+      previousRankings: Array.isArray(world.season.previousRankings) ? world.season.previousRankings : []
     },
     history: {
       champions,

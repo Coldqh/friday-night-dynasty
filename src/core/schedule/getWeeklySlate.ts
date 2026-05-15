@@ -14,43 +14,32 @@ export interface WeeklySlate {
 }
 
 function getImportanceReason(world: GameWorld, game: WeekStakeGame) {
-  if (game.stage === 'final') {
-    return 'State Final';
+  switch (game.shortLabel) {
+    case 'State Final':
+      return 'A state championship hangs on four quarters.';
+    case 'Playoff Semifinal':
+      return 'Win and the path to the title stays alive.';
+    case 'Rivalry with Playoff Pressure':
+      return 'Pride and playoff seeding are both on the line.';
+    case 'Rivalry Game':
+      return 'The biggest local bragging rights game of the week.';
+    case 'Unbeaten Watch':
+      return 'A perfect season is still standing at kickoff.';
+    case 'Playoff Race':
+      return 'One result could swing the final-four picture.';
+    case 'Top-Four Showdown':
+      return 'Two of the state heavyweights are colliding.';
+    case 'Evenly Matched Programs':
+      return 'These programs are separated by only a sliver.';
+    default:
+      break;
   }
 
-  if (game.stage === 'semifinal') {
-    return 'Playoff semifinal';
+  if (world.phase === 'playoffs') {
+    return 'Every playoff snap is raising the stakes across the state.';
   }
 
-  if (game.stakes.includes('Rivalry Game') && game.stakes.includes('Playoff Race')) {
-    return 'Rivalry spotlight with playoff pressure';
-  }
-
-  if (game.stakes.includes('Rivalry Game')) {
-    return 'Rivalry spotlight';
-  }
-
-  if (game.stakes.includes('Undefeated Watch')) {
-    return 'Unbeaten season on the line';
-  }
-
-  if (game.stakes.includes('Top-Four Showdown')) {
-    return 'Top-four showdown';
-  }
-
-  if (game.stakes.includes('Playoff Race')) {
-    return 'Playoff race';
-  }
-
-  if (game.stakes.includes('Late-season Must Win')) {
-    return 'Late-season must-win';
-  }
-
-  if (game.stakes.length > 0) {
-    return game.stakes[0];
-  }
-
-  return 'Friday night spotlight';
+  return 'Friday night spotlight is landing on this matchup.';
 }
 
 function buildSlateEntry(world: GameWorld, game: WeekStakeGame): WeeklySlateEntry {
