@@ -4,6 +4,7 @@ import { developPlayer } from '../players/developPlayer';
 import { emptyStats } from '../players/generatePlayers';
 import { generateFreshmanClass } from '../players/generateFreshmanClass';
 import { makeId, SeededRng } from '../random/rng';
+import { processRecruitingClass } from '../recruiting/processRecruitingClass';
 import { generateSchedule } from '../schedule/generateSchedule';
 import { calculateStandings } from '../standings/calculateStandings';
 import { calculateTeamRatings } from '../teams/calculateTeamRatings';
@@ -58,11 +59,7 @@ function buildTeamHistoryEntry(world: GameWorld, team: Team): TeamHistoryEntry {
     playoffAppearance,
     wonTitle: titleWon,
     titleWon,
-    note: titleWon
-      ? `${team.shortName} выиграла титул Texoma.`
-      : playoffAppearance
-        ? `${team.shortName} дошла до финальной четвёрки.`
-        : `${team.shortName} завершила сезон ${team.wins}-${team.losses}.`
+    note: ''
   };
 }
 
@@ -82,6 +79,7 @@ function ensureTeamHistoryRecorded(world: GameWorld) {
     history[existingIndex] = {
       ...entry,
       ...history[existingIndex],
+      note: history[existingIndex].note ?? '',
       madePlayoffs: history[existingIndex].madePlayoffs ?? history[existingIndex].playoffAppearance ?? entry.madePlayoffs,
       playoffAppearance:
         history[existingIndex].playoffAppearance ?? history[existingIndex].madePlayoffs ?? entry.playoffAppearance,
@@ -117,13 +115,11 @@ function buildGraduatedPlayer(player: Player): Player {
 function graduatePeople({
   people,
   graduatingPlayers,
-  teamsById,
   year,
   rng
 }: {
   people: Person[];
   graduatingPlayers: Player[];
-  teamsById: Map<string, Team>;
   year: number;
   rng: SeededRng;
 }): Person[] {
@@ -138,14 +134,13 @@ function graduatePeople({
       return person;
     }
 
-    const team = teamsById.get(graduatingPlayer.teamId);
     const event = createCareerEvent({
       rng,
       year,
       week: 0,
       type: 'graduation',
-      title: `${graduatingPlayer.firstName} ${graduatingPlayer.lastName} окончил школу`,
-      body: `${graduatingPlayer.position} ${graduatingPlayer.firstName} ${graduatingPlayer.lastName} завершил школьный этап в ${team?.shortName ?? 'своей программе'} и попал в пул выпускников.`,
+      title: `${graduatingPlayer.firstName} ${graduatingPlayer.lastName}: выпуск`,
+      body: '',
       teamId: graduatingPlayer.teamId,
       schoolId: graduatingPlayer.schoolId
     });
@@ -183,7 +178,6 @@ export function advanceOffseason(input: GameWorld): GameWorld {
   world.history = recordSeasonHistory(world);
 
   const rng = new SeededRng(world.seed + (world.season.year + 1) * 9973);
-  const teamsById = new Map(world.teams.map((team) => [team.id, team]));
   const graduatingPlayers = world.players
     .filter((player) => player.classYear === 'SR')
     .map((player) => buildGraduatedPlayer(normalizePlayerIdentity(player, 'graduated')));
@@ -200,16 +194,30 @@ export function advanceOffseason(input: GameWorld): GameWorld {
         careerStage: 'highSchool' as const
       };
     });
-  const nextPlayers: Player[] = [];
-  const nextPeople: Person[] = graduatePeople({
+  let nextPeople: Person[] = graduatePeople({
     people: world.people ?? [],
     graduatingPlayers,
-    teamsById,
     year: world.season.year,
     rng
   });
 
-  world.graduatedPlayers = [...(world.graduatedPlayers ?? []), ...graduatingPlayers];
+  const recruitingResult = processRecruitingClass({
+    world,
+    graduatingPlayers,
+    people: nextPeople,
+    rng,
+    year: world.season.year
+  });
+
+  nextPeople = recruitingResult.people;
+  world.graduatedPlayers = [...(world.graduatedPlayers ?? []), ...recruitingResult.graduatedPlayers];
+  world.recruitingProfiles = [
+    ...(world.recruitingProfiles ?? []).filter((profile) => profile.year !== world.season.year),
+    ...recruitingResult.profiles
+  ];
+  world.commitments = [...(world.commitments ?? []), ...recruitingResult.commitments];
+
+  const nextPlayers: Player[] = [];
 
   world.teams = world.teams.map((team) => {
     const school = world.schools.find((entry) => entry.id === team.schoolId)!;
@@ -272,8 +280,8 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     id: makeId('news', rng),
     year: world.currentYear,
     week: 0,
-    headline: 'Межсезонье завершено',
-    body: `${graduatingPlayers.length} выпускников попали в общий пул, новички пришли в школы, Texoma готовится к новому сезону.`
+    headline: 'Межсезонье',
+    body: ''
   });
 
   return world;

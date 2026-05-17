@@ -1,11 +1,37 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { useGameStore } from '../store/useGameStore';
 
 export function RosterScreen() {
   const world = useGameStore((state) => state.world)!;
+  const activeLeague = useGameStore((state) => state.activeLeague);
   const selectTeam = useGameStore((state) => state.selectTeam);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
+
+  if (activeLeague === 'college') {
+    const collegeTeams = getCollegeStandings(world);
+
+    return (
+      <Card title="Колледжи">
+        {collegeTeams.length === 0 ? (
+          <p className="muted">Нет колледжей.</p>
+        ) : (
+          <div className="team-grid">
+            {collegeTeams.map((team) => (
+              <div className="team-chip" key={team.teamId}>
+                <strong>{team.teamName}</strong>
+                <span>
+                  {team.wins}-{team.losses} / престиж {team.prestige}
+                </span>
+                <span>позиции: {team.recruitingNeeds}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <Card title="Команды">

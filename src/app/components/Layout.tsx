@@ -5,10 +5,8 @@ import { AppScreen, useGameStore } from '../store/useGameStore';
 export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'dashboard', label: 'Главная' },
   { id: 'roster', label: 'Команды' },
-  { id: 'prospects', label: 'Выпускники' },
   { id: 'schedule', label: 'Календарь' },
   { id: 'rankings', label: 'Таблица' },
-  { id: 'news', label: 'Новости' },
   { id: 'history', label: 'История' }
 ];
 
@@ -16,6 +14,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const screen = useGameStore((state) => state.screen);
   const setScreen = useGameStore((state) => state.setScreen);
   const world = useGameStore((state) => state.world);
+  const activeLeague = useGameStore((state) => state.activeLeague);
+  const setActiveLeague = useGameStore((state) => state.setActiveLeague);
 
   return (
     <div className="app-shell">
@@ -26,6 +26,21 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
         <div className="year-pill">{world?.currentYear}</div>
       </header>
+
+      <div className="league-switch">
+        <button
+          className={activeLeague === 'highSchool' ? 'filter-chip active' : 'filter-chip'}
+          onClick={() => setActiveLeague('highSchool')}
+        >
+          Старшая школа
+        </button>
+        <button
+          className={activeLeague === 'college' ? 'filter-chip active' : 'filter-chip'}
+          onClick={() => setActiveLeague('college')}
+        >
+          Колледжи
+        </button>
+      </div>
 
       <main className="screen">{children}</main>
 

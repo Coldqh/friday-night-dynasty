@@ -14,32 +14,31 @@ export interface WeeklySlate {
 }
 
 function getImportanceReason(world: GameWorld, game: WeekStakeGame) {
-  switch (game.shortLabel) {
-    case 'State Final':
-      return 'Четыре четверти решат судьбу титула.';
-    case 'Playoff Semifinal':
-      return 'Победитель останется в гонке за титул.';
-    case 'Rivalry with Playoff Pressure':
-      return 'На кону и гордость, и позиция в плей-офф.';
-    case 'Rivalry Game':
-      return 'Главный локальный матч недели.';
-    case 'Unbeaten Watch':
-      return 'Одна из команд всё ещё идёт без поражений.';
-    case 'Playoff Race':
-      return 'Один результат может сдвинуть всю борьбу за топ-4.';
-    case 'Top-Four Showdown':
-      return 'Две сильные команды штата встречаются напрямую.';
-    case 'Evenly Matched Programs':
-      return 'Команды очень близки по силе.';
-    default:
-      break;
+  if (game.stage === 'final') {
+    return 'финал штата';
+  }
+
+  if (game.stage === 'semifinal') {
+    return 'полуфинал';
+  }
+
+  if (game.isRivalry) {
+    return 'дерби';
+  }
+
+  if (game.stakes.includes('Playoff Race')) {
+    return 'гонка за плей-офф';
+  }
+
+  if (game.stakes.includes('Undefeated Watch')) {
+    return 'команда без поражений';
   }
 
   if (world.phase === 'playoffs') {
-    return 'Каждый розыгрыш в плей-офф меняет сезон.';
+    return 'плей-офф';
   }
 
-  return 'Матч получает главный свет этой недели.';
+  return `приоритет ${Math.round(game.priorityScore)}`;
 }
 
 function buildSlateEntry(world: GameWorld, game: WeekStakeGame): WeeklySlateEntry {

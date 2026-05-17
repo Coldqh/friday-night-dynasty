@@ -1,5 +1,6 @@
 import { cityNames, mascots } from '../../content/names';
 import { generateCoach } from '../coaches/generateCoach';
+import { generateCollegeLayer } from '../colleges/generateColleges';
 import { createPeopleFromPlayers } from '../people/personUtils';
 import { generatePlayersForTeam } from '../players/generatePlayers';
 import { makeId, SeededRng } from '../random/rng';
@@ -132,13 +133,18 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
   assignRivalries(teams);
 
   const people = createPeopleFromPlayers(players, 2026, rng);
+  const { colleges, collegeTeams } = generateCollegeLayer({
+    stateId: state.id,
+    cities,
+    rng
+  });
   const schedule = generateSchedule({ rng, teams, weeks: 10 });
   const kickoffNews = {
     id: makeId('news', rng),
     year: 2026,
     week: 0,
-    headline: 'Старт живого штата',
-    body: 'Texoma начинает путь: 16 команд, 8 городов и первая гонка за титул штата.'
+    headline: 'Старт',
+    body: ''
   };
 
   return {
@@ -155,6 +161,10 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     players,
     people,
     graduatedPlayers: [],
+    colleges,
+    collegeTeams,
+    recruitingProfiles: [],
+    commitments: [],
     season: {
       year: 2026,
       currentWeek: 0,
@@ -172,8 +182,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
           id: makeId('history', rng),
           year: 2026,
           week: 0,
-          headline: 'Сезон начинается',
-          body: 'Каждый город Texoma начинает гонку за первый титул штата.',
+          headline: 'Старт сезона',
+          body: '',
           gameId: null
         }
       ]

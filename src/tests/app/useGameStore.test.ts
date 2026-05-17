@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { navigationTabs } from '../../app/components/Layout';
 import { getDashboardStatusPills } from '../../app/screens/DashboardScreen';
 import { historySections } from '../../app/screens/HistoryScreen';
-import { newsSections } from '../../app/screens/NewsScreen';
 import { scheduleFilters } from '../../app/screens/ScheduleScreen';
 import { useGameStore, resolveSelectedTeamId } from '../../app/store/useGameStore';
 import { createWorld } from '../../core/world/createWorld';
@@ -153,13 +152,11 @@ describe('useGameStore team profile navigation', () => {
     expect(useGameStore.getState().screen).toBe('schedule');
   });
 
-  it('navigation labels expose localized News and History without any Game Log wording', () => {
+  it('navigation labels expose only functional sections', () => {
+    expect(navigationTabs.map((tab) => tab.label)).toEqual(['Главная', 'Команды', 'Календарь', 'Таблица', 'История']);
     expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
-    expect(navigationTabs.some((tab) => tab.label === 'World')).toBe(false);
-    expect(navigationTabs.some((tab) => tab.label === 'Главная')).toBe(true);
-    expect(navigationTabs.some((tab) => tab.label === 'Новости')).toBe(true);
-    expect(navigationTabs.some((tab) => tab.label === 'История')).toBe(true);
-    expect(navigationTabs.some((tab) => tab.label === 'Выпускники')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'Новости')).toBe(false);
+    expect(navigationTabs.some((tab) => tab.label === 'Выпускники')).toBe(false);
   });
 
   it('schedule filters are localized and keep only upcoming and completed scopes', () => {
@@ -177,13 +174,9 @@ describe('useGameStore team profile navigation', () => {
     expect(pills.some((pill) => /сыгранных игр/i.test(pill))).toBe(false);
   });
 
-  it('history and news sections stay clean and avoid old debug-heavy panels', () => {
+  it('history sections stay clean and functional', () => {
     expect(historySections).toEqual(['История лиги', 'Чемпионы штата']);
     expect(historySections).not.toContain('State Finals');
     expect(historySections).not.toContain('League Timeline');
-
-    expect(newsSections).toEqual(['Новости штата', 'Главные заголовки']);
-    expect(newsSections).not.toContain('Game of the Week');
-    expect(newsSections).not.toContain('Season Journal');
   });
 });

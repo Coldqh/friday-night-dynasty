@@ -1,9 +1,12 @@
+import { ensureCollegeLayer } from '../colleges/ensureCollegeLayer';
 import { ensurePeopleForPlayers, normalizePlayerIdentity } from '../people/personUtils';
 import { SeededRng } from '../random/rng';
 import {
   GameWorld,
   Person,
   Player,
+  RecruitingProfile,
+  CollegeCommitment,
   RivalryGameResult,
   SeasonLogEntry,
   TeamHistoryEntry,
@@ -26,6 +29,8 @@ type LegacySeasonHistory = {
 type LegacyWorld = GameWorld & {
   people?: Person[];
   graduatedPlayers?: Player[];
+  recruitingProfiles?: RecruitingProfile[];
+  commitments?: CollegeCommitment[];
   season: GameWorld['season'] & {
     historyEntries?: SeasonLogEntry[];
   };
@@ -52,7 +57,7 @@ function normalizeTeamHistoryEntry(entry: LegacyTeamHistoryEntry): TeamHistoryEn
     playoffAppearance,
     wonTitle: titleWon,
     titleWon,
-    note: entry.note
+    note: entry.note ?? ''
   };
 }
 
@@ -76,13 +81,13 @@ function toChampionHistory(season: LegacySeasonHistory) {
     year: season.year,
     championId: season.championId ?? season.championTeamId ?? 'unknown',
     championTeamId: season.championTeamId ?? season.championId ?? 'unknown',
-    championName: season.championName ?? 'Unknown Champion',
+    championName: season.championName ?? 'Неизвестный чемпион',
     runnerUpId: season.runnerUpId ?? null,
-    runnerUpName: season.runnerUpName ?? 'Unknown Runner-Up',
+    runnerUpName: season.runnerUpName ?? 'Неизвестный финалист',
     finalGameId: season.finalGameId ?? null,
-    finalScore: season.finalScore ?? 'No final score recorded',
-    finalSummary: season.finalSummary ?? 'No final summary recorded',
-    note: season.note ?? `${season.championName ?? 'A team'} claimed the state title.`
+    finalScore: season.finalScore ?? 'счёт не записан',
+    finalSummary: season.finalSummary ?? '',
+    note: season.note ?? ''
   };
 }
 
@@ -91,11 +96,11 @@ function toTitleGameHistory(season: LegacySeasonHistory) {
     year: season.year,
     gameId: season.finalGameId ?? `title-game-${season.year}`,
     championId: season.championId ?? season.championTeamId ?? 'unknown',
-    championName: season.championName ?? 'Unknown Champion',
+    championName: season.championName ?? 'Неизвестный чемпион',
     runnerUpId: season.runnerUpId ?? null,
-    runnerUpName: season.runnerUpName ?? 'Unknown Runner-Up',
-    finalScore: season.finalScore ?? 'No final score recorded',
-    summary: season.finalSummary ?? 'No final summary recorded'
+    runnerUpName: season.runnerUpName ?? 'Неизвестный финалист',
+    finalScore: season.finalScore ?? 'счёт не записан',
+    summary: season.finalSummary ?? ''
   };
 }
 
@@ -106,7 +111,7 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
 
   world.players = world.players.map((player) => normalizePlayerIdentity(player, 'highSchool'));
   world.graduatedPlayers = Array.isArray(world.graduatedPlayers)
-    ? world.graduatedPlayers.map((player) => normalizePlayerIdentity(player, 'graduated'))
+    ? world.graduatedPlayers.map((player) => normalizePlayerIdentity(player, player.careerStage ?? 'graduated'))
     : [];
 
   world.players.forEach((player) => {
@@ -162,11 +167,13 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
         ? world.season.historyEntries
         : [];
 
-  return {
+  const normalized: GameWorld = {
     ...world,
     players: world.players,
     people,
     graduatedPlayers: world.graduatedPlayers,
+    recruitingProfiles: Array.isArray(world.recruitingProfiles) ? world.recruitingProfiles : [],
+    commitments: Array.isArray(world.commitments) ? world.commitments : [],
     teams: world.teams,
     season: {
       ...world.season,
@@ -179,4 +186,6 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
       rivalryResults
     }
   };
+
+  return ensureCollegeLayer(normalized);
 }

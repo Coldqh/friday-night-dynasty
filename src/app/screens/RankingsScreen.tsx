@@ -1,9 +1,42 @@
 import { Card } from '../components/Card';
+import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { useGameStore } from '../store/useGameStore';
 
 export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
+  const activeLeague = useGameStore((state) => state.activeLeague);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
+
+  if (activeLeague === 'college') {
+    const standings = getCollegeStandings(world);
+
+    return (
+      <Card title="Таблица колледжей">
+        <div className="table compact-table">
+          <div className="table-head grid-college-standings">
+            <span>#</span>
+            <span>команда</span>
+            <span>п-б</span>
+            <span>престиж</span>
+            <span>позиции</span>
+          </div>
+
+          {standings.map((entry) => (
+            <div className="table-row grid-college-standings" key={entry.teamId}>
+              <span>{entry.rank}</span>
+              <span>{entry.teamName}</span>
+              <span>
+                {entry.wins}-{entry.losses}
+              </span>
+              <strong>{entry.prestige}</strong>
+              <span>{entry.recruitingNeeds}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
   const standings = world.season.standings;
 
   return (

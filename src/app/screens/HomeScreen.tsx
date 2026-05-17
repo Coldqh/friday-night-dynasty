@@ -11,11 +11,8 @@ export function HomeScreen() {
   return (
     <div className="home-screen">
       <div className="home-title">
-        <div className="eyebrow">живая футбольная вселенная / {GAME_VERSION_LABEL}</div>
+        <div className="eyebrow">{GAME_VERSION_LABEL}</div>
         <h1>Friday Night Dynasty</h1>
-        <p>
-          Школьный футбол, маленькие города, сезоны, выпускники, рекорды и карьеры, которые продолжаются после последнего школьного матча.
-        </p>
       </div>
 
       <Card>

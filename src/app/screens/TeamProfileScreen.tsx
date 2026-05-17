@@ -1,7 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
-import { getPlayerLifeSummary } from '../../core/people/personUtils';
 import { getRivalryRecord } from '../../core/rivalries/getRivalryRecord';
 import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
 import { getTeamIdentityProfile } from '../../core/teams/getTeamIdentityProfile';
@@ -18,7 +17,7 @@ const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
 ];
 
 function formatAllTimeRivalryRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, ties: number) {
-  return `Вся история: ${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / ничьи ${ties}` : ''}`;
+  return `${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / ничьи ${ties}` : ''}`;
 }
 
 function formatLastGame(
@@ -26,7 +25,7 @@ function formatLastGame(
   record: ReturnType<typeof getRivalryRecord>
 ) {
   if (!record.lastGame) {
-    return 'истории личных встреч пока нет';
+    return 'нет матчей';
   }
 
   const winnerName =
@@ -37,20 +36,7 @@ function formatLastGame(
         : null;
 
   const score = `${record.lastGame.awayScore}-${record.lastGame.homeScore}`;
-  const resultNote = winnerName ? `${winnerName} выиграла ${score}` : `счёт ${score}`;
-
-  return `${record.lastGame.year} / ${resultNote}`;
-}
-
-function formatStreak(teamNames: { teamId: string; rivalId: string; teamName: string; rivalName: string }, record: ReturnType<typeof getRivalryRecord>) {
-  if (!record.currentStreak) {
-    return 'серии побед нет';
-  }
-
-  const streakOwner =
-    record.currentStreak.teamId === teamNames.teamId ? teamNames.teamName : teamNames.rivalName;
-
-  return `${streakOwner}: побед подряд ${record.currentStreak.wins}`;
+  return winnerName ? `${record.lastGame.year} / ${winnerName} / ${score}` : `${record.lastGame.year} / ${score}`;
 }
 
 export function TeamProfileScreen() {
@@ -68,7 +54,6 @@ export function TeamProfileScreen() {
   const schedule = getTeamSchedule(world, team.id);
   const history = getTeamHistorySnapshot(world, team.id);
   const standing = world.season.standings.find((entry) => entry.teamId === team.id);
-  const recentNotes = [...schedule].filter((game) => game.summary).slice(-4).reverse();
   const rivals = team.rivalryIds
     .map((rivalId) => {
       const rivalTeam = world.teams.find((entry) => entry.id === rivalId);
@@ -118,7 +103,7 @@ export function TeamProfileScreen() {
         </div>
       </Card>
 
-      <Card title="Разделы команды">
+      <Card title="Разделы">
         <div className="tab-row">
           {profileTabs.map((tab) => (
             <button
@@ -135,18 +120,15 @@ export function TeamProfileScreen() {
       {teamProfileTab === 'overview' && (
         <>
           <Card title="Обзор">
-            <div className="stack compact-stack">
-              <div className="identity-tier">{identity.programTier}</div>
-              <p className="muted">{identity.description}</p>
-              <p className="muted">
-                {standing
-                  ? `${team.shortName}: место #${standing.rank}, баланс ${standing.wins}-${standing.losses}, очки ${standing.pointsFor}-${standing.pointsAgainst}.`
-                  : `${team.shortName}: сезон только начинается.`}
-              </p>
+            <div className="stat-strip">
+              <span>место #{standing?.rank ?? '—'}</span>
+              <span>баланс {standing ? `${standing.wins}-${standing.losses}` : `${team.wins}-${team.losses}`}</span>
+              <span>очки {standing ? `${standing.pointsFor}-${standing.pointsAgainst}` : `${team.pointsFor}-${team.pointsAgainst}`}</span>
+              <span>разница {standing?.pointDifferential ?? team.pointsFor - team.pointsAgainst}</span>
             </div>
           </Card>
 
-          <Card title="Лидеры команды">
+          <Card title="Лидеры">
             <div className="list">
               {leaderRows.map(({ label, player }) => (
                 <div className="list-row" key={label}>
@@ -155,29 +137,28 @@ export function TeamProfileScreen() {
                     <p className="muted">
                       {player
                         ? `${player.firstName} ${player.lastName} / ${player.position} / ${formatClassYear(player.classYear)}`
-                        : 'игрок для этой роли пока не найден'}
+                        : 'нет'}
                     </p>
-                    {player ? <p className="muted">{getPlayerLifeSummary(world, player.id)}</p> : null}
                     {player ? (
                       <button className="filter-chip" onClick={() => openPlayerProfile(player.id, 'teamProfile')}>
-                        Профиль игрока
+                        Профиль
                       </button>
                     ) : null}
                   </div>
-                  <strong>{player ? `общ ${player.overall} / пот ${player.potential}` : 'нет'}</strong>
+                  <strong>{player ? `общ ${player.overall} / пот ${player.potential}` : '—'}</strong>
                 </div>
               ))}
             </div>
           </Card>
 
-          <Card title="Принципиальные соперники">
+          <Card title="Соперники">
             {rivals.length === 0 ? (
-              <p className="muted">У команды пока нет принципиального соперника.</p>
+              <p className="muted">Нет.</p>
             ) : (
               <div className="list">
                 {rivals.map((rival) => (
                   <div className="history-item" key={rival.team.id}>
-                    <div className="eyebrow">история соперничества</div>
+                    <div className="eyebrow">личные встречи</div>
                     <strong>{rival.team.shortName}</strong>
                     <p>
                       {formatAllTimeRivalryRecord(
@@ -188,20 +169,9 @@ export function TeamProfileScreen() {
                         rival.rivalryRecord.ties
                       )}
                     </p>
+                    <p className="muted">матчей {rival.rivalryRecord.gamesPlayed}</p>
                     <p className="muted">
-                      матчей {rival.rivalryRecord.gamesPlayed}
-                      {rival.rivalryRecord.gamesPlayed > 0 ? ` / последний матч ${formatLastGame(
-                        {
-                          teamId: team.id,
-                          rivalId: rival.team.id,
-                          teamName: team.shortName,
-                          rivalName: rival.team.shortName
-                        },
-                        rival.rivalryRecord
-                      )}` : ' / матчей ещё не было'}
-                    </p>
-                    <p className="muted">
-                      {formatStreak(
+                      последний матч: {formatLastGame(
                         {
                           teamId: team.id,
                           rivalId: rival.team.id,
@@ -219,25 +189,6 @@ export function TeamProfileScreen() {
               </div>
             )}
           </Card>
-
-          <Card title="Последние заметки команды">
-            {recentNotes.length === 0 ? (
-              <p className="muted">Заметки появятся после сыгранных матчей.</p>
-            ) : (
-              <div className="list">
-                {recentNotes.map((game) => (
-                  <div className="history-item" key={`${game.gameId}-note`}>
-                    <div className="eyebrow">
-                      неделя {game.week + 1}
-                      {game.stage !== 'regular' ? ` / ${formatStage(game.stage)}` : ''}
-                    </div>
-                    <strong>{game.isRivalry ? `${game.opponentName} / дерби` : game.opponentName}</strong>
-                    <p>{game.summary}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
         </>
       )}
 
@@ -250,7 +201,7 @@ export function TeamProfileScreen() {
               <span>класс</span>
               <span>общ</span>
               <span>пот</span>
-              <span>личность</span>
+              <span>возраст</span>
             </div>
             {roster.map((player) => (
               <div className="table-row grid-profile-roster" key={player.id}>
@@ -261,10 +212,7 @@ export function TeamProfileScreen() {
                 <span>{formatClassYear(player.classYear)}</span>
                 <strong>{player.overall}</strong>
                 <strong>{player.potential}</strong>
-                <span>
-                  {getPlayerLifeSummary(world, player.id)}
-                  {player.traits.length > 0 ? ` / ${player.traits.join(', ')}` : ''}
-                </span>
+                <span>{player.age}</span>
               </div>
             ))}
           </div>
@@ -298,42 +246,26 @@ export function TeamProfileScreen() {
       )}
 
       {teamProfileTab === 'history' && (
-        <Card title="История программы">
+        <Card title="История">
           <div className="stack compact-stack">
             <div className="stat-strip">
               <span>текущий сезон {history.currentSeasonRecord.label}</span>
-              <span>
-                вся история {history.totalHistoricalWins}-{history.totalHistoricalLosses}
-              </span>
+              <span>вся история {history.totalHistoricalWins}-{history.totalHistoricalLosses}</span>
               <span>титулы {history.titlesCount}</span>
               <span>плей-офф {history.playoffAppearancesCount}</span>
             </div>
-            {history.lastSeasonEntry ? (
-              <div className="history-item">
-                <div className="eyebrow">прошлый сезон</div>
-                <strong>
-                  {history.lastSeasonEntry.year}: {history.lastSeasonEntry.wins}-{history.lastSeasonEntry.losses}
-                </strong>
-                <p>{history.lastSeasonEntry.note}</p>
-              </div>
-            ) : (
-              <p className="muted">Команда ещё пишет первую главу своей истории.</p>
-            )}
-            {history.history.length > 0 && (
+            {history.history.length > 0 ? (
               <div className="list">
                 {history.history.map((season) => (
                   <div className="history-item" key={`${team.id}-${season.year}`}>
                     <div className="eyebrow">{season.year}</div>
-                    <strong>
-                      {season.wins}-{season.losses}
-                    </strong>
-                    <p>
-                      очки {season.pointsFor}-{season.pointsAgainst}
-                    </p>
-                    <p>{season.note}</p>
+                    <strong>{season.wins}-{season.losses}</strong>
+                    <p>очки {season.pointsFor}-{season.pointsAgainst}</p>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="muted">Нет завершённых сезонов.</p>
             )}
           </div>
         </Card>

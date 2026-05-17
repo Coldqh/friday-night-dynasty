@@ -1,4 +1,4 @@
-# Friday Night Dynasty v0.4.0 — test localization fix
+# Friday Night Dynasty v0.6.2 — test fix
 
 ## Команда проекта
 
@@ -6,21 +6,17 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Что исправлено
+## Исправлено
 
-Патч обновляет тесты под русскую локализацию v0.4.0.
-
-Игра уже собиралась, но тесты ожидали старые английские строки:
-
-- `Watch`
-- `State Final`
-- `Dashboard`
-- `All Games`
-- `Completed`
-- `League History`
-- `State Champions`
-
-Теперь тесты проверяют русские значения и отсутствие старых debug-панелей.
+- Выпускники после межсезонья снова остаются `careerStage: 'graduated'`.
+- Коммит в колледж теперь хранится через `recruitingProfile`, `commitment`, `collegeId`, `collegeTeamId`, но не ломает alumni pool.
+- `getWeekStakes().summary` больше не пустой.
+- `getWeeklySlate().gameOfTheWeek.reason` больше не пустой.
+- Тексты оставлены функциональными:
+  - `неделя X / матчей Y / дерби Z...`
+  - `приоритет N`
+  - `дерби`
+  - `финал штата`
 
 ## Проверка
 

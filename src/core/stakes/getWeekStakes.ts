@@ -65,15 +65,13 @@ function createProjectedGame(
     week,
     stage,
     awayTeamId,
-    homeTeamId,
-    summary
+    homeTeamId
   }: {
     gameId: string;
     week: number;
     stage: FullScheduleEntry['stage'];
     awayTeamId: string;
     homeTeamId: string;
-    summary: string;
   }
 ): FullScheduleEntry {
   const awayTeam = world.teams.find((team) => team.id === awayTeamId);
@@ -86,15 +84,15 @@ function createProjectedGame(
     stageLabel: getProjectedStageLabel(stage),
     awayTeamId,
     awayTeamName: awayTeam?.shortName ?? 'Неизвестная команда',
-    awayTeamContextLabel: awayTeam ? `${awayTeam.shortName} (${awayTeam.wins}-${awayTeam.losses}, общ ${awayTeam.overallRating})` : 'Неизвестная команда (0-0, общ --)',
+    awayTeamContextLabel: awayTeam ? `${awayTeam.shortName} (${awayTeam.wins}-${awayTeam.losses}, общ ${awayTeam.overallRating})` : 'Неизвестная команда',
     homeTeamId,
     homeTeamName: homeTeam?.shortName ?? 'Неизвестная команда',
-    homeTeamContextLabel: homeTeam ? `${homeTeam.shortName} (${homeTeam.wins}-${homeTeam.losses}, общ ${homeTeam.overallRating})` : 'Неизвестная команда (0-0, общ --)',
+    homeTeamContextLabel: homeTeam ? `${homeTeam.shortName} (${homeTeam.wins}-${homeTeam.losses}, общ ${homeTeam.overallRating})` : 'Неизвестная команда',
     awayScore: null,
     homeScore: null,
     winnerId: null,
     winnerName: null,
-    summary,
+    summary: '',
     score: '',
     status: 'Upcoming'
   };
@@ -115,16 +113,14 @@ function getProjectedPlayoffGames(world: GameWorld): FullScheduleEntry[] {
         week: world.season.currentWeek,
         stage: 'semifinal',
         awayTeamId: world.season.playoffTeams[3],
-        homeTeamId: world.season.playoffTeams[0],
-        summary: 'Ожидаемый полуфинал Texoma.'
+        homeTeamId: world.season.playoffTeams[0]
       }),
       createProjectedGame(world, {
         gameId: 'projected-semifinal-2',
         week: world.season.currentWeek,
         stage: 'semifinal',
         awayTeamId: world.season.playoffTeams[2],
-        homeTeamId: world.season.playoffTeams[1],
-        summary: 'Ожидаемый полуфинал Texoma.'
+        homeTeamId: world.season.playoffTeams[1]
       })
     ];
   }
@@ -136,8 +132,7 @@ function getProjectedPlayoffGames(world: GameWorld): FullScheduleEntry[] {
         week: world.season.currentWeek,
         stage: 'final',
         awayTeamId: semifinalGames[1].winnerId!,
-        homeTeamId: semifinalGames[0].winnerId!,
-        summary: 'Ожидаемый финал штата Texoma.'
+        homeTeamId: semifinalGames[0].winnerId!
       })
     ];
   }
@@ -177,35 +172,15 @@ function buildStakeLabels(world: GameWorld, game: FullScheduleEntry): WeekStakeL
     ((awayTeam?.wins ?? 0) >= 2 || (homeTeam?.wins ?? 0) >= 2) &&
     ((awayTeam?.losses ?? 1) === 0 || (homeTeam?.losses ?? 1) === 0);
 
-  if (game.stage === 'final') {
-    labels.add('State Final');
-  } else if (game.stage === 'semifinal') {
-    labels.add('Playoff Semifinal');
-  }
+  if (game.stage === 'final') labels.add('State Final');
+  else if (game.stage === 'semifinal') labels.add('Playoff Semifinal');
 
-  if (isRivalryGame(world, game)) {
-    labels.add('Rivalry Game');
-  }
-
-  if (unbeatenGame) {
-    labels.add('Undefeated Watch');
-  }
-
-  if (bestRank <= 4 && worstRank <= 4) {
-    labels.add('Top-Four Showdown');
-  }
-
-  if (lateSeasonRegular && bestRank <= 6 && worstRank <= 10) {
-    labels.add('Playoff Race');
-  }
-
-  if (lateSeasonRegular && ([4, 5, 6, 7, 8].includes(awayStanding?.rank ?? -1) || [4, 5, 6, 7, 8].includes(homeStanding?.rank ?? -1))) {
-    labels.add('Late-season Must Win');
-  }
-
-  if (overallGap <= 3) {
-    labels.add('Evenly Matched Programs');
-  }
+  if (isRivalryGame(world, game)) labels.add('Rivalry Game');
+  if (unbeatenGame) labels.add('Undefeated Watch');
+  if (bestRank <= 4 && worstRank <= 4) labels.add('Top-Four Showdown');
+  if (lateSeasonRegular && bestRank <= 6 && worstRank <= 10) labels.add('Playoff Race');
+  if (lateSeasonRegular && ([4, 5, 6, 7, 8].includes(awayStanding?.rank ?? -1) || [4, 5, 6, 7, 8].includes(homeStanding?.rank ?? -1))) labels.add('Late-season Must Win');
+  if (overallGap <= 3) labels.add('Evenly Matched Programs');
 
   return [...labels];
 }
@@ -213,14 +188,6 @@ function buildStakeLabels(world: GameWorld, game: FullScheduleEntry): WeekStakeL
 function getPrimaryStakeLabel(stakes: WeekStakeLabel[]) {
   if (stakes.includes('State Final')) return 'State Final';
   if (stakes.includes('Playoff Semifinal')) return 'Playoff Semifinal';
-
-  if (
-    stakes.includes('Rivalry Game') &&
-    (stakes.includes('Playoff Race') || stakes.includes('Late-season Must Win') || stakes.includes('Top-Four Showdown'))
-  ) {
-    return 'Rivalry with Playoff Pressure';
-  }
-
   if (stakes.includes('Rivalry Game')) return 'Rivalry Game';
   if (stakes.includes('Undefeated Watch')) return 'Unbeaten Watch';
   if (stakes.includes('Playoff Race')) return 'Playoff Race';
@@ -281,36 +248,20 @@ function buildStakeGame(world: GameWorld, game: FullScheduleEntry): WeekStakeGam
   };
 }
 
-function getSummary(world: GameWorld, gamesThisWeek: WeekStakeGame[]) {
-  if (world.phase === 'offseason') {
-    return 'Титульная гонка завершена. Команды уже смотрят в сторону нового цикла.';
-  }
-
-  if (gamesThisWeek.some((game) => game.stakes.includes('State Final'))) {
-    return 'На кону титул штата.';
-  }
-
-  if (gamesThisWeek.some((game) => game.stakes.includes('Playoff Semifinal'))) {
-    return 'Четыре лучшие команды борются за выход в финал штата.';
-  }
-
-  if (gamesThisWeek.some((game) => game.shortLabel === 'Rivalry with Playoff Pressure')) {
-    return 'Дерби и давление плей-офф сошлись в одной неделе.';
-  }
-
-  if (gamesThisWeek.some((game) => game.stakes.includes('Rivalry Game'))) {
-    return 'Неделю задают принципиальные матчи.';
-  }
-
-  if (gamesThisWeek.some((game) => game.stakes.includes('Playoff Race'))) {
-    return 'Гонка за плей-офф становится плотнее.';
-  }
-
-  if (gamesThisWeek.some((game) => game.stakes.includes('Undefeated Watch'))) {
-    return 'Несколько команд всё ещё держат сезон без поражений.';
-  }
-
-  return 'В штате собирается очередная футбольная пятница.';
+function buildSummary({
+  currentWeek,
+  gamesCount,
+  rivalryCount,
+  playoffRaceCount,
+  undefeatedCount
+}: {
+  currentWeek: number;
+  gamesCount: number;
+  rivalryCount: number;
+  playoffRaceCount: number;
+  undefeatedCount: number;
+}) {
+  return `неделя ${currentWeek + 1} / матчей ${gamesCount} / дерби ${rivalryCount} / плей-офф ${playoffRaceCount} / без поражений ${undefeatedCount}`;
 }
 
 export function getWeekStakes(world: GameWorld): WeekStakes {
@@ -322,15 +273,25 @@ export function getWeekStakes(world: GameWorld): WeekStakes {
         right.priorityScore - left.priorityScore || left.awayTeamName.localeCompare(right.awayTeamName)
     );
   const topStakeGame = annotatedGames[0] ?? null;
+  const playoffRaceGames = annotatedGames.filter((game) => game.stakes.includes('Playoff Race'));
+  const mustWinGames = annotatedGames.filter((game) => game.stakes.includes('Late-season Must Win'));
+  const undefeatedWatchGames = annotatedGames.filter((game) => game.stakes.includes('Undefeated Watch'));
+  const rivalryGames = annotatedGames.filter((game) => game.stakes.includes('Rivalry Game'));
 
   return {
     currentWeek,
     gamesThisWeek: annotatedGames,
-    playoffRaceGames: annotatedGames.filter((game) => game.stakes.includes('Playoff Race')),
-    mustWinGames: annotatedGames.filter((game) => game.stakes.includes('Late-season Must Win')),
-    undefeatedWatchGames: annotatedGames.filter((game) => game.stakes.includes('Undefeated Watch')),
-    rivalryGames: annotatedGames.filter((game) => game.stakes.includes('Rivalry Game')),
+    playoffRaceGames,
+    mustWinGames,
+    undefeatedWatchGames,
+    rivalryGames,
     gameOfTheWeekStakes: topStakeGame?.stakes ?? [],
-    summary: getSummary(world, annotatedGames)
+    summary: buildSummary({
+      currentWeek,
+      gamesCount: annotatedGames.length,
+      rivalryCount: rivalryGames.length,
+      playoffRaceCount: playoffRaceGames.length,
+      undefeatedCount: undefeatedWatchGames.length
+    })
   };
 }

@@ -1,10 +1,9 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { formatHeadlineType, formatPhase, formatStakeLabel } from '../localization';
+import { formatClassYear } from '../localization';
 import { GAME_VERSION_LABEL, GAME_VERSION_NAME } from '../version';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
-import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
-import { getProspectPool } from '../../core/prospects/getProspectPool';
+import { getRecentCommitments } from '../../core/recruiting/getRecruitingProfile';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { useGameStore } from '../store/useGameStore';
 
@@ -42,14 +41,11 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
-  const setScreen = useGameStore((state) => state.setScreen);
   const slate = getWeeklySlate(world);
-  const headlines = generateWeeklyHeadlines(world).slice(0, 5);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
-  const prospects = getProspectPool(world).slice(0, 4);
+  const commitments = getRecentCommitments(world, 5);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
-  const recentSeasonEntries = world.season.seasonLog.slice(0, 5);
   const seasonStatus = getSeasonStatusLabel({
     phase: world.phase,
     currentWeek: world.season.currentWeek,
@@ -58,6 +54,9 @@ export function DashboardScreen() {
   const peopleCount = world.people?.length ?? 0;
   const graduatedCount = world.graduatedPlayers?.length ?? 0;
   const activePlayerCount = world.players.length;
+  const collegeCount = world.colleges?.length ?? 0;
+  const recruitingProfileCount = world.recruitingProfiles?.length ?? 0;
+  const commitmentCount = world.commitments?.length ?? 0;
 
   return (
     <div className="stack">
@@ -101,51 +100,38 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Пульс мира">
+      <Card title="База мира">
         <div className="dashboard-grid">
           <div>
-            <div className="eyebrow">людей в базе</div>
+            <div className="eyebrow">людей</div>
             <p className="big-number">{peopleCount}</p>
           </div>
           <div>
-            <div className="eyebrow">активных игроков</div>
+            <div className="eyebrow">игроков</div>
             <p className="big-number">{activePlayerCount}</p>
           </div>
           <div>
             <div className="eyebrow">выпускников</div>
             <p className="big-number">{graduatedCount}</p>
           </div>
-        </div>
-        <p className="muted">Мир уже хранит игроков как людей: школа, выпуск, будущий рекрутинг, колледж и дальнейшая карьера.</p>
-      </Card>
-
-      <Card title="Пул выпускников">
-        {prospects.length === 0 ? (
-          <p className="muted">Выпускники появятся после первого завершённого сезона и перехода через межсезонье.</p>
-        ) : (
-          <div className="list">
-            {prospects.map((prospect) => (
-              <div className="list-row" key={prospect.playerId}>
-                <div>
-                  <strong>{prospect.playerName}</strong>
-                  <p className="muted">
-                    {prospect.position} / {prospect.teamName} / рейтинг {prospect.score}
-                  </p>
-                  <p className="muted">{prospect.projection}</p>
-                </div>
-                <button className="filter-chip" onClick={() => openPlayerProfile(prospect.playerId, 'dashboard')}>
-                  Профиль
-                </button>
-              </div>
-            ))}
-            <button className="filter-chip" onClick={() => setScreen('prospects')}>Открыть всех выпускников</button>
+          <div>
+            <div className="eyebrow">колледжей</div>
+            <p className="big-number">{collegeCount}</p>
           </div>
-        )}
+          <div>
+            <div className="eyebrow">профилей</div>
+            <p className="big-number">{recruitingProfileCount}</p>
+          </div>
+          <div>
+            <div className="eyebrow">коммитов</div>
+            <p className="big-number">{commitmentCount}</p>
+          </div>
+        </div>
       </Card>
 
-      <Card title="Претенденты на награды">
+      <Card title="Награды">
         {awards.length === 0 ? (
-          <p className="muted">Список появится, когда в мире будут активные игроки.</p>
+          <p className="muted">Нет кандидатов.</p>
         ) : (
           <div className="list">
             {awards.map((award) => (
@@ -153,9 +139,9 @@ export function DashboardScreen() {
                 <div>
                   <strong>{award.title}</strong>
                   <p className="muted">
-                    {award.playerName} / {award.position} / {award.classYear} / {award.teamName}
+                    {award.playerName} / {award.position} / {formatClassYear(award.classYear)} / {award.teamName}
                   </p>
-                  <p className="muted">{award.reason}</p>
+                  <p className="muted">оценка {award.score}</p>
                 </div>
                 <button className="filter-chip" onClick={() => openPlayerProfile(award.playerId, 'dashboard')}>
                   Профиль
@@ -166,16 +152,34 @@ export function DashboardScreen() {
         )}
       </Card>
 
+      <Card title="Коммиты">
+        {commitments.length === 0 ? (
+          <p className="muted">Нет.</p>
+        ) : (
+          <div className="list">
+            {commitments.map((commitment) => (
+              <div className="list-row" key={commitment.id}>
+                <div>
+                  <strong>{commitment.playerName}</strong>
+                  <p className="muted">
+                    {commitment.position} / {commitment.fromTeamName} / {commitment.collegeName}
+                  </p>
+                </div>
+                <strong>{commitment.stars}★ / {commitment.prospectScore}</strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       {world.phase === 'offseason' && latestChampion ? (
         <Card title="Чемпион">
           <div className="stack compact-stack">
             <strong>{latestChampion.championName}</strong>
-            <p className="muted">
-              {latestChampion.year}: {latestChampion.finalSummary}
-            </p>
             <div className="stat-strip">
+              <span>год {latestChampion.year}</span>
               <span>финалист {latestChampion.runnerUpName}</span>
-              <span>финал {latestChampion.finalScore}</span>
+              <span>счёт {latestChampion.finalScore}</span>
             </div>
           </div>
         </Card>
@@ -183,47 +187,24 @@ export function DashboardScreen() {
         <Card title="Матч недели">
           {slate.gameOfTheWeek ? (
             <div className="stack compact-stack">
-              <div className="eyebrow">
-                неделя {slate.currentWeek + 1} / {formatStakeLabel(slate.gameOfTheWeek.stageLabel)}
-              </div>
+              <div className="eyebrow">неделя {slate.currentWeek + 1}</div>
               <strong>
-                {slate.gameOfTheWeek.awayTeamName} в гостях у {slate.gameOfTheWeek.homeTeamName}
+                {slate.gameOfTheWeek.awayTeamName} @ {slate.gameOfTheWeek.homeTeamName}
               </strong>
-              <div className="tag-row">
-                {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{formatStakeLabel(slate.gameOfTheWeek.shortLabel)}</span> : null}
-                <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
-                <span className="tag-chip subdued">{slate.gameOfTheWeek.status === 'Final' ? 'сыграно' : 'впереди'}</span>
-                <span className="tag-chip subdued">{slate.gameOfTheWeek.score || 'счёта нет'}</span>
+              <div className="stat-strip">
+                <span>{slate.gameOfTheWeek.status === 'Final' ? 'сыграно' : 'впереди'}</span>
+                <span>{slate.gameOfTheWeek.score || 'счёта нет'}</span>
               </div>
-              {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
             </div>
           ) : (
-            <p className="muted">Матч недели появится, когда будет доступна игровая неделя.</p>
+            <p className="muted">Матч не выбран.</p>
           )}
         </Card>
       )}
 
-      <Card title="Главные новости">
-        {headlines.length === 0 ? (
-          <p className="muted">Пока нет крупных новостей.</p>
-        ) : (
-          <div className="list">
-            {headlines.map((headline) => (
-              <div className="history-item" key={headline.id}>
-                <div className="eyebrow">
-                  {formatHeadlineType(headline.type)} / неделя {headline.week + 1}
-                </div>
-                <strong>{headline.title}</strong>
-                <p>{headline.body}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Card title="Верх таблицы">
+      <Card title="Топ таблицы">
         {topStandings.length === 0 ? (
-          <p className="muted">Таблица появится после старта сезона.</p>
+          <p className="muted">Нет данных.</p>
         ) : (
           <div className="list">
             {topStandings.map((entry) => (
@@ -232,26 +213,8 @@ export function DashboardScreen() {
                   #{entry.rank} {entry.teamName}
                 </span>
                 <strong>
-                  {entry.wins}-{entry.losses} / разница {entry.pointDifferential}
+                  {entry.wins}-{entry.losses} / {entry.pointDifferential}
                 </strong>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Card title="Последние события">
-        {recentSeasonEntries.length === 0 ? (
-          <p className="muted">События появятся после сыгранных матчей.</p>
-        ) : (
-          <div className="list">
-            {recentSeasonEntries.map((entry) => (
-              <div className="history-item" key={entry.id}>
-                <div className="eyebrow">
-                  {entry.year} / неделя {entry.week + 1}
-                </div>
-                <strong>{entry.headline}</strong>
-                <p>{entry.body}</p>
               </div>
             ))}
           </div>

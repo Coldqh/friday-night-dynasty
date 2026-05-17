@@ -29,6 +29,8 @@ export type CareerEventType =
   | 'staffMove'
   | 'general';
 
+export type RecruitingStatus = 'uncommitted' | 'committed' | 'walkOn' | 'noOffer';
+
 export interface CareerEvent {
   id: string;
   year: number;
@@ -99,6 +101,33 @@ export interface Coach {
   losses: number;
 }
 
+export interface College {
+  id: string;
+  stateId: string;
+  cityId: string;
+  name: string;
+  shortName: string;
+  prestige: number;
+  facilities: number;
+  academicRating: number;
+  scholarshipBudget: number;
+}
+
+export interface CollegeTeam {
+  id: string;
+  collegeId: string;
+  cityId: string;
+  name: string;
+  shortName: string;
+  prestige: number;
+  offenseStyle: OffenseStyle;
+  defenseStyle: DefenseStyle;
+  rosterPlayerIds: string[];
+  recruitingNeeds: Position[];
+  wins: number;
+  losses: number;
+}
+
 export interface PlayerStats {
   passingYards: number;
   rushingYards: number;
@@ -117,6 +146,9 @@ export interface Player {
   cityId: string;
   hometownCityId?: string;
   careerStage?: CareerStage;
+  collegeId?: string | null;
+  collegeTeamId?: string | null;
+  recruitingProfileId?: string | null;
   firstName: string;
   lastName: string;
   age: number;
@@ -135,6 +167,42 @@ export interface Player {
   traits: string[];
   seasonStats: PlayerStats;
   careerStats: PlayerStats;
+}
+
+export interface RecruitingProfile {
+  id: string;
+  year: number;
+  playerId: string;
+  personId: string | null;
+  playerName: string;
+  fromTeamId: string;
+  fromTeamName: string;
+  position: Position;
+  overall: number;
+  potential: number;
+  prospectScore: number;
+  stars: number;
+  stateRank: number;
+  status: RecruitingStatus;
+  offerCollegeIds: string[];
+  committedCollegeId: string | null;
+  committedCollegeTeamId: string | null;
+}
+
+export interface CollegeCommitment {
+  id: string;
+  year: number;
+  playerId: string;
+  personId: string | null;
+  playerName: string;
+  position: Position;
+  fromTeamId: string;
+  fromTeamName: string;
+  collegeId: string;
+  collegeTeamId: string;
+  collegeName: string;
+  stars: number;
+  prospectScore: number;
 }
 
 export interface TeamHistoryEntry {
@@ -340,6 +408,10 @@ export interface GameWorld {
   players: Player[];
   people?: Person[];
   graduatedPlayers?: Player[];
+  colleges?: College[];
+  collegeTeams?: CollegeTeam[];
+  recruitingProfiles?: RecruitingProfile[];
+  commitments?: CollegeCommitment[];
   season: SeasonState;
   news: NewsItem[];
   history: WorldHistory;

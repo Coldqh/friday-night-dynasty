@@ -4,10 +4,8 @@ import { DashboardScreen } from './app/screens/DashboardScreen';
 import { RosterScreen } from './app/screens/RosterScreen';
 import { TeamProfileScreen } from './app/screens/TeamProfileScreen';
 import { PlayerProfileScreen } from './app/screens/PlayerProfileScreen';
-import { ProspectPoolScreen } from './app/screens/ProspectPoolScreen';
 import { ScheduleScreen } from './app/screens/ScheduleScreen';
 import { RankingsScreen } from './app/screens/RankingsScreen';
-import { NewsScreen } from './app/screens/NewsScreen';
 import { HistoryScreen } from './app/screens/HistoryScreen';
 import { useGameStore } from './app/store/useGameStore';
 
@@ -25,10 +23,8 @@ export function App() {
       {screen === 'roster' && <RosterScreen />}
       {screen === 'teamProfile' && <TeamProfileScreen />}
       {screen === 'playerProfile' && <PlayerProfileScreen />}
-      {screen === 'prospects' && <ProspectPoolScreen />}
       {screen === 'schedule' && <ScheduleScreen />}
       {screen === 'rankings' && <RankingsScreen />}
-      {screen === 'news' && <NewsScreen />}
       {screen === 'history' && <HistoryScreen />}
     </Layout>
   );

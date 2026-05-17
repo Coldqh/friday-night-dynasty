@@ -6,15 +6,15 @@ import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 import { GameWorld } from '../../core/world/worldTypes';
 import { loadLatestWorld, saveWorld } from '../../storage/saveGame';
 
+export type LeagueLevel = 'highSchool' | 'college';
+
 export type AppScreen =
   | 'dashboard'
   | 'roster'
   | 'teamProfile'
   | 'playerProfile'
-  | 'prospects'
   | 'schedule'
   | 'rankings'
-  | 'news'
   | 'history';
 
 export type TeamProfileTab = 'overview' | 'roster' | 'schedule' | 'history';
@@ -47,6 +47,7 @@ export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerI
 
 interface GameStore {
   world: GameWorld | null;
+  activeLeague: LeagueLevel;
   selectedTeamId: string | null;
   selectedPlayerId: string | null;
   teamProfileTab: TeamProfileTab;
@@ -54,6 +55,7 @@ interface GameStore {
   previousScreenBeforeTeamProfile: AppScreen | null;
   previousScreenBeforePlayerProfile: AppScreen | null;
   error: string | null;
+  setActiveLeague: (league: LeagueLevel) => void;
   setScreen: (screen: AppScreen) => void;
   selectTeam: (teamId: string) => void;
   setTeamProfileTab: (tab: TeamProfileTab) => void;
@@ -73,6 +75,7 @@ const DEFAULT_SEED = 982451653;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   world: null,
+  activeLeague: 'highSchool',
   selectedTeamId: null,
   selectedPlayerId: null,
   teamProfileTab: 'overview',
@@ -81,11 +84,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   previousScreenBeforePlayerProfile: null,
   error: null,
 
+  setActiveLeague: (activeLeague) =>
+    set((state) => ({
+      activeLeague,
+      screen: state.screen === 'teamProfile' && activeLeague === 'college' ? 'roster' : state.screen,
+      selectedTeamId: activeLeague === 'highSchool' ? resolveSelectedTeamId(state.world, state.selectedTeamId) : state.selectedTeamId,
+      previousScreenBeforeTeamProfile: activeLeague === 'college' ? null : state.previousScreenBeforeTeamProfile
+    })),
+
   setScreen: (screen) =>
     set((state) => ({
       screen,
       selectedTeamId:
-        screen === 'teamProfile' || screen === 'roster' || screen === 'schedule' || screen === 'history'
+        state.activeLeague === 'highSchool' &&
+        (screen === 'teamProfile' || screen === 'roster' || screen === 'schedule' || screen === 'history')
           ? resolveSelectedTeamId(state.world, state.selectedTeamId)
           : state.selectedTeamId,
       selectedPlayerId: screen === 'playerProfile' ? resolveSelectedPlayerId(state.world, state.selectedPlayerId) : state.selectedPlayerId
@@ -148,6 +160,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       world,
+      activeLeague: 'highSchool',
       selectedTeamId: resolveSelectedTeamId(world, null),
       selectedPlayerId: null,
       teamProfileTab: 'overview',
@@ -172,6 +185,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       world,
+      activeLeague: 'highSchool',
       selectedTeamId: resolveSelectedTeamId(world, null),
       selectedPlayerId: null,
       teamProfileTab: 'overview',

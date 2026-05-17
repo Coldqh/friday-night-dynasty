@@ -2,16 +2,16 @@ import { makeId, SeededRng } from '../random/rng';
 import { CareerEvent, GameWorld, Person, Player } from '../world/worldTypes';
 
 const personalities = [
-  'тихий трудяга',
-  'прирождённый лидер',
-  'одержим разбором игры',
-  'звезда маленького города',
-  'поздно раскрылся',
-  'искра раздевалки',
-  'любит давление',
-  'нуждается в дисциплине',
-  'тренер на поле',
-  'сырой атлет'
+  'трудолюбие',
+  'лидерство',
+  'дисциплина',
+  'развитие',
+  'стабильность',
+  'атлетизм',
+  'потенциал',
+  'опыт',
+  'характер',
+  'скорость'
 ];
 
 function stablePersonId(player: Pick<Player, 'id' | 'personId'>): string {
@@ -100,12 +100,9 @@ export function createPersonFromPlayer(player: Player, year: number, rng: Seeded
         type: normalized.careerStage === 'graduated' ? 'graduation' : 'created',
         title:
           normalized.careerStage === 'graduated'
-            ? `${normalized.firstName} ${normalized.lastName} попал в пул выпускников`
-            : `${normalized.firstName} ${normalized.lastName} начал школьную карьеру`,
-        body:
-          normalized.careerStage === 'graduated'
-            ? `${normalized.position} ${normalized.firstName} ${normalized.lastName} теперь хранится как выпускник для будущей футбольной экосистемы.`
-            : `${normalized.position} ${normalized.firstName} ${normalized.lastName} начал отслеживаемую карьеру: ${normalized.classYear}.`,
+            ? `${normalized.firstName} ${normalized.lastName}: выпуск`
+            : `${normalized.firstName} ${normalized.lastName}: старт карьеры`,
+        body: '',
         teamId: normalized.teamId,
         schoolId: normalized.schoolId
       })
@@ -172,15 +169,15 @@ export function getPlayerLifeSummary(world: GameWorld, playerId: string): string
     null;
 
   if (!player) {
-    return 'нет записи игрока';
+    return 'нет записи';
   }
 
   const person = getPersonForPlayer(world, playerId);
   const hometown = world.cities.find((city) => city.id === (player.hometownCityId ?? player.cityId));
 
   if (!person) {
-    return `${hometown?.name ?? 'неизвестный город'}`;
+    return hometown?.name ?? 'неизвестный город';
   }
 
-  return `${person.personality} / репутация ${person.reputation} / ${hometown?.name ?? 'неизвестный город'}`;
+  return `репутация ${person.reputation} / ${hometown?.name ?? 'неизвестный город'}`;
 }
