@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { advanceCollegeSeason } from '../../core/colleges/advanceCollegeSeason';
 import { simulateCollegeSeason, simulateCollegeWeek } from '../../core/colleges/collegeSeason';
 import { advanceOffseason } from '../../core/offseason/advanceOffseason';
 import { simulateSeason, simulateWeek } from '../../core/season/simulateSeason';
@@ -13,6 +14,7 @@ export type AppScreen =
   | 'dashboard'
   | 'roster'
   | 'teamProfile'
+  | 'collegeTeamProfile'
   | 'playerProfile'
   | 'favorites'
   | 'schedule'
@@ -20,18 +22,16 @@ export type AppScreen =
   | 'history';
 
 export type TeamProfileTab = 'overview' | 'roster' | 'schedule' | 'history';
+export type CollegeTeamProfileTab = 'overview' | 'roster' | 'schedule' | 'history';
 
 const FAVORITES_STORAGE_KEY = 'fnd_favorite_player_ids';
 
 function loadFavoritePlayerIds() {
-  if (typeof localStorage === 'undefined') {
-    return [];
-  }
+  if (typeof localStorage === 'undefined') return [];
 
   try {
     const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
   } catch {
     return [];
@@ -39,35 +39,33 @@ function loadFavoritePlayerIds() {
 }
 
 function saveFavoritePlayerIds(ids: string[]) {
-  if (typeof localStorage === 'undefined') {
-    return;
-  }
-
+  if (typeof localStorage === 'undefined') return;
   localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(ids));
 }
 
 export function resolveSelectedTeamId(world: GameWorld | null, selectedTeamId: string | null): string | null {
-  if (!world || world.teams.length === 0) {
-    return null;
-  }
-
-  if (selectedTeamId && world.teams.some((team) => team.id === selectedTeamId)) {
-    return selectedTeamId;
-  }
-
+  if (!world || world.teams.length === 0) return null;
+  if (selectedTeamId && world.teams.some((team) => team.id === selectedTeamId)) return selectedTeamId;
   return world.teams[0]?.id ?? null;
 }
 
+export function resolveSelectedCollegeTeamId(world: GameWorld | null, selectedCollegeTeamId: string | null): string | null {
+  if (!world || !world.collegeTeams || world.collegeTeams.length === 0) return null;
+  if (selectedCollegeTeamId && world.collegeTeams.some((team) => team.id === selectedCollegeTeamId)) return selectedCollegeTeamId;
+  return world.collegeTeams[0]?.id ?? null;
+}
+
 export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerId: string | null): string | null {
-  if (!world) {
-    return null;
+  if (!world) return null;
+
+  const converted = (world.commitments ?? []).find((commitment) => commitment.playerId === selectedPlayerId && commitment.convertedToCollegePlayerId);
+  if (converted?.convertedToCollegePlayerId && (world.collegePlayers ?? []).some((player) => player.id === converted.convertedToCollegePlayerId)) {
+    return converted.convertedToCollegePlayerId;
   }
 
   const allPlayers = [...world.players, ...(world.graduatedPlayers ?? []), ...(world.collegePlayers ?? [])];
 
-  if (selectedPlayerId && allPlayers.some((player) => player.id === selectedPlayerId)) {
-    return selectedPlayerId;
-  }
+  if (selectedPlayerId && allPlayers.some((player) => player.id === selectedPlayerId)) return selectedPlayerId;
 
   return allPlayers[0]?.id ?? null;
 }
@@ -77,19 +75,26 @@ interface GameStore {
   activeLeague: LeagueLevel;
   favoritePlayerIds: string[];
   selectedTeamId: string | null;
+  selectedCollegeTeamId: string | null;
   selectedPlayerId: string | null;
   teamProfileTab: TeamProfileTab;
+  collegeTeamProfileTab: CollegeTeamProfileTab;
   screen: AppScreen;
   previousScreenBeforeTeamProfile: AppScreen | null;
+  previousScreenBeforeCollegeTeamProfile: AppScreen | null;
   previousScreenBeforePlayerProfile: AppScreen | null;
   error: string | null;
   setActiveLeague: (league: LeagueLevel) => void;
   setScreen: (screen: AppScreen) => void;
   selectTeam: (teamId: string) => void;
+  selectCollegeTeam: (teamId: string) => void;
   setTeamProfileTab: (tab: TeamProfileTab) => void;
+  setCollegeTeamProfileTab: (tab: CollegeTeamProfileTab) => void;
   toggleFavoritePlayer: (playerId: string) => void;
   openTeamProfile: (teamId: string, tab?: TeamProfileTab, returnScreen?: AppScreen) => void;
   closeTeamProfile: () => void;
+  openCollegeTeamProfile: (teamId: string, tab?: CollegeTeamProfileTab, returnScreen?: AppScreen) => void;
+  closeCollegeTeamProfile: () => void;
   openPlayerProfile: (playerId: string, returnScreen?: AppScreen) => void;
   closePlayerProfile: () => void;
   newWorld: () => Promise<void>;
@@ -98,6 +103,7 @@ interface GameStore {
   simNextWeek: () => Promise<void>;
   simFullSeason: () => Promise<void>;
   advanceToNextSeason: () => Promise<void>;
+  advanceCollegeToNextSeason: () => Promise<void>;
 }
 
 const DEFAULT_SEED = 982451653;
@@ -107,19 +113,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
   activeLeague: 'highSchool',
   favoritePlayerIds: loadFavoritePlayerIds(),
   selectedTeamId: null,
+  selectedCollegeTeamId: null,
   selectedPlayerId: null,
   teamProfileTab: 'overview',
+  collegeTeamProfileTab: 'overview',
   screen: 'dashboard',
   previousScreenBeforeTeamProfile: null,
+  previousScreenBeforeCollegeTeamProfile: null,
   previousScreenBeforePlayerProfile: null,
   error: null,
 
   setActiveLeague: (activeLeague) =>
     set((state) => ({
       activeLeague,
-      screen: state.screen === 'teamProfile' && activeLeague === 'college' ? 'roster' : state.screen,
+      screen:
+        activeLeague === 'college' && state.screen === 'teamProfile'
+          ? 'roster'
+          : activeLeague === 'highSchool' && state.screen === 'collegeTeamProfile'
+            ? 'roster'
+            : state.screen,
       selectedTeamId: activeLeague === 'highSchool' ? resolveSelectedTeamId(state.world, state.selectedTeamId) : state.selectedTeamId,
-      previousScreenBeforeTeamProfile: activeLeague === 'college' ? null : state.previousScreenBeforeTeamProfile
+      selectedCollegeTeamId: activeLeague === 'college' ? resolveSelectedCollegeTeamId(state.world, state.selectedCollegeTeamId) : state.selectedCollegeTeamId,
+      previousScreenBeforeTeamProfile: activeLeague === 'college' ? null : state.previousScreenBeforeTeamProfile,
+      previousScreenBeforeCollegeTeamProfile: activeLeague === 'highSchool' ? null : state.previousScreenBeforeCollegeTeamProfile
     })),
 
   setScreen: (screen) =>
@@ -130,6 +146,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         (screen === 'teamProfile' || screen === 'roster' || screen === 'schedule' || screen === 'history')
           ? resolveSelectedTeamId(state.world, state.selectedTeamId)
           : state.selectedTeamId,
+      selectedCollegeTeamId:
+        state.activeLeague === 'college' &&
+        (screen === 'collegeTeamProfile' || screen === 'roster' || screen === 'schedule' || screen === 'history')
+          ? resolveSelectedCollegeTeamId(state.world, state.selectedCollegeTeamId)
+          : state.selectedCollegeTeamId,
       selectedPlayerId: screen === 'playerProfile' ? resolveSelectedPlayerId(state.world, state.selectedPlayerId) : state.selectedPlayerId
     })),
 
@@ -138,7 +159,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedTeamId: resolveSelectedTeamId(state.world, teamId)
     })),
 
+  selectCollegeTeam: (teamId) =>
+    set((state) => ({
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(state.world, teamId)
+    })),
+
   setTeamProfileTab: (tab) => set({ teamProfileTab: tab }),
+  setCollegeTeamProfileTab: (tab) => set({ collegeTeamProfileTab: tab }),
 
   toggleFavoritePlayer: (playerId) =>
     set((state) => {
@@ -148,19 +175,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : [...state.favoritePlayerIds, playerId];
 
       saveFavoritePlayerIds(favoritePlayerIds);
-
       return { favoritePlayerIds };
     }),
 
   openTeamProfile: (teamId, tab = 'overview', returnScreen) =>
     set((state) => {
       const selectedTeamId = resolveSelectedTeamId(state.world, teamId);
-      const previousScreen =
-        returnScreen ??
-        (state.screen === 'teamProfile' ? state.previousScreenBeforeTeamProfile ?? 'roster' : state.screen);
+      const previousScreen = returnScreen ?? (state.screen === 'teamProfile' ? state.previousScreenBeforeTeamProfile ?? 'roster' : state.screen);
 
       return {
         screen: 'teamProfile',
+        activeLeague: 'highSchool',
         selectedTeamId,
         teamProfileTab: tab,
         previousScreenBeforeTeamProfile: previousScreen,
@@ -176,6 +201,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
           : 'roster',
       previousScreenBeforeTeamProfile: null,
       selectedTeamId: resolveSelectedTeamId(state.world, state.selectedTeamId)
+    })),
+
+  openCollegeTeamProfile: (teamId, tab = 'overview', returnScreen) =>
+    set((state) => {
+      const selectedCollegeTeamId = resolveSelectedCollegeTeamId(state.world, teamId);
+      const previousScreen =
+        returnScreen ?? (state.screen === 'collegeTeamProfile' ? state.previousScreenBeforeCollegeTeamProfile ?? 'roster' : state.screen);
+
+      return {
+        screen: 'collegeTeamProfile',
+        activeLeague: 'college',
+        selectedCollegeTeamId,
+        collegeTeamProfileTab: tab,
+        previousScreenBeforeCollegeTeamProfile: previousScreen,
+        error: null
+      };
+    }),
+
+  closeCollegeTeamProfile: () =>
+    set((state) => ({
+      screen:
+        state.previousScreenBeforeCollegeTeamProfile && state.previousScreenBeforeCollegeTeamProfile !== 'collegeTeamProfile'
+          ? state.previousScreenBeforeCollegeTeamProfile
+          : 'roster',
+      previousScreenBeforeCollegeTeamProfile: null,
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(state.world, state.selectedCollegeTeamId)
     })),
 
   openPlayerProfile: (playerId, returnScreen) =>
@@ -204,10 +255,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       world,
       activeLeague: 'highSchool',
       selectedTeamId: resolveSelectedTeamId(world, null),
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(world, null),
       selectedPlayerId: null,
       teamProfileTab: 'overview',
+      collegeTeamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforeCollegeTeamProfile: null,
       previousScreenBeforePlayerProfile: null,
       error: null
     });
@@ -229,10 +283,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       world,
       activeLeague: 'highSchool',
       selectedTeamId: resolveSelectedTeamId(world, null),
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(world, null),
       selectedPlayerId: null,
       teamProfileTab: 'overview',
+      collegeTeamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforeCollegeTeamProfile: null,
       previousScreenBeforePlayerProfile: null,
       error: null
     });
@@ -240,16 +297,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   save: async () => {
     const world = get().world;
-    if (world) {
-      await saveWorld(world);
-    }
+    if (world) await saveWorld(world);
   },
 
   simNextWeek: async () => {
     const world = get().world;
-    if (!world) {
-      return;
-    }
+    if (!world) return;
 
     const normalized = normalizeWorldState(world);
     const updated =
@@ -260,6 +313,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
       selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));
@@ -269,9 +323,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   simFullSeason: async () => {
     const world = get().world;
-    if (!world) {
-      return;
-    }
+    if (!world) return;
 
     const normalized = normalizeWorldState(world);
     const updated =
@@ -282,6 +334,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
       selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));
@@ -291,9 +344,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   advanceToNextSeason: async () => {
     const world = get().world;
-    if (!world) {
-      return;
-    }
+    if (!world) return;
 
     if (world.phase !== 'offseason' || world.season.championId === null) {
       set({ error: 'Сначала закончи текущий сезон.' });
@@ -305,6 +356,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
+      selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
+      error: null
+    }));
+
+    await saveWorld(updated);
+  },
+
+  advanceCollegeToNextSeason: async () => {
+    const world = get().world;
+    if (!world) return;
+
+    if (!world.collegeSeason?.championTeamId) {
+      set({ error: 'Сначала закончи колледжский сезон.' });
+      return;
+    }
+
+    const updated = normalizeWorldState(advanceCollegeSeason(normalizeWorldState(world)));
+
+    set((state) => ({
+      world: updated,
+      selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
       selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));

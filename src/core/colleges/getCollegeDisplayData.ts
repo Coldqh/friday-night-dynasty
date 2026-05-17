@@ -1,6 +1,7 @@
 import { GameWorld } from '../world/worldTypes';
 import { calculateCollegeStandings } from './collegeStandings';
 import { getCollegeRosterStrength } from './collegeRatings';
+import { isCollegeRivalryGame } from './collegeRivalries';
 
 export interface CollegeScheduleEntry {
   gameId: string;
@@ -14,6 +15,7 @@ export interface CollegeScheduleEntry {
   status: 'Upcoming' | 'Final';
   score: string;
   winnerName: string | null;
+  isRivalry: boolean;
 }
 
 export interface CollegeStandingEntry {
@@ -35,10 +37,7 @@ function getTeamName(world: GameWorld, teamId: string) {
 }
 
 function toScore(homeScore: number | null, awayScore: number | null) {
-  if (homeScore === null || awayScore === null) {
-    return '';
-  }
-
+  if (homeScore === null || awayScore === null) return '';
   return `${awayScore}-${homeScore}`;
 }
 
@@ -57,7 +56,8 @@ function toScheduleEntry(world: GameWorld, game: NonNullable<GameWorld['collegeS
     homeTeamName: getTeamName(world, game.homeTeamId),
     status: game.homeScore === null || game.awayScore === null ? 'Upcoming' : 'Final',
     score: toScore(game.homeScore, game.awayScore),
-    winnerName
+    winnerName,
+    isRivalry: isCollegeRivalryGame(world, game.awayTeamId, game.homeTeamId)
   };
 }
 
@@ -94,6 +94,10 @@ export function getCollegeSchedule(world: GameWorld): CollegeScheduleEntry[] {
   fromCompleted.forEach((game) => byId.set(game.gameId, game));
 
   return [...byId.values()].sort((left, right) => left.week - right.week || left.awayTeamName.localeCompare(right.awayTeamName));
+}
+
+export function getCollegeTeamSchedule(world: GameWorld, teamId: string) {
+  return getCollegeSchedule(world).filter((game) => game.awayTeamId === teamId || game.homeTeamId === teamId);
 }
 
 export function getCollegeUpcomingSchedule(world: GameWorld) {

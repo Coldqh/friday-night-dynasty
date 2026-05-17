@@ -33,6 +33,7 @@ export function DashboardScreen() {
   const simNextWeek = useGameStore((state) => state.simNextWeek);
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
+  const advanceCollegeToNextSeason = useGameStore((state) => state.advanceCollegeToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
   const slate = getWeeklySlate(world);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
@@ -81,14 +82,18 @@ export function DashboardScreen() {
             <span>колледжей {collegeCount}</span>
             <span>игроков колледжа {collegePlayerCount}</span>
           </div>
-          <div className="button-row">
-            <Button disabled={Boolean(collegeSeason?.championTeamId)} onClick={simNextWeek}>
-              Симулировать неделю
-            </Button>
-            <Button disabled={Boolean(collegeSeason?.championTeamId)} variant="ghost" onClick={simFullSeason}>
-              Симулировать сезон
-            </Button>
-          </div>
+          {collegeSeason?.championTeamId ? (
+            <div className="button-row">
+              <Button onClick={advanceCollegeToNextSeason}>Новый сезон колледжей</Button>
+            </div>
+          ) : (
+            <div className="button-row">
+              <Button onClick={simNextWeek}>Симулировать неделю</Button>
+              <Button variant="ghost" onClick={simFullSeason}>
+                Симулировать сезон
+              </Button>
+            </div>
+          )}
         </Card>
 
         <Card title="База колледжей">

@@ -22,9 +22,35 @@ function getFullName(player: Pick<Player, 'firstName' | 'lastName'> | Pick<Colle
   return `${player.firstName} ${player.lastName}`;
 }
 
+function getCollegePlayerBySourcePlayerId(world: GameWorld, sourcePlayerId: string | null) {
+  if (!sourcePlayerId) {
+    return null;
+  }
+
+  const commitment = (world.commitments ?? []).find(
+    (entry) => entry.playerId === sourcePlayerId && entry.convertedToCollegePlayerId
+  );
+
+  if (commitment?.convertedToCollegePlayerId) {
+    return (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId) ?? null;
+  }
+
+  return (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId) ?? null;
+}
+
 function getTarget(world: GameWorld | null, selectedPlayerId: string | null): ProfileTarget | null {
   if (!world) {
     return null;
+  }
+
+  const directCollege = (world.collegePlayers ?? []).find((entry) => entry.id === selectedPlayerId);
+  if (directCollege) {
+    return { kind: 'college', player: directCollege };
+  }
+
+  const convertedCollege = getCollegePlayerBySourcePlayerId(world, selectedPlayerId);
+  if (convertedCollege) {
+    return { kind: 'college', player: convertedCollege };
   }
 
   const school = world.players.find((entry) => entry.id === selectedPlayerId);
@@ -35,11 +61,6 @@ function getTarget(world: GameWorld | null, selectedPlayerId: string | null): Pr
   const graduate = (world.graduatedPlayers ?? []).find((entry) => entry.id === selectedPlayerId);
   if (graduate) {
     return { kind: 'graduate', player: graduate };
-  }
-
-  const college = (world.collegePlayers ?? []).find((entry) => entry.id === selectedPlayerId);
-  if (college) {
-    return { kind: 'college', player: college };
   }
 
   const fallbackSchool = world.players[0];
@@ -75,7 +96,8 @@ export function PlayerProfileScreen() {
 
   if (target.kind === 'college') {
     const player = target.player;
-    const isFavorite = favoritePlayerIds.includes(player.id);
+    const favoriteKey = favoritePlayerIds.includes(player.sourcePlayerId) ? player.sourcePlayerId : player.id;
+    const isFavorite = favoritePlayerIds.includes(favoriteKey);
     const person = (world.people ?? []).find((entry) => entry.id === player.personId) ?? null;
     const school = world.schools.find((entry) => entry.id === player.sourceSchoolId) ?? null;
     const collegeTeam = (world.collegeTeams ?? []).find((entry) => entry.id === player.collegeTeamId) ?? null;
@@ -94,7 +116,7 @@ export function PlayerProfileScreen() {
             </div>
             <button
               className={isFavorite ? 'favorite-star active' : 'favorite-star'}
-              onClick={() => toggleFavoritePlayer(player.id)}
+              onClick={() => toggleFavoritePlayer(favoriteKey)}
               title={isFavorite ? 'Убрать из избранных' : 'Добавить в избранные'}
             >
               ★

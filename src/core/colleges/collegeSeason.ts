@@ -234,20 +234,17 @@ function finishCollegeSeason(world: GameWorld, rng: SeededRng): GameWorld {
     ...world,
     collegeTeams: nextTeams.map((team) => ({
       ...team,
-      history:
-        team.id === champion?.id || team.id === runnerUp?.id
-          ? [
-              ...team.history.filter((entry) => entry.year !== world.collegeSeason?.year),
-              {
-                year: world.collegeSeason?.year ?? world.currentYear,
-                wins: team.wins,
-                losses: team.losses,
-                pointsFor: team.pointsFor,
-                pointsAgainst: team.pointsAgainst,
-                wonTitle: team.id === champion?.id
-              }
-            ]
-          : team.history
+      history: [
+        ...team.history.filter((entry) => entry.year !== (world.collegeSeason?.year ?? world.currentYear)),
+        {
+          year: world.collegeSeason?.year ?? world.currentYear,
+          wins: team.wins,
+          losses: team.losses,
+          pointsFor: team.pointsFor,
+          pointsAgainst: team.pointsAgainst,
+          wonTitle: team.id === champion?.id
+        }
+      ]
     })),
     collegePlayers: nextCollegePlayers,
     collegeSeason: world.collegeSeason

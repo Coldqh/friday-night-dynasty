@@ -17,6 +17,7 @@ export function ScheduleScreen() {
   const world = useGameStore((state) => state.world)!;
   const activeLeague = useGameStore((state) => state.activeLeague);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
+  const openCollegeTeamProfile = useGameStore((state) => state.openCollegeTeamProfile);
   const [filter, setFilter] = useState<ScheduleFilter>('all');
   const rivalryGameIds = new Set(getRivalryGames(world).map((game) => game.gameId));
 
@@ -89,7 +90,7 @@ export function ScheduleScreen() {
 
             {filteredSchedule.map((game) => {
               const isHighSchoolGame = activeLeague === 'highSchool';
-              const isRivalry = isHighSchoolGame && rivalryGameIds.has(game.gameId);
+              const isRivalry = isHighSchoolGame ? rivalryGameIds.has(game.gameId) : Boolean('isRivalry' in game && game.isRivalry);
 
               return (
                 <div className="schedule-card-row" key={game.gameId}>
@@ -105,7 +106,12 @@ export function ScheduleScreen() {
                           {game.awayTeamName}
                         </button>
                       ) : (
-                        <span>{game.awayTeamName}</span>
+                        <button
+                          className="schedule-team-button"
+                          onClick={() => openCollegeTeamProfile(game.awayTeamId, 'schedule', 'schedule')}
+                        >
+                          {game.awayTeamName}
+                        </button>
                       )}
                       {isHighSchoolGame ? (
                         <button
@@ -115,7 +121,12 @@ export function ScheduleScreen() {
                           {game.homeTeamName}
                         </button>
                       ) : (
-                        <span>{game.homeTeamName}</span>
+                        <button
+                          className="schedule-team-button"
+                          onClick={() => openCollegeTeamProfile(game.homeTeamId, 'schedule', 'schedule')}
+                        >
+                          {game.homeTeamName}
+                        </button>
                       )}
                       <span>{isRivalry ? 'дерби' : '—'}</span>
                     </div>
@@ -131,7 +142,12 @@ export function ScheduleScreen() {
                           {game.awayTeamName}
                         </button>
                       ) : (
-                        <span>{game.awayTeamName}</span>
+                        <button
+                          className="schedule-team-button"
+                          onClick={() => openCollegeTeamProfile(game.awayTeamId, 'schedule', 'schedule')}
+                        >
+                          {game.awayTeamName}
+                        </button>
                       )}
                       {isHighSchoolGame ? (
                         <button
@@ -141,7 +157,12 @@ export function ScheduleScreen() {
                           {game.homeTeamName}
                         </button>
                       ) : (
-                        <span>{game.homeTeamName}</span>
+                        <button
+                          className="schedule-team-button"
+                          onClick={() => openCollegeTeamProfile(game.homeTeamId, 'schedule', 'schedule')}
+                        >
+                          {game.homeTeamName}
+                        </button>
                       )}
                       <span>{formatScheduleStatus(game.status)}</span>
                       <strong>{game.score || '—'}</strong>

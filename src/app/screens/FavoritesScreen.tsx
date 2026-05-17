@@ -4,18 +4,53 @@ import { CollegePlayer, GameWorld, Player } from '../../core/world/worldTypes';
 import { useGameStore } from '../store/useGameStore';
 
 type FavoriteEntry =
-  | { id: string; level: 'Школа'; player: Player; teamName: string }
-  | { id: string; level: 'Выпускник'; player: Player; teamName: string }
-  | { id: string; level: 'Колледж'; player: CollegePlayer; teamName: string };
+  | { id: string; openId: string; level: 'Школа'; player: Player; teamName: string }
+  | { id: string; openId: string; level: 'Выпускник'; player: Player; teamName: string }
+  | { id: string; openId: string; level: 'Колледж'; player: CollegePlayer; teamName: string };
+
+function getConvertedCollegePlayer(world: GameWorld, sourcePlayerId: string) {
+  const commitment = (world.commitments ?? []).find((entry) => entry.playerId === sourcePlayerId && entry.convertedToCollegePlayerId);
+
+  if (commitment?.convertedToCollegePlayerId) {
+    return (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId) ?? null;
+  }
+
+  return (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId) ?? null;
+}
 
 function getFavoriteEntries(world: GameWorld, favoriteIds: string[]): FavoriteEntry[] {
   const entries: FavoriteEntry[] = [];
 
   favoriteIds.forEach((id) => {
+    const directCollege = (world.collegePlayers ?? []).find((player) => player.id === id);
+    if (directCollege) {
+      entries.push({
+        id,
+        openId: directCollege.id,
+        level: 'Колледж',
+        player: directCollege,
+        teamName: (world.collegeTeams ?? []).find((team) => team.id === directCollege.collegeTeamId)?.shortName ?? '—'
+      });
+      return;
+    }
+
+    const converted = getConvertedCollegePlayer(world, id);
+    if (converted) {
+      entries.push({
+        id,
+        openId: converted.id,
+        level: 'Колледж',
+        player: converted,
+        teamName: (world.collegeTeams ?? []).find((team) => team.id === converted.collegeTeamId)?.shortName ?? '—'
+      });
+      return;
+    }
+
     const schoolPlayer = world.players.find((player) => player.id === id);
     if (schoolPlayer) {
       entries.push({
         id,
+        openId: schoolPlayer.id,
         level: 'Школа',
         player: schoolPlayer,
         teamName: world.teams.find((team) => team.id === schoolPlayer.teamId)?.shortName ?? '—'
@@ -27,20 +62,10 @@ function getFavoriteEntries(world: GameWorld, favoriteIds: string[]): FavoriteEn
     if (graduate) {
       entries.push({
         id,
+        openId: graduate.id,
         level: 'Выпускник',
         player: graduate,
         teamName: world.teams.find((team) => team.id === graduate.teamId)?.shortName ?? '—'
-      });
-      return;
-    }
-
-    const collegePlayer = (world.collegePlayers ?? []).find((player) => player.id === id);
-    if (collegePlayer) {
-      entries.push({
-        id,
-        level: 'Колледж',
-        player: collegePlayer,
-        teamName: (world.collegeTeams ?? []).find((team) => team.id === collegePlayer.collegeTeamId)?.shortName ?? '—'
       });
     }
   });
@@ -83,7 +108,7 @@ export function FavoritesScreen() {
             </div>
             {entries.map((entry) => (
               <div className="table-row grid-favorites" key={entry.id}>
-                <button className="table-row-button" onClick={() => openPlayerProfile(entry.id, 'favorites')}>
+                <button className="table-row-button" onClick={() => openPlayerProfile(entry.openId, 'favorites')}>
                   {getName(entry.player)}
                 </button>
                 <span>{entry.level}</span>

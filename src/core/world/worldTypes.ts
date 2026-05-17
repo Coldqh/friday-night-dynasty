@@ -137,6 +137,7 @@ export interface CollegeTeam {
   defenseStyle: DefenseStyle;
   rosterPlayerIds: string[];
   recruitingNeeds: Position[];
+  rivalryIds: string[];
   wins: number;
   losses: number;
   pointsFor: number;

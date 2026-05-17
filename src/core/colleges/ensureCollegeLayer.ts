@@ -4,6 +4,37 @@ import { calculateCollegeStandings } from './collegeStandings';
 import { SeededRng } from '../random/rng';
 import { GameWorld } from '../world/worldTypes';
 
+function normalizeCollegeTeam<T extends NonNullable<GameWorld['collegeTeams']>[number]>(team: T): T {
+  return {
+    ...team,
+    rivalryIds: Array.isArray(team.rivalryIds) ? team.rivalryIds : [],
+    pointsFor: team.pointsFor ?? 0,
+    pointsAgainst: team.pointsAgainst ?? 0,
+    history: Array.isArray(team.history) ? team.history : []
+  };
+}
+
+function ensureFallbackRivalries(teams: NonNullable<GameWorld['collegeTeams']>) {
+  const next = teams.map(normalizeCollegeTeam);
+  const hasAny = next.some((team) => team.rivalryIds.length > 0);
+
+  if (hasAny || next.length < 2) {
+    return next;
+  }
+
+  for (let index = 0; index < next.length; index += 2) {
+    const first = next[index];
+    const second = next[index + 1] ?? next[0];
+
+    if (!first || !second || first.id === second.id) continue;
+
+    first.rivalryIds = [second.id];
+    second.rivalryIds = [first.id];
+  }
+
+  return next;
+}
+
 export function ensureCollegeLayer(world: GameWorld): GameWorld {
   const hasColleges = Array.isArray(world.colleges) && world.colleges.length > 0;
   const hasCollegeTeams = Array.isArray(world.collegeTeams) && world.collegeTeams.length > 0;
@@ -11,12 +42,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
   const layer = hasColleges && hasCollegeTeams
     ? {
         colleges: world.colleges ?? [],
-        collegeTeams: (world.collegeTeams ?? []).map((team) => ({
-          ...team,
-          pointsFor: team.pointsFor ?? 0,
-          pointsAgainst: team.pointsAgainst ?? 0,
-          history: Array.isArray(team.history) ? team.history : []
-        }))
+        collegeTeams: ensureFallbackRivalries(world.collegeTeams ?? [])
       }
     : generateCollegeLayer({
         stateId: world.state.id,
@@ -50,9 +76,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
       : [],
     collegeSeason: {
       ...collegeSeason,
-      standings: collegeSeason.standings?.length
-        ? collegeSeason.standings
-        : calculateCollegeStandings(layer.collegeTeams, collegePlayers)
+      standings: calculateCollegeStandings(layer.collegeTeams, collegePlayers)
     },
     history: {
       ...world.history,

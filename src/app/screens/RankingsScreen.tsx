@@ -6,6 +6,7 @@ export function RankingsScreen() {
   const world = useGameStore((state) => state.world)!;
   const activeLeague = useGameStore((state) => state.activeLeague);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
+  const openCollegeTeamProfile = useGameStore((state) => state.openCollegeTeamProfile);
 
   if (activeLeague === 'college') {
     const standings = getCollegeStandings(world);
@@ -22,7 +23,11 @@ export function RankingsScreen() {
           </div>
 
           {standings.map((entry) => (
-            <div className="table-row grid-college-standings" key={entry.teamId}>
+            <button
+              className="table-row grid-college-standings table-row-button"
+              key={entry.teamId}
+              onClick={() => openCollegeTeamProfile(entry.teamId, 'overview', 'rankings')}
+            >
               <span>{entry.rank}</span>
               <span>{entry.teamName}</span>
               <span>
@@ -30,7 +35,7 @@ export function RankingsScreen() {
               </span>
               <strong>{entry.rosterStrength}</strong>
               <span>{entry.recruitingNeeds}</span>
-            </div>
+            </button>
           ))}
         </div>
       </Card>

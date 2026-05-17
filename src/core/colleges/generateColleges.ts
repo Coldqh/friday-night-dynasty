@@ -9,13 +9,8 @@ const needsPool: Position[] = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', '
 function getCollegeName(cityName: string, index: number) {
   const suffix = suffixes[index % suffixes.length];
 
-  if (suffix === 'A&M') {
-    return `${cityName} A&M`;
-  }
-
-  if (suffix === 'State') {
-    return `${cityName} State`;
-  }
+  if (suffix === 'A&M') return `${cityName} A&M`;
+  if (suffix === 'State') return `${cityName} State`;
 
   return `${cityName} ${suffix}`;
 }
@@ -35,6 +30,42 @@ function shuffleWithRng<T>(items: T[], rng: SeededRng) {
 
 function pickNeeds(rng: SeededRng) {
   return shuffleWithRng(needsPool, rng).slice(0, 3);
+}
+
+function assignCollegeRivalries(teams: CollegeTeam[]) {
+  if (teams.length < 2) {
+    return teams;
+  }
+
+  const next = teams.map((team) => ({ ...team, rivalryIds: [] as string[] }));
+
+  for (let index = 0; index < next.length; index += 2) {
+    const first = next[index];
+    const second = next[index + 1] ?? next[0];
+
+    if (!first || !second || first.id === second.id) {
+      continue;
+    }
+
+    first.rivalryIds = [...new Set([...first.rivalryIds, second.id])];
+    second.rivalryIds = [...new Set([...second.rivalryIds, first.id])];
+  }
+
+  if (next.length >= 4) {
+    for (let index = 0; index < next.length; index += 1) {
+      const team = next[index];
+      const cross = next[(index + 3) % next.length];
+
+      if (!team || !cross || team.id === cross.id) {
+        continue;
+      }
+
+      team.rivalryIds = [...new Set([...team.rivalryIds, cross.id])].slice(0, 2);
+      cross.rivalryIds = [...new Set([...cross.rivalryIds, team.id])].slice(0, 2);
+    }
+  }
+
+  return next;
 }
 
 export function generateCollegeLayer({
@@ -76,6 +107,7 @@ export function generateCollegeLayer({
       defenseStyle: rng.pick(defenseStyles),
       rosterPlayerIds: [],
       recruitingNeeds: pickNeeds(rng),
+      rivalryIds: [],
       wins: 0,
       losses: 0,
       pointsFor: 0,
@@ -87,5 +119,5 @@ export function generateCollegeLayer({
     collegeTeams.push(team);
   });
 
-  return { colleges, collegeTeams };
+  return { colleges, collegeTeams: assignCollegeRivalries(collegeTeams) };
 }
