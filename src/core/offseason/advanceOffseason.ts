@@ -1,6 +1,7 @@
 import { createCollegeSeason } from '../colleges/collegeSeason';
 import { convertCommitmentsToCollegePlayers, developCollegePlayers } from '../colleges/collegePlayerLifecycle';
 import { calculateCollegeStandings } from '../colleges/collegeStandings';
+import { updateCollegeTeamNeeds } from '../colleges/collegeRosterPlan';
 import { recordSeasonHistory } from '../history/recordSeasonHistory';
 import { appendCareerEvent, createCareerEvent, createPeopleFromPlayers, normalizePlayerIdentity } from '../people/personUtils';
 import { developPlayer } from '../players/developPlayer';
@@ -229,6 +230,13 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     rng
   });
 
+  const developedCollege = developCollegePlayers({
+    players: world.collegePlayers ?? [],
+    rng
+  });
+  world.collegePlayers = developedCollege.returningPlayers;
+  world.collegeTeams = updateCollegeTeamNeeds(world.collegeTeams ?? [], world.collegePlayers ?? []);
+
   const recruitingResult = processRecruitingClass({
     world,
     graduatingPlayers,
@@ -244,11 +252,6 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     ...recruitingResult.profiles
   ];
   const combinedCommitments = [...(world.commitments ?? []), ...recruitingResult.commitments];
-  const developedCollege = developCollegePlayers({
-    players: world.collegePlayers ?? [],
-    rng
-  });
-  world.collegePlayers = developedCollege.returningPlayers;
   const conversion = convertCommitmentsToCollegePlayers({
     world,
     commitments: combinedCommitments,
@@ -264,7 +267,7 @@ export function advanceOffseason(input: GameWorld): GameWorld {
 
   const nextWorldYear = world.season.year + 1;
 
-  world.collegeTeams = resetCollegeTeamsForNewSeason(world);
+  world.collegeTeams = updateCollegeTeamNeeds(resetCollegeTeamsForNewSeason(world), world.collegePlayers ?? []);
   world.collegeSeason = createCollegeSeason({
     world,
     rng,

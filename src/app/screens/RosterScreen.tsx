@@ -25,10 +25,9 @@ export function RosterScreen() {
                 <button className="team-chip-button" onClick={() => selectCollegeTeam(team.teamId)}>
                   <strong>{team.teamName}</strong>
                   <span>
-                    {team.wins}-{team.losses} / престиж {team.prestige} / сила {team.rosterStrength}
+                    {team.wins}-{team.losses} / очки {team.pointsFor}-{team.pointsAgainst} / разн {team.pointDifferential}
                   </span>
                   <span>игроков: {(world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.teamId).length}</span>
-                  <span>позиции: {team.recruitingNeeds}</span>
                 </button>
 
                 <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.teamId, 'overview', 'roster')}>

@@ -1,6 +1,8 @@
 import { generateCollegeLayer } from './generateColleges';
 import { generateCollegeSchedule } from './collegeSchedule';
 import { calculateCollegeStandings } from './collegeStandings';
+import { rebalanceAllCollegeRosters, shouldRepairCollegeRoster } from './generateCollegePlayers';
+import { updateCollegeTeamNeeds } from './collegeRosterPlan';
 import { SeededRng } from '../random/rng';
 import { GameWorld } from '../world/worldTypes';
 
@@ -75,9 +77,20 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
         cities: world.cities,
         rng
       });
-  const collegePlayers = Array.isArray(world.collegePlayers) ? world.collegePlayers : [];
+  const originalCollegePlayers = Array.isArray(world.collegePlayers) ? world.collegePlayers : [];
+  const mustRepairRosters =
+    originalCollegePlayers.length === 0 ||
+    layer.collegeTeams.some((team) => shouldRepairCollegeRoster(team, originalCollegePlayers));
+  const collegePlayers = mustRepairRosters
+    ? rebalanceAllCollegeRosters({
+        rng,
+        teams: layer.collegeTeams,
+        cities: world.cities,
+        players: originalCollegePlayers
+      })
+    : originalCollegePlayers;
   const seasonYearMismatch = world.collegeSeason?.year !== undefined && world.collegeSeason.year !== world.season.year;
-  const collegeTeams = seasonYearMismatch
+  const baseCollegeTeams = seasonYearMismatch
     ? layer.collegeTeams.map((team) => ({
         ...team,
         wins: 0,
@@ -86,7 +99,8 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
         pointsAgainst: 0
       }))
     : layer.collegeTeams;
-  const collegeSeason = !world.collegeSeason || seasonYearMismatch
+  const collegeTeams = updateCollegeTeamNeeds(baseCollegeTeams, collegePlayers);
+  const collegeSeason = !world.collegeSeason || seasonYearMismatch || mustRepairRosters
     ? createFreshCollegeSeason(
         {
           ...world,

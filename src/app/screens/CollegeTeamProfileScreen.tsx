@@ -94,7 +94,7 @@ export function CollegeTeamProfileScreen() {
               <span>баланс {standing ? `${standing.wins}-${standing.losses}` : `${team.wins}-${team.losses}`}</span>
               <span>очки {standing ? `${standing.pointsFor}-${standing.pointsAgainst}` : `${team.pointsFor}-${team.pointsAgainst}`}</span>
               <span>разница {standing?.pointDifferential ?? team.pointsFor - team.pointsAgainst}</span>
-              <span>нужды {team.recruitingNeeds.join(', ')}</span>
+              
             </div>
           </Card>
 

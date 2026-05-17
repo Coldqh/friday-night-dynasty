@@ -1,6 +1,8 @@
 import { cityNames, mascots } from '../../content/names';
 import { generateCoach } from '../coaches/generateCoach';
 import { generateCollegeLayer } from '../colleges/generateColleges';
+import { generateInitialCollegeRoster } from '../colleges/generateCollegePlayers';
+import { updateCollegeTeamNeeds } from '../colleges/collegeRosterPlan';
 import { createCollegeSeason } from '../colleges/collegeSeason';
 import { createPeopleFromPlayers } from '../people/personUtils';
 import { generatePlayersForTeam } from '../players/generatePlayers';
@@ -134,11 +136,17 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
   assignRivalries(teams);
 
   const people = createPeopleFromPlayers(players, 2026, rng);
-  const { colleges, collegeTeams } = generateCollegeLayer({
+  const { colleges, collegeTeams: rawCollegeTeams } = generateCollegeLayer({
     stateId: state.id,
     cities,
     rng
   });
+  const collegePlayers = rawCollegeTeams.flatMap((team) => {
+    const city = cities.find((entry) => entry.id === team.cityId) ?? cities[0];
+
+    return city ? generateInitialCollegeRoster({ rng, team, city }) : [];
+  });
+  const collegeTeams = updateCollegeTeamNeeds(rawCollegeTeams, collegePlayers);
   const baseWorldForCollegeSeason: GameWorld = {
     id: 'temp',
     seed,
@@ -155,7 +163,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     graduatedPlayers: [],
     colleges,
     collegeTeams,
-    collegePlayers: [],
+    collegePlayers,
     recruitingProfiles: [],
     commitments: [],
     season: {
@@ -211,7 +219,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     graduatedPlayers: [],
     colleges,
     collegeTeams,
-    collegePlayers: [],
+    collegePlayers,
     recruitingProfiles: [],
     commitments: [],
     collegeSeason,

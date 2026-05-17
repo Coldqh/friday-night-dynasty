@@ -261,7 +261,7 @@ button:disabled {
 }
 
 .grid-college-standings {
-  grid-template-columns: 0.35fr 1.45fr 0.65fr 0.65fr 1.4fr;
+  grid-template-columns: 0.3fr 1.6fr 0.7fr 0.55fr 0.55fr 0.7fr;
 }
 
 .grid-profile-roster {
@@ -517,7 +517,7 @@ button:disabled {
   }
 
   .grid-college-standings {
-    grid-template-columns: 0.3fr 1.25fr 0.55fr 0.55fr 1fr;
+    grid-template-columns: 0.3fr 1.6fr 0.7fr 0.55fr 0.55fr 0.7fr;
   }
 
   .grid-commitments {

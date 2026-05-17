@@ -14,17 +14,18 @@ export function RankingsScreen() {
     return (
       <Card title="Таблица колледжей">
         <div className="table compact-table">
-          <div className="table-head grid-college-standings">
+          <div className="table-head grid-standings">
             <span>#</span>
             <span>команда</span>
             <span>п-б</span>
-            <span>сила</span>
-            <span>позиции</span>
+            <span>очк+</span>
+            <span>очк-</span>
+            <span>разн</span>
           </div>
 
           {standings.map((entry) => (
             <button
-              className="table-row grid-college-standings table-row-button"
+              className="table-row grid-standings table-row-button"
               key={entry.teamId}
               onClick={() => openCollegeTeamProfile(entry.teamId, 'overview', 'rankings')}
             >
@@ -33,8 +34,9 @@ export function RankingsScreen() {
               <span>
                 {entry.wins}-{entry.losses}
               </span>
-              <strong>{entry.rosterStrength}</strong>
-              <span>{entry.recruitingNeeds}</span>
+              <span>{entry.pointsFor}</span>
+              <span>{entry.pointsAgainst}</span>
+              <strong>{entry.pointDifferential}</strong>
             </button>
           ))}
         </div>
