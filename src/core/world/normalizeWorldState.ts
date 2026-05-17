@@ -1,4 +1,14 @@
-import { GameWorld, RivalryGameResult, SeasonLogEntry, TeamHistoryEntry, WorldHistory } from './worldTypes';
+import { ensurePeopleForPlayers, normalizePlayerIdentity } from '../people/personUtils';
+import { SeededRng } from '../random/rng';
+import {
+  GameWorld,
+  Person,
+  Player,
+  RivalryGameResult,
+  SeasonLogEntry,
+  TeamHistoryEntry,
+  WorldHistory
+} from './worldTypes';
 
 type LegacySeasonHistory = {
   year: number;
@@ -14,6 +24,8 @@ type LegacySeasonHistory = {
 };
 
 type LegacyWorld = GameWorld & {
+  people?: Person[];
+  graduatedPlayers?: Player[];
   season: GameWorld['season'] & {
     historyEntries?: SeasonLogEntry[];
   };
@@ -89,7 +101,13 @@ function toTitleGameHistory(season: LegacySeasonHistory) {
 
 export function normalizeWorldState(input: GameWorld): GameWorld {
   const world = structuredClone(input) as LegacyWorld;
+  const rng = new SeededRng(world.seed + (world.currentYear ?? world.season.year) * 31);
   const playersByTeam = new Map<string, string[]>();
+
+  world.players = world.players.map((player) => normalizePlayerIdentity(player, 'highSchool'));
+  world.graduatedPlayers = Array.isArray(world.graduatedPlayers)
+    ? world.graduatedPlayers.map((player) => normalizePlayerIdentity(player, 'graduated'))
+    : [];
 
   world.players.forEach((player) => {
     if (!playersByTeam.has(player.teamId)) {
@@ -117,6 +135,14 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     };
   });
 
+  const people = ensurePeopleForPlayers({
+    players: world.players,
+    graduatedPlayers: world.graduatedPlayers,
+    people: Array.isArray(world.people) ? world.people : [],
+    year: world.currentYear ?? world.season.year,
+    rng
+  });
+
   const legacySeasons = Array.isArray(world.history?.seasons) ? world.history.seasons : [];
   const champions =
     Array.isArray(world.history?.champions) && world.history.champions.length > 0
@@ -138,6 +164,9 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
 
   return {
     ...world,
+    players: world.players,
+    people,
+    graduatedPlayers: world.graduatedPlayers,
     teams: world.teams,
     season: {
       ...world.season,

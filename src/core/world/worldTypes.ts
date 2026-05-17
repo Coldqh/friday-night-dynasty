@@ -5,6 +5,64 @@ export type ClassYear = 'FR' | 'SO' | 'JR' | 'SR';
 export type OffenseStyle = 'balanced' | 'runHeavy' | 'passHeavy' | 'spread' | 'powerRun';
 export type DefenseStyle = 'balanced' | 'aggressive' | 'conservative' | 'blitzHeavy';
 
+export type CareerStage =
+  | 'highSchool'
+  | 'graduated'
+  | 'collegeProspect'
+  | 'college'
+  | 'draftProspect'
+  | 'pro'
+  | 'retired';
+
+export type PersonRoleType = 'player' | 'coach' | 'graduate' | 'scout' | 'gm' | 'retired';
+
+export type CareerEventType =
+  | 'created'
+  | 'freshmanArrival'
+  | 'development'
+  | 'graduation'
+  | 'recruiting'
+  | 'commitment'
+  | 'draft'
+  | 'proDebut'
+  | 'retirement'
+  | 'staffMove'
+  | 'general';
+
+export interface CareerEvent {
+  id: string;
+  year: number;
+  week: number;
+  type: CareerEventType;
+  title: string;
+  body: string;
+  teamId: string | null;
+  schoolId: string | null;
+}
+
+export interface PersonRole {
+  type: PersonRoleType;
+  entityId: string;
+  teamId: string | null;
+  schoolId: string | null;
+  startedYear: number;
+  endedYear: number | null;
+}
+
+export interface Person {
+  id: string;
+  firstName: string;
+  lastName: string;
+  birthYear: number;
+  hometownCityId: string;
+  personality: string;
+  ambition: number;
+  discipline: number;
+  reputation: number;
+  roles: PersonRole[];
+  careerEvents: CareerEvent[];
+}
+
 export interface StateRegion {
   id: string;
   name: string;
@@ -53,9 +111,12 @@ export interface PlayerStats {
 
 export interface Player {
   id: string;
+  personId?: string;
   teamId: string;
   schoolId: string;
   cityId: string;
+  hometownCityId?: string;
+  careerStage?: CareerStage;
   firstName: string;
   lastName: string;
   age: number;
@@ -277,6 +338,8 @@ export interface GameWorld {
   teams: Team[];
   coaches: Coach[];
   players: Player[];
+  people?: Person[];
+  graduatedPlayers?: Player[];
   season: SeasonState;
   news: NewsItem[];
   history: WorldHistory;

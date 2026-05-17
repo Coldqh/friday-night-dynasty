@@ -1,17 +1,34 @@
-# Patch summary
+# Friday Night Dynasty — late-season headline test fix
 
-This zip contains the changed/added files for Friday Night Dynasty:
+## Problem
 
-- README.md
-- package.json
-- scripts/check-built-index.mjs
-- docs/PROJECT_ANALYSIS_AND_ROADMAP.md
-- docs/LOCAL_AND_GITHUB_CHECKLIST.md
+`pnpm test` failed in:
 
-Purpose:
+`src/tests/core/historyNews.test.ts`
 
-- sync README with actual pnpm version;
-- document the project vision and roadmap;
-- add a local GitHub Pages index verification script;
-- add `pnpm check:index` and `pnpm verify:local` commands;
-- document the local build and GitHub Pages launch checklist.
+The failing assertion expected the generated headlines for a late regular-season world to include at least one of:
+
+- `playoffRace`
+- `mustWin`
+- `lateSeason`
+
+The application still built correctly, and `check:index` passed.
+
+## Cause
+
+`generateWeeklyHeadlines` did generate the generic `lateSeason` headline, but it was pushed too late in the headline list. Because the function returns only `headlines.slice(0, 10)`, the late-season item could be pushed out of the returned list by recap/momentum/poll-pressure headlines.
+
+## Fix
+
+Moved the generic `lateSeason` headline block higher in `generateWeeklyHeadlines`, immediately after Game of the Week and before completed-game recap headlines.
+
+## After applying
+
+Run:
+
+```bash
+cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
+pnpm test
+pnpm build
+pnpm check:index
+```

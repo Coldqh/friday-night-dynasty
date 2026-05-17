@@ -1,5 +1,6 @@
 import { cityNames, mascots } from '../../content/names';
 import { generateCoach } from '../coaches/generateCoach';
+import { createPeopleFromPlayers } from '../people/personUtils';
 import { generatePlayersForTeam } from '../players/generatePlayers';
 import { makeId, SeededRng } from '../random/rng';
 import { generateSchedule } from '../schedule/generateSchedule';
@@ -112,9 +113,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
   teams.forEach((team) => {
     const school = schools.find((item) => item.id === team.schoolId)!;
     const city = cities.find((item) => item.id === team.cityId)!;
-    const coach = coaches.find((item) => item.id === team.coachId)!;
     const roster = players.filter((player) => player.teamId === team.id).map((player) => player.id);
-    const ratings = calculateTeamRatings(team, players, coach);
+    const ratings = calculateTeamRatings(team, players, coaches.find((item) => item.id === team.coachId)!);
 
     team.schoolName = school.name;
     team.cityName = city.name;
@@ -131,6 +131,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
 
   assignRivalries(teams);
 
+  const people = createPeopleFromPlayers(players, 2026, rng);
   const schedule = generateSchedule({ rng, teams, weeks: 10 });
   const kickoffNews = {
     id: makeId('news', rng),
@@ -152,6 +153,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     teams,
     coaches,
     players,
+    people,
+    graduatedPlayers: [],
     season: {
       year: 2026,
       currentWeek: 0,

@@ -53,12 +53,16 @@ export function generatePlayersForTeam({
       const base = clamp(rng.int(38, 76) + programBoost, 35, 88);
       const potential = clamp(base + rng.int(6, 24), base + 2, 99);
       const selectedTraits = rng.shuffle(traits).slice(0, rng.int(1, 2));
+      const personId = makeId('person', rng);
 
       players.push({
         id: makeId('player', rng),
+        personId,
         teamId: team.id,
         schoolId: school.id,
         cityId: city.id,
+        hometownCityId: city.id,
+        careerStage: 'highSchool',
         firstName: rng.pick(firstNames),
         lastName: rng.pick(lastNames),
         age:

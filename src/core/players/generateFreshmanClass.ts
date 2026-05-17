@@ -84,12 +84,16 @@ export function generateFreshmanClass({
       base + 4,
       96
     );
+    const personId = makeId('person', rng);
 
     freshmen.push({
       id: makeId('player', rng),
+      personId,
       teamId: team.id,
       schoolId: school.id,
       cityId: city.id,
+      hometownCityId: city.id,
+      careerStage: 'highSchool',
       firstName: rng.pick(firstNames),
       lastName: rng.pick(lastNames),
       age: rng.int(14, 15),

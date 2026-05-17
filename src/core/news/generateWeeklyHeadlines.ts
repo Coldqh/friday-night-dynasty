@@ -252,6 +252,17 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     );
   }
 
+  if (world.phase === 'regular' && world.season.currentWeek >= Math.max(0, world.season.regularSeasonWeeks - 3)) {
+    pushHeadline(
+      createHeadline(world, rng, {
+        type: 'lateSeason',
+        title: `Late-season pressure is building across ${world.state.name}`,
+        body: weekStakes.summary,
+        teamIds: []
+      })
+    );
+  }
+
   getCompletedGamesForHeadlines(world)
     .map((game) => buildGameStoryHeadline(world, rng, game))
     .forEach((headline) => pushHeadline(headline));
@@ -311,17 +322,6 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
         teamIds: [rivalryGame.awayTeamId, rivalryGame.homeTeamId],
         gameId: rivalryGame.gameId,
         week: rivalryGame.week
-      })
-    );
-  }
-
-  if (world.phase === 'regular' && world.season.currentWeek >= Math.max(0, world.season.regularSeasonWeeks - 3)) {
-    pushHeadline(
-      createHeadline(world, rng, {
-        type: 'lateSeason',
-        title: `Late-season pressure is building across ${world.state.name}`,
-        body: weekStakes.summary,
-        teamIds: []
       })
     );
   }

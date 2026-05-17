@@ -47,6 +47,9 @@ export function DashboardScreen() {
     currentWeek: world.season.currentWeek,
     completedGames: world.season.completedGames.length
   });
+  const peopleCount = world.people?.length ?? 0;
+  const graduatedCount = world.graduatedPlayers?.length ?? 0;
+  const activePlayerCount = world.players.length;
 
   return (
     <div className="stack">
@@ -86,6 +89,26 @@ export function DashboardScreen() {
             <Button onClick={advanceToNextSeason}>Advance Offseason</Button>
           </div>
         )}
+      </Card>
+
+      <Card title="Living World Pulse">
+        <div className="dashboard-grid">
+          <div>
+            <div className="eyebrow">Tracked People</div>
+            <p className="big-number">{peopleCount}</p>
+          </div>
+          <div>
+            <div className="eyebrow">Active Players</div>
+            <p className="big-number">{activePlayerCount}</p>
+          </div>
+          <div>
+            <div className="eyebrow">Graduates</div>
+            <p className="big-number">{graduatedCount}</p>
+          </div>
+        </div>
+        <p className="muted">
+          v0.2 begins the ecosystem layer: players now have person records, personality, reputation and career events.
+        </p>
       </Card>
 
       {world.phase === 'offseason' && latestChampion ? (

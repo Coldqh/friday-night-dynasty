@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { getPlayerLifeSummary } from '../../core/people/personUtils';
 import { getRivalryRecord } from '../../core/rivalries/getRivalryRecord';
 import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
 import { getTeamIdentityProfile } from '../../core/teams/getTeamIdentityProfile';
@@ -167,6 +168,7 @@ export function TeamProfileScreen() {
                         ? `${player.firstName} ${player.lastName} / ${player.position} / ${player.classYear}`
                         : 'No player available in this role yet.'}
                     </p>
+                    {player ? <p className="muted">{getPlayerLifeSummary(world, player.id)}</p> : null}
                   </div>
                   <strong>{player ? `OVR ${player.overall} / POT ${player.potential}` : 'N/A'}</strong>
                 </div>
@@ -254,7 +256,7 @@ export function TeamProfileScreen() {
               <span>Class</span>
               <span>OVR</span>
               <span>POT</span>
-              <span>Traits</span>
+              <span>Life</span>
             </div>
             {roster.map((player) => (
               <div className="table-row grid-profile-roster" key={player.id}>
@@ -265,7 +267,10 @@ export function TeamProfileScreen() {
                 <span>{player.classYear}</span>
                 <strong>{player.overall}</strong>
                 <strong>{player.potential}</strong>
-                <span>{player.traits.length > 0 ? player.traits.join(', ') : 'No traits'}</span>
+                <span>
+                  {getPlayerLifeSummary(world, player.id)}
+                  {player.traits.length > 0 ? ` / ${player.traits.join(', ')}` : ''}
+                </span>
               </div>
             ))}
           </div>
