@@ -1,5 +1,7 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { GAME_VERSION_LABEL } from '../version';
+import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { useGameStore } from '../store/useGameStore';
@@ -37,8 +39,10 @@ export function DashboardScreen() {
   const simNextWeek = useGameStore((state) => state.simNextWeek);
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
+  const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
   const slate = getWeeklySlate(world);
   const headlines = generateWeeklyHeadlines(world).slice(0, 5);
+  const awards = getSeasonAwardWatch(world).slice(0, 4);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
   const recentSeasonEntries = world.season.seasonLog.slice(0, 5);
@@ -73,6 +77,7 @@ export function DashboardScreen() {
           {getDashboardStatusPills(seasonStatus, world.teams.length).map((item) => (
             <span key={item}>{item}</span>
           ))}
+          <span>{GAME_VERSION_LABEL}</span>
         </div>
 
         <div className="button-row">
@@ -107,8 +112,31 @@ export function DashboardScreen() {
           </div>
         </div>
         <p className="muted">
-          v0.2 begins the ecosystem layer: players now have person records, personality, reputation and career events.
+          {GAME_VERSION_LABEL}: player profiles, career timelines, award watch and stricter rivalry scheduling.
         </p>
+      </Card>
+
+      <Card title="Award Watch">
+        {awards.length === 0 ? (
+          <p className="muted">Award watch will appear once the state has active players.</p>
+        ) : (
+          <div className="list">
+            {awards.map((award) => (
+              <div className="list-row" key={`${award.type}-${award.playerId}`}>
+                <div>
+                  <strong>{award.title}</strong>
+                  <p className="muted">
+                    {award.playerName} / {award.position} / {award.classYear} / {award.teamName}
+                  </p>
+                  <p className="muted">{award.reason}</p>
+                </div>
+                <button className="filter-chip" onClick={() => openPlayerProfile(award.playerId, 'dashboard')}>
+                  Profile
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {world.phase === 'offseason' && latestChampion ? (
@@ -125,29 +153,27 @@ export function DashboardScreen() {
           </div>
         </Card>
       ) : (
-        <>
-          <Card title="Game of the Week">
-            {slate.gameOfTheWeek ? (
-              <div className="stack compact-stack">
-                <div className="eyebrow">
-                  Week {slate.currentWeek + 1} / {slate.gameOfTheWeek.stageLabel}
-                </div>
-                <strong>
-                  {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
-                </strong>
-                <div className="tag-row">
-                  {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{slate.gameOfTheWeek.shortLabel}</span> : null}
-                  <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
-                  <span className="tag-chip subdued">{slate.gameOfTheWeek.status}</span>
-                  <span className="tag-chip subdued">{slate.gameOfTheWeek.score}</span>
-                </div>
-                {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
+        <Card title="Game of the Week">
+          {slate.gameOfTheWeek ? (
+            <div className="stack compact-stack">
+              <div className="eyebrow">
+                Week {slate.currentWeek + 1} / {slate.gameOfTheWeek.stageLabel}
               </div>
-            ) : (
-              <p className="muted">This week's headliner will appear once a slate is available.</p>
-            )}
-          </Card>
-        </>
+              <strong>
+                {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
+              </strong>
+              <div className="tag-row">
+                {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{slate.gameOfTheWeek.shortLabel}</span> : null}
+                <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
+                <span className="tag-chip subdued">{slate.gameOfTheWeek.status}</span>
+                <span className="tag-chip subdued">{slate.gameOfTheWeek.score}</span>
+              </div>
+              {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
+            </div>
+          ) : (
+            <p className="muted">This week's headliner will appear once a slate is available.</p>
+          )}
+        </Card>
       )}
 
       <Card title="Latest Headlines">

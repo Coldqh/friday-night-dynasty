@@ -10,6 +10,7 @@ export type AppScreen =
   | 'dashboard'
   | 'roster'
   | 'teamProfile'
+  | 'playerProfile'
   | 'schedule'
   | 'rankings'
   | 'news'
@@ -29,18 +30,36 @@ export function resolveSelectedTeamId(world: GameWorld | null, selectedTeamId: s
   return world.teams[0]?.id ?? null;
 }
 
+export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerId: string | null): string | null {
+  if (!world) {
+    return null;
+  }
+
+  const allPlayers = [...world.players, ...(world.graduatedPlayers ?? [])];
+
+  if (selectedPlayerId && allPlayers.some((player) => player.id === selectedPlayerId)) {
+    return selectedPlayerId;
+  }
+
+  return allPlayers[0]?.id ?? null;
+}
+
 interface GameStore {
   world: GameWorld | null;
   selectedTeamId: string | null;
+  selectedPlayerId: string | null;
   teamProfileTab: TeamProfileTab;
   screen: AppScreen;
   previousScreenBeforeTeamProfile: AppScreen | null;
+  previousScreenBeforePlayerProfile: AppScreen | null;
   error: string | null;
   setScreen: (screen: AppScreen) => void;
   selectTeam: (teamId: string) => void;
   setTeamProfileTab: (tab: TeamProfileTab) => void;
   openTeamProfile: (teamId: string, tab?: TeamProfileTab, returnScreen?: AppScreen) => void;
   closeTeamProfile: () => void;
+  openPlayerProfile: (playerId: string, returnScreen?: AppScreen) => void;
+  closePlayerProfile: () => void;
   newWorld: () => Promise<void>;
   continueWorld: () => Promise<void>;
   save: () => Promise<void>;
@@ -54,9 +73,11 @@ const DEFAULT_SEED = 982451653;
 export const useGameStore = create<GameStore>((set, get) => ({
   world: null,
   selectedTeamId: null,
+  selectedPlayerId: null,
   teamProfileTab: 'overview',
   screen: 'dashboard',
   previousScreenBeforeTeamProfile: null,
+  previousScreenBeforePlayerProfile: null,
   error: null,
 
   setScreen: (screen) =>
@@ -65,7 +86,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedTeamId:
         screen === 'teamProfile' || screen === 'roster' || screen === 'schedule' || screen === 'history'
           ? resolveSelectedTeamId(state.world, state.selectedTeamId)
-          : state.selectedTeamId
+          : state.selectedTeamId,
+      selectedPlayerId: screen === 'playerProfile' ? resolveSelectedPlayerId(state.world, state.selectedPlayerId) : state.selectedPlayerId
     })),
 
   selectTeam: (teamId) =>
@@ -101,15 +123,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedTeamId: resolveSelectedTeamId(state.world, state.selectedTeamId)
     })),
 
+  openPlayerProfile: (playerId, returnScreen) =>
+    set((state) => ({
+      screen: 'playerProfile',
+      selectedPlayerId: resolveSelectedPlayerId(state.world, playerId),
+      previousScreenBeforePlayerProfile:
+        returnScreen ?? (state.screen === 'playerProfile' ? state.previousScreenBeforePlayerProfile ?? 'roster' : state.screen),
+      error: null
+    })),
+
+  closePlayerProfile: () =>
+    set((state) => ({
+      screen:
+        state.previousScreenBeforePlayerProfile && state.previousScreenBeforePlayerProfile !== 'playerProfile'
+          ? state.previousScreenBeforePlayerProfile
+          : 'roster',
+      previousScreenBeforePlayerProfile: null,
+      selectedPlayerId: resolveSelectedPlayerId(state.world, state.selectedPlayerId)
+    })),
+
   newWorld: async () => {
     const world = normalizeWorldState(createWorld({ seed: DEFAULT_SEED }));
 
     set({
       world,
       selectedTeamId: resolveSelectedTeamId(world, null),
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -129,9 +172,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       world,
       selectedTeamId: resolveSelectedTeamId(world, null),
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
   },
@@ -154,6 +199,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));
 
@@ -171,6 +217,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));
 
@@ -193,6 +240,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
+      selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null
     }));
 

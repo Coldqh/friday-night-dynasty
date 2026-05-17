@@ -16,18 +16,12 @@ const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
   { id: 'history', label: 'History' }
 ];
 
-function formatSeriesRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, gamesPlayed: number) {
+function formatAllTimeRivalryRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, ties: number, gamesPlayed: number) {
   if (gamesPlayed === 0) {
-    return 'No games played yet';
+    return `All-time rivalry: ${teamName} 0 — ${rivalName} 0`;
   }
 
-  if (teamWins === rivalWins) {
-    return `Series tied ${teamWins}-${rivalWins}`;
-  }
-
-  return teamWins > rivalWins
-    ? `${teamName} leads ${teamWins}-${rivalWins}`
-    : `${rivalName} leads ${rivalWins}-${teamWins}`;
+  return `All-time rivalry: ${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / Ties ${ties}` : ''}`;
 }
 
 function formatLastGame(
@@ -69,6 +63,7 @@ export function TeamProfileScreen() {
   const setTeamProfileTab = useGameStore((state) => state.setTeamProfileTab);
   const closeTeamProfile = useGameStore((state) => state.closeTeamProfile);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
+  const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const identity = getTeamIdentityProfile(world, team.id);
   const leaders = getTeamLeaders(world, team.id);
@@ -80,15 +75,12 @@ export function TeamProfileScreen() {
   const rivals = team.rivalryIds
     .map((rivalId) => {
       const rivalTeam = world.teams.find((entry) => entry.id === rivalId);
-      const rivalStanding = world.season.standings.find((entry) => entry.teamId === rivalId);
-
       if (!rivalTeam) {
         return null;
       }
 
       return {
         team: rivalTeam,
-        record: rivalStanding ? `${rivalStanding.wins}-${rivalStanding.losses}` : `${rivalTeam.wins}-${rivalTeam.losses}`,
         rivalryRecord: getRivalryRecord(world, team.id, rivalTeam.id)
       };
     })
@@ -169,6 +161,11 @@ export function TeamProfileScreen() {
                         : 'No player available in this role yet.'}
                     </p>
                     {player ? <p className="muted">{getPlayerLifeSummary(world, player.id)}</p> : null}
+                    {player ? (
+                      <button className="filter-chip" onClick={() => openPlayerProfile(player.id, 'teamProfile')}>
+                        Open Player Profile
+                      </button>
+                    ) : null}
                   </div>
                   <strong>{player ? `OVR ${player.overall} / POT ${player.potential}` : 'N/A'}</strong>
                 </div>
@@ -183,14 +180,15 @@ export function TeamProfileScreen() {
               <div className="list">
                 {rivals.map((rival) => (
                   <div className="history-item" key={rival.team.id}>
-                    <div className="eyebrow">Current record {rival.record}</div>
+                    <div className="eyebrow">Rivalry series</div>
                     <strong>{rival.team.shortName}</strong>
                     <p>
-                      {formatSeriesRecord(
+                      {formatAllTimeRivalryRecord(
                         team.shortName,
                         rival.team.shortName,
                         rival.rivalryRecord.teamWins,
                         rival.rivalryRecord.rivalWins,
+                        rival.rivalryRecord.ties,
                         rival.rivalryRecord.gamesPlayed
                       )}
                     </p>
@@ -260,9 +258,9 @@ export function TeamProfileScreen() {
             </div>
             {roster.map((player) => (
               <div className="table-row grid-profile-roster" key={player.id}>
-                <span>
+                <button className="table-row-button" onClick={() => openPlayerProfile(player.id, 'teamProfile')}>
                   {player.firstName} {player.lastName}
-                </span>
+                </button>
                 <span>{player.position}</span>
                 <span>{player.classYear}</span>
                 <strong>{player.overall}</strong>

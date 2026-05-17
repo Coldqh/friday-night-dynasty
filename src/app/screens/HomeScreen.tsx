@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { GAME_VERSION_LABEL } from '../version';
 import { useGameStore } from '../store/useGameStore';
 
 export function HomeScreen() {
@@ -10,7 +11,7 @@ export function HomeScreen() {
   return (
     <div className="home-screen">
       <div className="home-title">
-        <div className="eyebrow">Living football world</div>
+        <div className="eyebrow">Living football world / {GAME_VERSION_LABEL}</div>
         <h1>Friday Night Dynasty</h1>
         <p>
           Школьный футбол, маленькие города, рекруты, сезоны, рекорды, выпускники и мир,

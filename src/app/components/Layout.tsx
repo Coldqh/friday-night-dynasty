@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { GAME_VERSION } from '../version';
 import { AppScreen, useGameStore } from '../store/useGameStore';
 
 export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
@@ -19,7 +20,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <div className="eyebrow">Friday Night Dynasty</div>
+          <div className="eyebrow">Friday Night Dynasty / {GAME_VERSION}</div>
           <h1>{world?.state.name ?? 'New State'}</h1>
         </div>
         <div className="year-pill">{world?.currentYear}</div>
