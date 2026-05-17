@@ -1,9 +1,10 @@
 import { Card } from '../components/Card';
+import { formatHeadlineType } from '../localization';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
 import { getWeekStakes } from '../../core/stakes/getWeekStakes';
 import { useGameStore } from '../store/useGameStore';
 
-export const newsSections = ['State News', 'Latest Headlines'] as const;
+export const newsSections = ['Новости штата', 'Главные заголовки'] as const;
 
 export function NewsScreen() {
   const world = useGameStore((state) => state.world)!;
@@ -12,24 +13,24 @@ export function NewsScreen() {
 
   return (
     <div className="stack">
-      <Card title="State News">
+      <Card title="Новости штата">
         <div className="stat-strip">
-          <span>Year {world.season.year}</span>
-          <span>Week {world.phase === 'offseason' ? 'Season Complete' : world.season.currentWeek + 1}</span>
-          <span>{world.phase === 'regular' ? 'Friday Night Slate' : world.phase === 'playoffs' ? 'Playoff Push' : 'Offseason Reset'}</span>
+          <span>год {world.season.year}</span>
+          <span>неделя {world.phase === 'offseason' ? 'сезон завершён' : world.season.currentWeek + 1}</span>
+          <span>{world.phase === 'regular' ? 'пятничный тур' : world.phase === 'playoffs' ? 'плей-офф' : 'межсезонье'}</span>
         </div>
         <p className="muted">{weekStakes.summary}</p>
       </Card>
 
-      <Card title="Latest Headlines">
+      <Card title="Главные заголовки">
         {headlines.length === 0 ? (
-          <p className="muted">No major headlines yet. Sim a week to generate state news.</p>
+          <p className="muted">Крупных новостей пока нет.</p>
         ) : (
           <div className="list">
             {headlines.map((headline) => (
               <article className="news-item" key={headline.id}>
                 <div className="eyebrow">
-                  {headline.type.toUpperCase()} / {headline.year} / Week {headline.week + 1}
+                  {formatHeadlineType(headline.type)} / {headline.year} / неделя {headline.week + 1}
                 </div>
                 <h3>{headline.title}</h3>
                 <p>{headline.body}</p>

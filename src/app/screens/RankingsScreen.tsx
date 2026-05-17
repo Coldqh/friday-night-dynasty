@@ -7,17 +7,15 @@ export function RankingsScreen() {
   const standings = world.season.standings;
 
   return (
-    <Card title="Standings">
-      <p className="muted">Tap any team to open its program profile.</p>
-
+    <Card title="Турнирная таблица">
       <div className="table compact-table">
         <div className="table-head grid-standings">
           <span>#</span>
-          <span>Team</span>
-          <span>W-L</span>
-          <span>PF</span>
-          <span>PA</span>
-          <span>Diff</span>
+          <span>команда</span>
+          <span>п-б</span>
+          <span>очк+</span>
+          <span>очк-</span>
+          <span>разн</span>
         </div>
 
         {standings.map((entry) => (

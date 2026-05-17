@@ -1,5 +1,6 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
 import { getPlayerLifeSummary } from '../../core/people/personUtils';
 import { getRivalryRecord } from '../../core/rivalries/getRivalryRecord';
 import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
@@ -10,18 +11,14 @@ import { getTeamSchedule } from '../../core/teams/getTeamSchedule';
 import { TeamProfileTab, useGameStore } from '../store/useGameStore';
 
 const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'roster', label: 'Roster' },
-  { id: 'schedule', label: 'Schedule' },
-  { id: 'history', label: 'History' }
+  { id: 'overview', label: 'Обзор' },
+  { id: 'roster', label: 'Состав' },
+  { id: 'schedule', label: 'Календарь' },
+  { id: 'history', label: 'История' }
 ];
 
-function formatAllTimeRivalryRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, ties: number, gamesPlayed: number) {
-  if (gamesPlayed === 0) {
-    return `All-time rivalry: ${teamName} 0 — ${rivalName} 0`;
-  }
-
-  return `All-time rivalry: ${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / Ties ${ties}` : ''}`;
+function formatAllTimeRivalryRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, ties: number) {
+  return `Вся история: ${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / ничьи ${ties}` : ''}`;
 }
 
 function formatLastGame(
@@ -29,7 +26,7 @@ function formatLastGame(
   record: ReturnType<typeof getRivalryRecord>
 ) {
   if (!record.lastGame) {
-    return 'No rivalry history yet.';
+    return 'истории личных встреч пока нет';
   }
 
   const winnerName =
@@ -40,20 +37,20 @@ function formatLastGame(
         : null;
 
   const score = `${record.lastGame.awayScore}-${record.lastGame.homeScore}`;
-  const resultNote = winnerName ? `${winnerName} won ${score}.` : `Finished ${score}.`;
+  const resultNote = winnerName ? `${winnerName} выиграла ${score}` : `счёт ${score}`;
 
   return `${record.lastGame.year} / ${resultNote}`;
 }
 
 function formatStreak(teamNames: { teamId: string; rivalId: string; teamName: string; rivalName: string }, record: ReturnType<typeof getRivalryRecord>) {
   if (!record.currentStreak) {
-    return 'No active streak';
+    return 'серии побед нет';
   }
 
   const streakOwner =
     record.currentStreak.teamId === teamNames.teamId ? teamNames.teamName : teamNames.rivalName;
 
-  return `${streakOwner} won last ${record.currentStreak.wins}`;
+  return `${streakOwner}: побед подряд ${record.currentStreak.wins}`;
 }
 
 export function TeamProfileScreen() {
@@ -87,41 +84,41 @@ export function TeamProfileScreen() {
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
     .slice(0, 3);
   const leaderRows = [
-    { label: 'Best QB', player: leaders.quarterback },
-    { label: 'Best RB', player: leaders.runningBack },
-    { label: 'Best WR', player: leaders.receiver },
-    { label: 'Defensive star', player: leaders.defensiveStar },
-    { label: 'Top player', player: leaders.topPlayer },
-    { label: 'Young prospect', player: leaders.youngProspect }
+    { label: 'лучший QB', player: leaders.quarterback },
+    { label: 'лучший RB', player: leaders.runningBack },
+    { label: 'лучший WR', player: leaders.receiver },
+    { label: 'лидер защиты', player: leaders.defensiveStar },
+    { label: 'главная звезда', player: leaders.topPlayer },
+    { label: 'молодой талант', player: leaders.youngProspect }
   ];
 
   return (
     <div className="stack">
-      <Card title="Team Profile">
+      <Card title="Профиль команды">
         <div className="stack compact-stack">
           <div className="eyebrow">
             {team.schoolName} / {team.cityName} / {team.mascot}
           </div>
           <h3 className="profile-title">{team.name}</h3>
           <div className="stat-strip">
-            <span>Record {team.wins}-{team.losses}</span>
-            <span>Prestige {team.prestige}</span>
-            <span>OVR {team.overallRating}</span>
-            <span>OFF {team.offenseRating}</span>
-            <span>DEF {team.defenseRating}</span>
-            <span>{team.offenseStyle}</span>
-            <span>{team.defenseStyle}</span>
+            <span>сезон {team.wins}-{team.losses}</span>
+            <span>престиж {team.prestige}</span>
+            <span>общ {team.overallRating}</span>
+            <span>нап {team.offenseRating}</span>
+            <span>защ {team.defenseRating}</span>
+            <span>{formatOffenseStyle(team.offenseStyle)}</span>
+            <span>{formatDefenseStyle(team.defenseStyle)}</span>
             <span>{identity.programTier}</span>
           </div>
           <div className="button-row">
             <Button variant="ghost" onClick={closeTeamProfile}>
-              Back
+              Назад
             </Button>
           </div>
         </div>
       </Card>
 
-      <Card title="Team Views">
+      <Card title="Разделы команды">
         <div className="tab-row">
           {profileTabs.map((tab) => (
             <button
@@ -137,19 +134,19 @@ export function TeamProfileScreen() {
 
       {teamProfileTab === 'overview' && (
         <>
-          <Card title="Overview">
+          <Card title="Обзор">
             <div className="stack compact-stack">
               <div className="identity-tier">{identity.programTier}</div>
               <p className="muted">{identity.description}</p>
               <p className="muted">
                 {standing
-                  ? `${team.shortName} is currently #${standing.rank} in the state at ${standing.wins}-${standing.losses}, with ${standing.pointsFor} points scored and ${standing.pointsAgainst} allowed.`
-                  : `${team.shortName} is settling into a fresh season.`}
+                  ? `${team.shortName}: место #${standing.rank}, баланс ${standing.wins}-${standing.losses}, очки ${standing.pointsFor}-${standing.pointsAgainst}.`
+                  : `${team.shortName}: сезон только начинается.`}
               </p>
             </div>
           </Card>
 
-          <Card title="Team Leaders">
+          <Card title="Лидеры команды">
             <div className="list">
               {leaderRows.map(({ label, player }) => (
                 <div className="list-row" key={label}>
@@ -157,30 +154,30 @@ export function TeamProfileScreen() {
                     <strong>{label}</strong>
                     <p className="muted">
                       {player
-                        ? `${player.firstName} ${player.lastName} / ${player.position} / ${player.classYear}`
-                        : 'No player available in this role yet.'}
+                        ? `${player.firstName} ${player.lastName} / ${player.position} / ${formatClassYear(player.classYear)}`
+                        : 'игрок для этой роли пока не найден'}
                     </p>
                     {player ? <p className="muted">{getPlayerLifeSummary(world, player.id)}</p> : null}
                     {player ? (
                       <button className="filter-chip" onClick={() => openPlayerProfile(player.id, 'teamProfile')}>
-                        Open Player Profile
+                        Профиль игрока
                       </button>
                     ) : null}
                   </div>
-                  <strong>{player ? `OVR ${player.overall} / POT ${player.potential}` : 'N/A'}</strong>
+                  <strong>{player ? `общ ${player.overall} / пот ${player.potential}` : 'нет'}</strong>
                 </div>
               ))}
             </div>
           </Card>
 
-          <Card title="Rivals">
+          <Card title="Принципиальные соперники">
             {rivals.length === 0 ? (
-              <p className="muted">No major rivalries yet.</p>
+              <p className="muted">У команды пока нет принципиального соперника.</p>
             ) : (
               <div className="list">
                 {rivals.map((rival) => (
                   <div className="history-item" key={rival.team.id}>
-                    <div className="eyebrow">Rivalry series</div>
+                    <div className="eyebrow">история соперничества</div>
                     <strong>{rival.team.shortName}</strong>
                     <p>
                       {formatAllTimeRivalryRecord(
@@ -188,13 +185,12 @@ export function TeamProfileScreen() {
                         rival.team.shortName,
                         rival.rivalryRecord.teamWins,
                         rival.rivalryRecord.rivalWins,
-                        rival.rivalryRecord.ties,
-                        rival.rivalryRecord.gamesPlayed
+                        rival.rivalryRecord.ties
                       )}
                     </p>
                     <p className="muted">
-                      Games played {rival.rivalryRecord.gamesPlayed}
-                      {rival.rivalryRecord.gamesPlayed > 0 ? ` / Last game ${formatLastGame(
+                      матчей {rival.rivalryRecord.gamesPlayed}
+                      {rival.rivalryRecord.gamesPlayed > 0 ? ` / последний матч ${formatLastGame(
                         {
                           teamId: team.id,
                           rivalId: rival.team.id,
@@ -202,7 +198,7 @@ export function TeamProfileScreen() {
                           rivalName: rival.team.shortName
                         },
                         rival.rivalryRecord
-                      )}` : ' / No rivalry history yet.'}
+                      )}` : ' / матчей ещё не было'}
                     </p>
                     <p className="muted">
                       {formatStreak(
@@ -216,7 +212,7 @@ export function TeamProfileScreen() {
                       )}
                     </p>
                     <Button variant="ghost" onClick={() => openTeamProfile(rival.team.id, 'overview')}>
-                      Open Rival
+                      Открыть соперника
                     </Button>
                   </div>
                 ))}
@@ -224,18 +220,18 @@ export function TeamProfileScreen() {
             )}
           </Card>
 
-          <Card title="Recent Team Notes">
+          <Card title="Последние заметки команды">
             {recentNotes.length === 0 ? (
-              <p className="muted">Recent team notes will appear once this program has played games with recorded summaries.</p>
+              <p className="muted">Заметки появятся после сыгранных матчей.</p>
             ) : (
               <div className="list">
                 {recentNotes.map((game) => (
                   <div className="history-item" key={`${game.gameId}-note`}>
                     <div className="eyebrow">
-                      Week {game.week + 1}
-                      {game.stage !== 'regular' ? ` / ${game.stage}` : ''}
+                      неделя {game.week + 1}
+                      {game.stage !== 'regular' ? ` / ${formatStage(game.stage)}` : ''}
                     </div>
-                    <strong>{game.isRivalry ? `${game.opponentName} / Rivalry` : game.opponentName}</strong>
+                    <strong>{game.isRivalry ? `${game.opponentName} / дерби` : game.opponentName}</strong>
                     <p>{game.summary}</p>
                   </div>
                 ))}
@@ -246,15 +242,15 @@ export function TeamProfileScreen() {
       )}
 
       {teamProfileTab === 'roster' && (
-        <Card title="Roster">
+        <Card title="Состав">
           <div className="table compact-table">
             <div className="table-head grid-profile-roster">
-              <span>Name</span>
-              <span>Pos</span>
-              <span>Class</span>
-              <span>OVR</span>
-              <span>POT</span>
-              <span>Life</span>
+              <span>имя</span>
+              <span>поз</span>
+              <span>класс</span>
+              <span>общ</span>
+              <span>пот</span>
+              <span>личность</span>
             </div>
             {roster.map((player) => (
               <div className="table-row grid-profile-roster" key={player.id}>
@@ -262,7 +258,7 @@ export function TeamProfileScreen() {
                   {player.firstName} {player.lastName}
                 </button>
                 <span>{player.position}</span>
-                <span>{player.classYear}</span>
+                <span>{formatClassYear(player.classYear)}</span>
                 <strong>{player.overall}</strong>
                 <strong>{player.potential}</strong>
                 <span>
@@ -276,24 +272,24 @@ export function TeamProfileScreen() {
       )}
 
       {teamProfileTab === 'schedule' && (
-        <Card title="Schedule">
+        <Card title="Календарь">
           <div className="table compact-table">
             <div className="table-head grid-team-schedule">
-              <span>Week</span>
-              <span>Opponent</span>
-              <span>Home/Away</span>
-              <span>Result</span>
-              <span>Score</span>
+              <span>неделя</span>
+              <span>соперник</span>
+              <span>дом/гости</span>
+              <span>итог</span>
+              <span>счёт</span>
             </div>
             {schedule.map((game) => (
               <div className="table-row grid-team-schedule" key={game.gameId}>
                 <span>
-                  W{game.week + 1}
-                  {game.stage !== 'regular' ? ` / ${game.stage}` : ''}
+                  Н{game.week + 1}
+                  {game.stage !== 'regular' ? ` / ${formatStage(game.stage)}` : ''}
                 </span>
-                <span>{game.isRivalry ? `${game.opponentName} / Rivalry` : game.opponentName}</span>
-                <span>{game.homeAway}</span>
-                <strong>{game.result ?? 'TBD'}</strong>
+                <span>{game.isRivalry ? `${game.opponentName} / дерби` : game.opponentName}</span>
+                <span>{game.homeAway === 'Home' ? 'дома' : game.homeAway === 'Away' ? 'в гостях' : game.homeAway}</span>
+                <strong>{game.result ?? 'впереди'}</strong>
                 <strong>{game.score}</strong>
               </div>
             ))}
@@ -302,26 +298,26 @@ export function TeamProfileScreen() {
       )}
 
       {teamProfileTab === 'history' && (
-        <Card title="Program History">
+        <Card title="История программы">
           <div className="stack compact-stack">
             <div className="stat-strip">
-              <span>Current {history.currentSeasonRecord.label}</span>
+              <span>текущий сезон {history.currentSeasonRecord.label}</span>
               <span>
-                All-time {history.totalHistoricalWins}-{history.totalHistoricalLosses}
+                вся история {history.totalHistoricalWins}-{history.totalHistoricalLosses}
               </span>
-              <span>Titles {history.titlesCount}</span>
-              <span>Playoffs {history.playoffAppearancesCount}</span>
+              <span>титулы {history.titlesCount}</span>
+              <span>плей-офф {history.playoffAppearancesCount}</span>
             </div>
             {history.lastSeasonEntry ? (
               <div className="history-item">
-                <div className="eyebrow">Last season</div>
+                <div className="eyebrow">прошлый сезон</div>
                 <strong>
                   {history.lastSeasonEntry.year}: {history.lastSeasonEntry.wins}-{history.lastSeasonEntry.losses}
                 </strong>
                 <p>{history.lastSeasonEntry.note}</p>
               </div>
             ) : (
-              <p className="muted">This program is still writing its first chapter.</p>
+              <p className="muted">Команда ещё пишет первую главу своей истории.</p>
             )}
             {history.history.length > 0 && (
               <div className="list">
@@ -332,7 +328,7 @@ export function TeamProfileScreen() {
                       {season.wins}-{season.losses}
                     </strong>
                     <p>
-                      PF {season.pointsFor} / PA {season.pointsAgainst}
+                      очки {season.pointsFor}-{season.pointsAgainst}
                     </p>
                     <p>{season.note}</p>
                   </div>

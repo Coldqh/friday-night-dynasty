@@ -85,11 +85,11 @@ function createProjectedGame(
     stage,
     stageLabel: getProjectedStageLabel(stage),
     awayTeamId,
-    awayTeamName: awayTeam?.shortName ?? 'Unknown Team',
-    awayTeamContextLabel: awayTeam ? `${awayTeam.shortName} (${awayTeam.wins}-${awayTeam.losses}, OVR ${awayTeam.overallRating})` : 'Unknown Team (0-0, OVR --)',
+    awayTeamName: awayTeam?.shortName ?? 'Неизвестная команда',
+    awayTeamContextLabel: awayTeam ? `${awayTeam.shortName} (${awayTeam.wins}-${awayTeam.losses}, общ ${awayTeam.overallRating})` : 'Неизвестная команда (0-0, общ --)',
     homeTeamId,
-    homeTeamName: homeTeam?.shortName ?? 'Unknown Team',
-    homeTeamContextLabel: homeTeam ? `${homeTeam.shortName} (${homeTeam.wins}-${homeTeam.losses}, OVR ${homeTeam.overallRating})` : 'Unknown Team (0-0, OVR --)',
+    homeTeamName: homeTeam?.shortName ?? 'Неизвестная команда',
+    homeTeamContextLabel: homeTeam ? `${homeTeam.shortName} (${homeTeam.wins}-${homeTeam.losses}, общ ${homeTeam.overallRating})` : 'Неизвестная команда (0-0, общ --)',
     awayScore: null,
     homeScore: null,
     winnerId: null,
@@ -116,7 +116,7 @@ function getProjectedPlayoffGames(world: GameWorld): FullScheduleEntry[] {
         stage: 'semifinal',
         awayTeamId: world.season.playoffTeams[3],
         homeTeamId: world.season.playoffTeams[0],
-        summary: 'Projected Texoma semifinal matchup.'
+        summary: 'Ожидаемый полуфинал Texoma.'
       }),
       createProjectedGame(world, {
         gameId: 'projected-semifinal-2',
@@ -124,7 +124,7 @@ function getProjectedPlayoffGames(world: GameWorld): FullScheduleEntry[] {
         stage: 'semifinal',
         awayTeamId: world.season.playoffTeams[2],
         homeTeamId: world.season.playoffTeams[1],
-        summary: 'Projected Texoma semifinal matchup.'
+        summary: 'Ожидаемый полуфинал Texoma.'
       })
     ];
   }
@@ -137,7 +137,7 @@ function getProjectedPlayoffGames(world: GameWorld): FullScheduleEntry[] {
         stage: 'final',
         awayTeamId: semifinalGames[1].winnerId!,
         homeTeamId: semifinalGames[0].winnerId!,
-        summary: 'Projected Texoma state final matchup.'
+        summary: 'Ожидаемый финал штата Texoma.'
       })
     ];
   }
@@ -211,13 +211,8 @@ function buildStakeLabels(world: GameWorld, game: FullScheduleEntry): WeekStakeL
 }
 
 function getPrimaryStakeLabel(stakes: WeekStakeLabel[]) {
-  if (stakes.includes('State Final')) {
-    return 'State Final';
-  }
-
-  if (stakes.includes('Playoff Semifinal')) {
-    return 'Playoff Semifinal';
-  }
+  if (stakes.includes('State Final')) return 'State Final';
+  if (stakes.includes('Playoff Semifinal')) return 'Playoff Semifinal';
 
   if (
     stakes.includes('Rivalry Game') &&
@@ -226,25 +221,11 @@ function getPrimaryStakeLabel(stakes: WeekStakeLabel[]) {
     return 'Rivalry with Playoff Pressure';
   }
 
-  if (stakes.includes('Rivalry Game')) {
-    return 'Rivalry Game';
-  }
-
-  if (stakes.includes('Undefeated Watch')) {
-    return 'Unbeaten Watch';
-  }
-
-  if (stakes.includes('Playoff Race')) {
-    return 'Playoff Race';
-  }
-
-  if (stakes.includes('Top-Four Showdown')) {
-    return 'Top-Four Showdown';
-  }
-
-  if (stakes.includes('Evenly Matched Programs')) {
-    return 'Evenly Matched Programs';
-  }
+  if (stakes.includes('Rivalry Game')) return 'Rivalry Game';
+  if (stakes.includes('Undefeated Watch')) return 'Unbeaten Watch';
+  if (stakes.includes('Playoff Race')) return 'Playoff Race';
+  if (stakes.includes('Top-Four Showdown')) return 'Top-Four Showdown';
+  if (stakes.includes('Evenly Matched Programs')) return 'Evenly Matched Programs';
 
   return stakes[0] ?? null;
 }
@@ -302,34 +283,34 @@ function buildStakeGame(world: GameWorld, game: FullScheduleEntry): WeekStakeGam
 
 function getSummary(world: GameWorld, gamesThisWeek: WeekStakeGame[]) {
   if (world.phase === 'offseason') {
-    return 'The title race is over, but the state is still carrying the mood of the final run.';
+    return 'Титульная гонка завершена. Команды уже смотрят в сторону нового цикла.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('State Final'))) {
-    return 'A state title is on the line.';
+    return 'На кону титул штата.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Playoff Semifinal'))) {
-    return 'The final four are fighting for a trip to the state final.';
+    return 'Четыре лучшие команды борются за выход в финал штата.';
   }
 
   if (gamesThisWeek.some((game) => game.shortLabel === 'Rivalry with Playoff Pressure')) {
-    return 'Rivalry heat and playoff pressure are colliding in the same spotlight.';
+    return 'Дерби и давление плей-офф сошлись в одной неделе.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Rivalry Game'))) {
-    return 'Rivalry pressure is shaping the mood of the week across Texoma.';
+    return 'Неделю задают принципиальные матчи.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Playoff Race'))) {
-    return 'The playoff picture is tightening with every Friday night kickoff.';
+    return 'Гонка за плей-офф становится плотнее.';
   }
 
   if (gamesThisWeek.some((game) => game.stakes.includes('Undefeated Watch'))) {
-    return 'Perfect seasons are still hanging in the balance.';
+    return 'Несколько команд всё ещё держат сезон без поражений.';
   }
 
-  return 'Friday night storylines are building across the state.';
+  return 'В штате собирается очередная футбольная пятница.';
 }
 
 export function getWeekStakes(world: GameWorld): WeekStakes {

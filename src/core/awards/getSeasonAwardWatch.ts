@@ -27,7 +27,7 @@ function getPlayerName(player: Player) {
 }
 
 function getTeamName(world: GameWorld, teamId: string) {
-  return world.teams.find((team) => team.id === teamId)?.shortName ?? 'Unknown Team';
+  return world.teams.find((team) => team.id === teamId)?.shortName ?? 'Неизвестная команда';
 }
 
 function getStatTotal(player: Player) {
@@ -106,10 +106,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
       toEntry(
         world,
         'stateMvp',
-        'State MVP Watch',
+        'Кандидат на MVP штата',
         mvp.player,
         mvp.score,
-        `Best all-around resume: OVR ${mvp.player.overall}, POT ${mvp.player.potential}, ${mvp.player.seasonStats.touchdowns} TD.`
+        `Лучшее общее резюме: общ ${mvp.player.overall}, пот ${mvp.player.potential}, тачдауны ${mvp.player.seasonStats.touchdowns}.`
       )
     );
   }
@@ -123,10 +123,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
       toEntry(
         world,
         'offensivePlayer',
-        'Offensive Player Watch',
+        'Игрок нападения',
         offensive.player,
         offensive.score,
-        `${offensive.player.seasonStats.passingYards} pass yds, ${offensive.player.seasonStats.rushingYards} rush yds, ${offensive.player.seasonStats.receivingYards} rec yds.`
+        `пас ${offensive.player.seasonStats.passingYards}, вынос ${offensive.player.seasonStats.rushingYards}, приём ${offensive.player.seasonStats.receivingYards}.`
       )
     );
   }
@@ -140,10 +140,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
       toEntry(
         world,
         'defensivePlayer',
-        'Defensive Player Watch',
+        'Игрок защиты',
         defensive.player,
         defensive.score,
-        `${defensive.player.seasonStats.tackles} tackles, ${defensive.player.seasonStats.sacks} sacks, ${defensive.player.seasonStats.interceptions} INT.`
+        `захваты ${defensive.player.seasonStats.tackles}, сэки ${defensive.player.seasonStats.sacks}, перехваты ${defensive.player.seasonStats.interceptions}.`
       )
     );
   }
@@ -157,10 +157,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
       toEntry(
         world,
         'freshmanBreakout',
-        'Freshman Breakout Watch',
+        'Прорыв новичка',
         freshman.player,
         freshman.score,
-        `Young impact profile: OVR ${freshman.player.overall}, POT ${freshman.player.potential}, work ethic ${freshman.player.workEthic}.`
+        `Молодой игрок уже заметен: общ ${freshman.player.overall}, пот ${freshman.player.potential}, трудолюбие ${freshman.player.workEthic}.`
       )
     );
   }
@@ -171,10 +171,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
       toEntry(
         world,
         'futureStar',
-        'Future Star Watch',
+        'Будущая звезда',
         futureStar.player,
         futureStar.score,
-        `Highest long-term ceiling in the state: POT ${futureStar.player.potential}, ambition ${futureStar.player.ambition}.`
+        `Один из лучших потолков штата: пот ${futureStar.player.potential}, амбиции ${futureStar.player.ambition}.`
       )
     );
   }
@@ -186,10 +186,10 @@ export function getSeasonAwardWatch(world: GameWorld): AwardWatchEntry[] {
         toEntry(
           world,
           'championshipMvp',
-          'Championship MVP',
+          'MVP финала',
           championshipMvp,
           getMvpScore(championshipMvp),
-          'Named the key man of the state final.'
+          'Ключевой игрок финала штата.'
         )
       );
     }

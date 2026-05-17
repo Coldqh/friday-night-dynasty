@@ -76,13 +76,13 @@ export function recordSeasonHistory(world: GameWorld): WorldHistory {
         year: world.season.year,
         championId: champion?.id ?? 'unknown',
         championTeamId: champion?.id ?? 'unknown',
-        championName: champion?.shortName ?? 'Unknown Champion',
+        championName: champion?.shortName ?? 'Неизвестный чемпион',
         runnerUpId: runnerUp?.id ?? null,
-        runnerUpName: runnerUp?.shortName ?? 'Unknown Runner-Up',
+        runnerUpName: runnerUp?.shortName ?? 'Неизвестный финалист',
         finalGameId: finalGame?.id ?? null,
-        finalScore: winnerScore !== null && runnerUpScore !== null ? `${winnerScore}-${runnerUpScore}` : 'No final score recorded',
-        finalSummary: finalGame?.summary ?? 'No final summary recorded',
-        note: `${champion?.shortName ?? 'A team'} claimed the Texoma state title.`
+        finalScore: winnerScore !== null && runnerUpScore !== null ? `${winnerScore}-${runnerUpScore}` : 'счёт не записан',
+        finalSummary: finalGame?.summary ?? 'описание финала не записано',
+        note: `${champion?.shortName ?? 'Команда'} выиграла титул Texoma.`
       }
     ],
     titleGames: finalGame
@@ -92,14 +92,14 @@ export function recordSeasonHistory(world: GameWorld): WorldHistory {
             year: world.season.year,
             gameId: finalGame.id,
             championId: champion?.id ?? 'unknown',
-            championName: champion?.shortName ?? 'Unknown Champion',
+            championName: champion?.shortName ?? 'Неизвестный чемпион',
             runnerUpId: runnerUp?.id ?? null,
-            runnerUpName: runnerUp?.shortName ?? 'Unknown Runner-Up',
+            runnerUpName: runnerUp?.shortName ?? 'Неизвестный финалист',
             finalScore:
               winnerScore !== null && runnerUpScore !== null
                 ? `${winnerScore}-${runnerUpScore}`
-                : 'No final score recorded',
-            summary: finalGame.summary || 'No final summary recorded'
+                : 'счёт не записан',
+            summary: finalGame.summary || 'описание финала не записано'
           }
         ]
       : titleGames,

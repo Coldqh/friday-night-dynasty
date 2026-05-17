@@ -2,16 +2,16 @@ import { makeId, SeededRng } from '../random/rng';
 import { CareerEvent, GameWorld, Person, Player } from '../world/worldTypes';
 
 const personalities = [
-  'Quiet worker',
-  'Natural leader',
-  'Film room addict',
-  'Small-town star',
-  'Late bloomer',
-  'Locker-room spark',
-  'Pressure chaser',
-  'Discipline project',
-  'Coach on the field',
-  'Raw athlete'
+  'тихий трудяга',
+  'прирождённый лидер',
+  'одержим разбором игры',
+  'звезда маленького города',
+  'поздно раскрылся',
+  'искра раздевалки',
+  'любит давление',
+  'нуждается в дисциплине',
+  'тренер на поле',
+  'сырой атлет'
 ];
 
 function stablePersonId(player: Pick<Player, 'id' | 'personId'>): string {
@@ -100,12 +100,12 @@ export function createPersonFromPlayer(player: Player, year: number, rng: Seeded
         type: normalized.careerStage === 'graduated' ? 'graduation' : 'created',
         title:
           normalized.careerStage === 'graduated'
-            ? `${normalized.firstName} ${normalized.lastName} entered the alumni pool`
-            : `${normalized.firstName} ${normalized.lastName} entered the high school scene`,
+            ? `${normalized.firstName} ${normalized.lastName} попал в пул выпускников`
+            : `${normalized.firstName} ${normalized.lastName} начал школьную карьеру`,
         body:
           normalized.careerStage === 'graduated'
-            ? `${normalized.position} ${normalized.firstName} ${normalized.lastName} is now tracked as a graduate for the wider football ecosystem.`
-            : `${normalized.position} ${normalized.firstName} ${normalized.lastName} began his tracked career as a ${normalized.classYear}.`,
+            ? `${normalized.position} ${normalized.firstName} ${normalized.lastName} теперь хранится как выпускник для будущей футбольной экосистемы.`
+            : `${normalized.position} ${normalized.firstName} ${normalized.lastName} начал отслеживаемую карьеру: ${normalized.classYear}.`,
         teamId: normalized.teamId,
         schoolId: normalized.schoolId
       })
@@ -172,16 +172,15 @@ export function getPlayerLifeSummary(world: GameWorld, playerId: string): string
     null;
 
   if (!player) {
-    return 'No player record';
+    return 'нет записи игрока';
   }
 
   const person = getPersonForPlayer(world, playerId);
   const hometown = world.cities.find((city) => city.id === (player.hometownCityId ?? player.cityId));
-  const stage = player.careerStage ?? 'highSchool';
 
   if (!person) {
-    return `${stage} / ${hometown?.name ?? 'Unknown hometown'}`;
+    return `${hometown?.name ?? 'неизвестный город'}`;
   }
 
-  return `${person.personality} / REP ${person.reputation} / ${hometown?.name ?? 'Unknown hometown'}`;
+  return `${person.personality} / репутация ${person.reputation} / ${hometown?.name ?? 'неизвестный город'}`;
 }

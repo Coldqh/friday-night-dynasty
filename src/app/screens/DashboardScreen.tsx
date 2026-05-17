@@ -1,8 +1,10 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { GAME_VERSION_LABEL } from '../version';
+import { formatHeadlineType, formatPhase, formatStakeLabel } from '../localization';
+import { GAME_VERSION_LABEL, GAME_VERSION_NAME } from '../version';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { generateWeeklyHeadlines } from '../../core/news/generateWeeklyHeadlines';
+import { getProspectPool } from '../../core/prospects/getProspectPool';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { useGameStore } from '../store/useGameStore';
 
@@ -16,22 +18,22 @@ function getSeasonStatusLabel({
   completedGames: number;
 }) {
   if (phase === 'offseason') {
-    return 'Season Complete';
+    return 'сезон завершён';
   }
 
   if (phase === 'playoffs') {
-    return 'Playoffs';
+    return 'плей-офф';
   }
 
   if (currentWeek === 0 && completedGames === 0) {
-    return 'Preseason';
+    return 'предсезонье';
   }
 
-  return 'Regular Season';
+  return 'регулярный сезон';
 }
 
 export function getDashboardStatusPills(seasonStatus: string, teamCount: number) {
-  return [seasonStatus, `${teamCount} Teams`];
+  return [seasonStatus, `${teamCount} команд`];
 }
 
 export function DashboardScreen() {
@@ -40,9 +42,11 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const setScreen = useGameStore((state) => state.setScreen);
   const slate = getWeeklySlate(world);
   const headlines = generateWeeklyHeadlines(world).slice(0, 5);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
+  const prospects = getProspectPool(world).slice(0, 4);
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
   const recentSeasonEntries = world.season.seasonLog.slice(0, 5);
@@ -57,18 +61,18 @@ export function DashboardScreen() {
 
   return (
     <div className="stack">
-      <Card title="Season State">
+      <Card title="Состояние сезона">
         <div className="dashboard-grid">
           <div>
-            <div className="eyebrow">Year</div>
+            <div className="eyebrow">год</div>
             <p className="big-number">{world.season.year}</p>
           </div>
           <div>
-            <div className="eyebrow">Current Week</div>
-            <p className="big-number">{world.phase === 'offseason' ? 'Done' : world.season.currentWeek + 1}</p>
+            <div className="eyebrow">неделя</div>
+            <p className="big-number">{world.phase === 'offseason' ? 'готово' : world.season.currentWeek + 1}</p>
           </div>
           <div>
-            <div className="eyebrow">Regular Season</div>
+            <div className="eyebrow">регулярка</div>
             <p className="big-number">{world.season.regularSeasonWeeks}</p>
           </div>
         </div>
@@ -78,47 +82,70 @@ export function DashboardScreen() {
             <span key={item}>{item}</span>
           ))}
           <span>{GAME_VERSION_LABEL}</span>
+          <span>{GAME_VERSION_NAME}</span>
         </div>
 
         <div className="button-row">
           <Button disabled={world.phase === 'offseason'} onClick={simNextWeek}>
-            Sim Week
+            Симулировать неделю
           </Button>
           <Button disabled={world.phase === 'offseason'} variant="ghost" onClick={simFullSeason}>
-            Sim Season
+            Симулировать сезон
           </Button>
         </div>
 
         {world.phase === 'offseason' && world.season.championId && (
           <div className="button-row">
-            <Button onClick={advanceToNextSeason}>Advance Offseason</Button>
+            <Button onClick={advanceToNextSeason}>Перейти к новому сезону</Button>
           </div>
         )}
       </Card>
 
-      <Card title="Living World Pulse">
+      <Card title="Пульс мира">
         <div className="dashboard-grid">
           <div>
-            <div className="eyebrow">Tracked People</div>
+            <div className="eyebrow">людей в базе</div>
             <p className="big-number">{peopleCount}</p>
           </div>
           <div>
-            <div className="eyebrow">Active Players</div>
+            <div className="eyebrow">активных игроков</div>
             <p className="big-number">{activePlayerCount}</p>
           </div>
           <div>
-            <div className="eyebrow">Graduates</div>
+            <div className="eyebrow">выпускников</div>
             <p className="big-number">{graduatedCount}</p>
           </div>
         </div>
-        <p className="muted">
-          {GAME_VERSION_LABEL}: player profiles, career timelines, award watch and stricter rivalry scheduling.
-        </p>
+        <p className="muted">Мир уже хранит игроков как людей: школа, выпуск, будущий рекрутинг, колледж и дальнейшая карьера.</p>
       </Card>
 
-      <Card title="Award Watch">
+      <Card title="Пул выпускников">
+        {prospects.length === 0 ? (
+          <p className="muted">Выпускники появятся после первого завершённого сезона и перехода через межсезонье.</p>
+        ) : (
+          <div className="list">
+            {prospects.map((prospect) => (
+              <div className="list-row" key={prospect.playerId}>
+                <div>
+                  <strong>{prospect.playerName}</strong>
+                  <p className="muted">
+                    {prospect.position} / {prospect.teamName} / рейтинг {prospect.score}
+                  </p>
+                  <p className="muted">{prospect.projection}</p>
+                </div>
+                <button className="filter-chip" onClick={() => openPlayerProfile(prospect.playerId, 'dashboard')}>
+                  Профиль
+                </button>
+              </div>
+            ))}
+            <button className="filter-chip" onClick={() => setScreen('prospects')}>Открыть всех выпускников</button>
+          </div>
+        )}
+      </Card>
+
+      <Card title="Претенденты на награды">
         {awards.length === 0 ? (
-          <p className="muted">Award watch will appear once the state has active players.</p>
+          <p className="muted">Список появится, когда в мире будут активные игроки.</p>
         ) : (
           <div className="list">
             {awards.map((award) => (
@@ -131,7 +158,7 @@ export function DashboardScreen() {
                   <p className="muted">{award.reason}</p>
                 </div>
                 <button className="filter-chip" onClick={() => openPlayerProfile(award.playerId, 'dashboard')}>
-                  Profile
+                  Профиль
                 </button>
               </div>
             ))}
@@ -140,51 +167,51 @@ export function DashboardScreen() {
       </Card>
 
       {world.phase === 'offseason' && latestChampion ? (
-        <Card title="Champion">
+        <Card title="Чемпион">
           <div className="stack compact-stack">
             <strong>{latestChampion.championName}</strong>
             <p className="muted">
               {latestChampion.year}: {latestChampion.finalSummary}
             </p>
             <div className="stat-strip">
-              <span>Runner-up {latestChampion.runnerUpName}</span>
-              <span>Final {latestChampion.finalScore}</span>
+              <span>финалист {latestChampion.runnerUpName}</span>
+              <span>финал {latestChampion.finalScore}</span>
             </div>
           </div>
         </Card>
       ) : (
-        <Card title="Game of the Week">
+        <Card title="Матч недели">
           {slate.gameOfTheWeek ? (
             <div className="stack compact-stack">
               <div className="eyebrow">
-                Week {slate.currentWeek + 1} / {slate.gameOfTheWeek.stageLabel}
+                неделя {slate.currentWeek + 1} / {formatStakeLabel(slate.gameOfTheWeek.stageLabel)}
               </div>
               <strong>
-                {slate.gameOfTheWeek.awayTeamName} at {slate.gameOfTheWeek.homeTeamName}
+                {slate.gameOfTheWeek.awayTeamName} в гостях у {slate.gameOfTheWeek.homeTeamName}
               </strong>
               <div className="tag-row">
-                {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{slate.gameOfTheWeek.shortLabel}</span> : null}
+                {slate.gameOfTheWeek.shortLabel ? <span className="tag-chip">{formatStakeLabel(slate.gameOfTheWeek.shortLabel)}</span> : null}
                 <span className="tag-chip subdued">{slate.gameOfTheWeek.reason}</span>
-                <span className="tag-chip subdued">{slate.gameOfTheWeek.status}</span>
-                <span className="tag-chip subdued">{slate.gameOfTheWeek.score}</span>
+                <span className="tag-chip subdued">{slate.gameOfTheWeek.status === 'Final' ? 'сыграно' : 'впереди'}</span>
+                <span className="tag-chip subdued">{slate.gameOfTheWeek.score || 'счёта нет'}</span>
               </div>
               {slate.gameOfTheWeek.summary ? <p className="muted">{slate.gameOfTheWeek.summary}</p> : null}
             </div>
           ) : (
-            <p className="muted">This week's headliner will appear once a slate is available.</p>
+            <p className="muted">Матч недели появится, когда будет доступна игровая неделя.</p>
           )}
         </Card>
       )}
 
-      <Card title="Latest Headlines">
+      <Card title="Главные новости">
         {headlines.length === 0 ? (
-          <p className="muted">No major headlines yet. Sim a week to bring the state to life.</p>
+          <p className="muted">Пока нет крупных новостей.</p>
         ) : (
           <div className="list">
             {headlines.map((headline) => (
               <div className="history-item" key={headline.id}>
                 <div className="eyebrow">
-                  {headline.type.toUpperCase()} / Week {headline.week + 1}
+                  {formatHeadlineType(headline.type)} / неделя {headline.week + 1}
                 </div>
                 <strong>{headline.title}</strong>
                 <p>{headline.body}</p>
@@ -194,9 +221,9 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Standings Snapshot">
+      <Card title="Верх таблицы">
         {topStandings.length === 0 ? (
-          <p className="muted">Standings will appear once the season starts moving.</p>
+          <p className="muted">Таблица появится после старта сезона.</p>
         ) : (
           <div className="list">
             {topStandings.map((entry) => (
@@ -205,7 +232,7 @@ export function DashboardScreen() {
                   #{entry.rank} {entry.teamName}
                 </span>
                 <strong>
-                  {entry.wins}-{entry.losses} / Diff {entry.pointDifferential}
+                  {entry.wins}-{entry.losses} / разница {entry.pointDifferential}
                 </strong>
               </div>
             ))}
@@ -213,15 +240,15 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Recent Events">
+      <Card title="Последние события">
         {recentSeasonEntries.length === 0 ? (
-          <p className="muted">Recent events will populate once games and story beats hit the calendar.</p>
+          <p className="muted">События появятся после сыгранных матчей.</p>
         ) : (
           <div className="list">
             {recentSeasonEntries.map((entry) => (
               <div className="history-item" key={entry.id}>
                 <div className="eyebrow">
-                  {entry.year} / Week {entry.week + 1}
+                  {entry.year} / неделя {entry.week + 1}
                 </div>
                 <strong>{entry.headline}</strong>
                 <p>{entry.body}</p>

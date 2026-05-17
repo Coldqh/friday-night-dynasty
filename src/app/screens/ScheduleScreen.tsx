@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card } from '../components/Card';
+import { formatScheduleStatus, formatStage, formatStakeLabel } from '../localization';
 import { getCompletedSchedule, getUpcomingSchedule } from '../../core/schedule/getFullSchedule';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { getWeekStakes } from '../../core/stakes/getWeekStakes';
@@ -9,8 +10,8 @@ import { useGameStore } from '../store/useGameStore';
 type ScheduleFilter = 'all' | 'completed';
 
 export const scheduleFilters: Array<{ id: ScheduleFilter; label: string }> = [
-  { id: 'all', label: 'All Games' },
-  { id: 'completed', label: 'Completed' }
+  { id: 'all', label: 'Ближайшие' },
+  { id: 'completed', label: 'Сыгранные' }
 ];
 
 export function ScheduleScreen() {
@@ -29,19 +30,19 @@ export function ScheduleScreen() {
     const labels: string[] = [];
 
     if (gameId === gameOfTheWeekId) {
-      labels.push('Game of the Week');
+      labels.push('матч недели');
     }
 
     if (weekStakes.playoffRaceGames.some((game) => game.gameId === gameId)) {
-      labels.push('Playoff Race');
+      labels.push('гонка за плей-офф');
     }
 
     if (weekStakes.undefeatedWatchGames.some((game) => game.gameId === gameId)) {
-      labels.push('Undefeated Watch');
+      labels.push('серия без поражений');
     }
 
     if (rivalryGameIds.has(gameId)) {
-      labels.push('Rivalry');
+      labels.push('дерби');
     }
 
     return labels;
@@ -49,12 +50,12 @@ export function ScheduleScreen() {
 
   return (
     <div className="stack">
-      <Card title="Texoma Schedule">
+      <Card title="Календарь Texoma">
         <div className="stack compact-stack">
           <div className="stat-strip">
-            <span>Year {world.season.year}</span>
-            <span>Week {world.season.currentWeek + 1}</span>
-            <span>{world.phase === 'regular' ? 'Regular Season' : world.phase === 'playoffs' ? 'Playoffs' : 'Season Complete'}</span>
+            <span>год {world.season.year}</span>
+            <span>неделя {world.season.currentWeek + 1}</span>
+            <span>{world.phase === 'regular' ? 'регулярный сезон' : world.phase === 'playoffs' ? 'плей-офф' : 'сезон завершён'}</span>
           </div>
 
           <div className="filter-row">
@@ -71,27 +72,27 @@ export function ScheduleScreen() {
         </div>
       </Card>
 
-      <Card title="Statewide Slate">
+      <Card title="Матчи штата">
         {filteredSchedule.length === 0 ? (
           <p className="muted">
             {filter === 'all'
               ? world.phase === 'offseason'
-                ? 'Season complete. The next live slate will appear after the offseason advance.'
-                : 'No upcoming games are on the board right now.'
-              : 'No completed games have been recorded yet.'}
+                ? 'Сезон завершён. Новый календарь появится после перехода через межсезонье.'
+                : 'Ближайших матчей сейчас нет.'
+              : 'Сыгранных матчей пока нет.'}
           </p>
         ) : (
           <div className="stack compact-stack">
             <p className="muted">{weekStakes.summary}</p>
 
             <div className="table-head grid-full-schedule">
-              <span>Week</span>
-              <span>Stage</span>
-              <span>Away</span>
-              <span>Home</span>
-              <span>Status</span>
-              <span>Score</span>
-              <span>Winner</span>
+              <span>нед</span>
+              <span>стадия</span>
+              <span>гости</span>
+              <span>дома</span>
+              <span>статус</span>
+              <span>счёт</span>
+              <span>победитель</span>
             </div>
 
             {filteredSchedule.map((game) => {
@@ -100,8 +101,8 @@ export function ScheduleScreen() {
               return (
                 <div className="schedule-card-row" key={game.gameId}>
                   <div className="grid-full-schedule schedule-card-grid">
-                    <span>W{game.week + 1}</span>
-                    <span>{game.stageLabel}</span>
+                    <span>Н{game.week + 1}</span>
+                    <span>{formatStage(game.stageLabel)}</span>
                     <button
                       className="schedule-team-button"
                       onClick={() => openTeamProfile(game.awayTeamId, 'schedule', 'schedule')}
@@ -114,16 +115,16 @@ export function ScheduleScreen() {
                     >
                       {game.homeTeamName}
                     </button>
-                    <span>{game.status}</span>
-                    <strong>{game.score}</strong>
-                    <strong>{game.winnerName ?? 'Upcoming'}</strong>
+                    <span>{formatScheduleStatus(game.status)}</span>
+                    <strong>{game.score || '—'}</strong>
+                    <strong>{game.winnerName ?? 'впереди'}</strong>
                   </div>
 
                   {labels.length > 0 ? (
                     <div className="tag-row">
                       {labels.map((label) => (
                         <span className="tag-chip" key={`${game.gameId}-${label}`}>
-                          {label}
+                          {formatStakeLabel(label)}
                         </span>
                       ))}
                     </div>

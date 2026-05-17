@@ -16,30 +16,30 @@ export interface WeeklySlate {
 function getImportanceReason(world: GameWorld, game: WeekStakeGame) {
   switch (game.shortLabel) {
     case 'State Final':
-      return 'A state championship hangs on four quarters.';
+      return 'Четыре четверти решат судьбу титула.';
     case 'Playoff Semifinal':
-      return 'Win and the path to the title stays alive.';
+      return 'Победитель останется в гонке за титул.';
     case 'Rivalry with Playoff Pressure':
-      return 'Pride and playoff seeding are both on the line.';
+      return 'На кону и гордость, и позиция в плей-офф.';
     case 'Rivalry Game':
-      return 'The biggest local bragging rights game of the week.';
+      return 'Главный локальный матч недели.';
     case 'Unbeaten Watch':
-      return 'A perfect season is still standing at kickoff.';
+      return 'Одна из команд всё ещё идёт без поражений.';
     case 'Playoff Race':
-      return 'One result could swing the final-four picture.';
+      return 'Один результат может сдвинуть всю борьбу за топ-4.';
     case 'Top-Four Showdown':
-      return 'Two of the state heavyweights are colliding.';
+      return 'Две сильные команды штата встречаются напрямую.';
     case 'Evenly Matched Programs':
-      return 'These programs are separated by only a sliver.';
+      return 'Команды очень близки по силе.';
     default:
       break;
   }
 
   if (world.phase === 'playoffs') {
-    return 'Every playoff snap is raising the stakes across the state.';
+    return 'Каждый розыгрыш в плей-офф меняет сезон.';
   }
 
-  return 'Friday night spotlight is landing on this matchup.';
+  return 'Матч получает главный свет этой недели.';
 }
 
 function buildSlateEntry(world: GameWorld, game: WeekStakeGame): WeeklySlateEntry {

@@ -59,10 +59,10 @@ function buildTeamHistoryEntry(world: GameWorld, team: Team): TeamHistoryEntry {
     wonTitle: titleWon,
     titleWon,
     note: titleWon
-      ? `${team.shortName} won the Texoma title.`
+      ? `${team.shortName} выиграла титул Texoma.`
       : playoffAppearance
-        ? `${team.shortName} reached the final four.`
-        : `${team.shortName} finished ${team.wins}-${team.losses}.`
+        ? `${team.shortName} дошла до финальной четвёрки.`
+        : `${team.shortName} завершила сезон ${team.wins}-${team.losses}.`
   };
 }
 
@@ -144,8 +144,8 @@ function graduatePeople({
       year,
       week: 0,
       type: 'graduation',
-      title: `${graduatingPlayer.firstName} ${graduatingPlayer.lastName} graduated`,
-      body: `${graduatingPlayer.position} ${graduatingPlayer.firstName} ${graduatingPlayer.lastName} finished his high school career at ${team?.shortName ?? 'his program'} and entered the alumni pool.`,
+      title: `${graduatingPlayer.firstName} ${graduatingPlayer.lastName} окончил школу`,
+      body: `${graduatingPlayer.position} ${graduatingPlayer.firstName} ${graduatingPlayer.lastName} завершил школьный этап в ${team?.shortName ?? 'своей программе'} и попал в пул выпускников.`,
       teamId: graduatingPlayer.teamId,
       schoolId: graduatingPlayer.schoolId
     });
@@ -272,8 +272,8 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     id: makeId('news', rng),
     year: world.currentYear,
     week: 0,
-    headline: 'Offseason rollover complete',
-    body: `${graduatingPlayers.length} seniors joined the alumni pool, new freshmen arrived, and Texoma is ready for another year.`
+    headline: 'Межсезонье завершено',
+    body: `${graduatingPlayers.length} выпускников попали в общий пул, новички пришли в школы, Texoma готовится к новому сезону.`
   });
 
   return world;

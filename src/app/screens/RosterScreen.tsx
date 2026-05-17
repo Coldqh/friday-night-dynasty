@@ -8,11 +8,7 @@ export function RosterScreen() {
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
 
   return (
-    <Card title="Teams">
-      <p className="muted">
-        Browse the state programs, set one as your active team, or jump straight into its full profile.
-      </p>
-
+    <Card title="Команды">
       <div className="team-grid">
         {world.teams.map((team) => (
           <div className="team-chip" key={team.id}>
@@ -22,12 +18,12 @@ export function RosterScreen() {
                 {team.schoolName} / {team.cityName}
               </span>
               <span>
-                {team.wins}-{team.losses} / OVR {team.overallRating}
+                {team.wins}-{team.losses} / рейтинг {team.overallRating}
               </span>
             </button>
 
             <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'overview', 'roster')}>
-              Open Team Profile
+              Профиль команды
             </Button>
           </div>
         ))}

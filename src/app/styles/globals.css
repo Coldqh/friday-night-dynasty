@@ -34,7 +34,7 @@ button:disabled {
   max-width: 720px;
   margin: 0 auto;
   min-height: 100vh;
-  padding-bottom: 92px;
+  padding-bottom: 98px;
 }
 
 .topbar {
@@ -229,6 +229,17 @@ button:disabled {
   grid-template-columns: 0.85fr 1.5fr 0.9fr 0.7fr 0.8fr;
 }
 
+.grid-full-schedule {
+  display: grid;
+  grid-template-columns: 0.65fr 1fr 1.25fr 1.25fr 0.8fr 0.8fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.grid-prospects {
+  grid-template-columns: 1.5fr 0.55fr 0.65fr 0.65fr 0.7fr 1.3fr;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -295,7 +306,8 @@ button:disabled {
   gap: 8px;
 }
 
-.tab-chip {
+.tab-chip,
+.filter-chip {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 10px 12px;
@@ -304,7 +316,13 @@ button:disabled {
   cursor: pointer;
 }
 
-.tab-chip.active {
+.filter-chip {
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.tab-chip.active,
+.filter-chip.active {
   border-color: rgba(139, 199, 255, 0.35);
   background: rgba(139, 199, 255, 0.16);
 }
@@ -319,75 +337,14 @@ button:disabled {
   font-weight: 700;
 }
 
-.schedule-week {
-  display: grid;
-  gap: 8px;
-}
-
-.schedule-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.filter-chip {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: inherit;
-  cursor: pointer;
-}
-
-.filter-chip.active {
-  border-color: rgba(139, 199, 255, 0.35);
-  background: rgba(139, 199, 255, 0.16);
-}
-
-.table-row-button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.table-row-button:hover {
-  border-radius: 12px;
-  background: rgba(139, 199, 255, 0.1);
-}
-
-.grid-full-schedule {
-  display: grid;
-  grid-template-columns: 0.65fr 1fr 1.25fr 1.25fr 0.8fr 0.8fr 1fr;
-  gap: 8px;
-  align-items: center;
-}
-
-.schedule-card-row {
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.schedule-card-grid {
-  font-size: 14px;
-}
-
-.schedule-summary {
-  margin: 6px 0 0;
-  color: #aab8d3;
-}
-
+.filter-row,
 .tag-row {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-row {
   gap: 6px;
   margin-top: 6px;
 }
@@ -408,20 +365,42 @@ button:disabled {
   color: #dce8f8;
 }
 
+.table-row-button,
 .schedule-team-button {
-  width: fit-content;
   border: 0;
-  padding: 0;
   background: transparent;
-  color: #dce8f8;
-  font: inherit;
+  color: inherit;
   text-align: left;
   cursor: pointer;
 }
 
+.table-row-button {
+  width: 100%;
+}
+
+.schedule-team-button {
+  width: fit-content;
+  padding: 0;
+}
+
+.table-row-button:hover,
 .schedule-team-button:hover {
   color: #8bc7ff;
   text-decoration: underline;
+}
+
+.schedule-card-row {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.schedule-card-grid {
+  font-size: 14px;
+}
+
+.schedule-summary {
+  margin: 6px 0 0;
+  color: #aab8d3;
 }
 
 .bottom-nav {
@@ -431,7 +410,7 @@ button:disabled {
   transform: translateX(-50%);
   width: min(720px, 100%);
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   padding: 8px;
   background: rgba(7, 11, 19, 0.94);
@@ -445,7 +424,7 @@ button:disabled {
   color: #8fa3c7;
   padding: 10px 4px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -463,37 +442,24 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .grid-roster {
-    grid-template-columns: 1.4fr 0.55fr 0.65fr 0.55fr 0.55fr;
-    font-size: 13px;
-  }
-
-  .grid-standings {
-    grid-template-columns: 0.25fr 1.4fr 0.65fr 0.5fr 0.5fr 0.65fr;
-    font-size: 13px;
-  }
-
-  .grid-profile-roster {
-    grid-template-columns: 1.25fr 0.5fr 0.6fr 0.5fr 0.5fr 1.1fr;
-    font-size: 13px;
-  }
-
-  .grid-team-schedule {
-    grid-template-columns: 0.8fr 1.25fr 0.85fr 0.65fr 0.75fr;
-    font-size: 13px;
+  .grid-roster,
+  .grid-standings,
+  .grid-profile-roster,
+  .grid-team-schedule,
+  .grid-full-schedule,
+  .grid-prospects {
+    font-size: 12px;
   }
 
   .grid-full-schedule {
     grid-template-columns: 0.7fr 0.95fr 1.05fr 1.05fr 0.8fr 0.75fr 0.95fr;
-    font-size: 12px;
+  }
+
+  .grid-prospects {
+    grid-template-columns: 1.3fr 0.5fr 0.55fr 0.55fr 0.6fr 1fr;
   }
 
   .tab-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .schedule-row {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }

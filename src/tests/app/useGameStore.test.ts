@@ -12,9 +12,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world: null,
       selectedTeamId: null,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
   });
@@ -26,9 +28,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: null,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'rankings',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -46,9 +50,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: world.teams[1].id,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'teamProfile',
       previousScreenBeforeTeamProfile: 'schedule',
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -58,9 +64,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: world.teams[2].id,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'teamProfile',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -74,9 +82,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: null,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'dashboard',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -102,9 +112,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: world.teams[0].id,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'roster',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -122,9 +134,11 @@ describe('useGameStore team profile navigation', () => {
     useGameStore.setState({
       world,
       selectedTeamId: world.teams[0].id,
+      selectedPlayerId: null,
       teamProfileTab: 'overview',
       screen: 'schedule',
       previousScreenBeforeTeamProfile: null,
+      previousScreenBeforePlayerProfile: null,
       error: null
     });
 
@@ -139,34 +153,36 @@ describe('useGameStore team profile navigation', () => {
     expect(useGameStore.getState().screen).toBe('schedule');
   });
 
-  it('navigation labels expose News and History without any Game Log wording', () => {
+  it('navigation labels expose localized News and History without any Game Log wording', () => {
     expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
     expect(navigationTabs.some((tab) => tab.label === 'World')).toBe(false);
-    expect(navigationTabs.some((tab) => tab.label === 'Dashboard')).toBe(true);
-    expect(navigationTabs.some((tab) => tab.label === 'News')).toBe(true);
-    expect(navigationTabs.some((tab) => tab.label === 'History')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'Главная')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'Новости')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'История')).toBe(true);
+    expect(navigationTabs.some((tab) => tab.label === 'Выпускники')).toBe(true);
   });
 
-  it('schedule filters are reduced to All Games and Completed', () => {
+  it('schedule filters are localized and keep only upcoming and completed scopes', () => {
     expect(scheduleFilters).toEqual([
-      { id: 'all', label: 'All Games' },
-      { id: 'completed', label: 'Completed' }
+      { id: 'all', label: 'Ближайшие' },
+      { id: 'completed', label: 'Сыгранные' }
     ]);
   });
 
   it('dashboard status pills no longer expose Completed Games', () => {
-    const pills = getDashboardStatusPills('Regular Season', 16);
+    const pills = getDashboardStatusPills('регулярный сезон', 16);
 
-    expect(pills).toEqual(['Regular Season', '16 Teams']);
+    expect(pills).toEqual(['регулярный сезон', '16 команд']);
     expect(pills.some((pill) => /completed games/i.test(pill))).toBe(false);
+    expect(pills.some((pill) => /сыгранных игр/i.test(pill))).toBe(false);
   });
 
   it('history and news sections stay clean and avoid old debug-heavy panels', () => {
-    expect(historySections).toEqual(['League History', 'State Champions']);
+    expect(historySections).toEqual(['История лиги', 'Чемпионы штата']);
     expect(historySections).not.toContain('State Finals');
     expect(historySections).not.toContain('League Timeline');
 
-    expect(newsSections).toEqual(['State News', 'Latest Headlines']);
+    expect(newsSections).toEqual(['Новости штата', 'Главные заголовки']);
     expect(newsSections).not.toContain('Game of the Week');
     expect(newsSections).not.toContain('Season Journal');
   });

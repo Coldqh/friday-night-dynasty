@@ -2,10 +2,10 @@ import { GameWorld } from '../world/worldTypes';
 import { getTeamHistorySnapshot } from './getTeamHistorySnapshot';
 
 export type ProgramTier =
-  | 'Local Underdog'
-  | 'Rising Program'
-  | 'State Contender'
-  | 'Friday Night Powerhouse';
+  | 'местный андердог'
+  | 'растущая программа'
+  | 'претендент штата'
+  | 'сила пятничных вечеров';
 
 export interface TeamIdentityProfile {
   teamId: string;
@@ -16,61 +16,61 @@ export interface TeamIdentityProfile {
 function getProgramTier(prestige: number, overall: number): ProgramTier {
   const programScore = prestige * 0.5 + overall * 0.5;
 
-  if (programScore >= 78) return 'Friday Night Powerhouse';
-  if (programScore >= 68) return 'State Contender';
-  if (programScore >= 56) return 'Rising Program';
-  return 'Local Underdog';
+  if (programScore >= 78) return 'сила пятничных вечеров';
+  if (programScore >= 68) return 'претендент штата';
+  if (programScore >= 56) return 'растущая программа';
+  return 'местный андердог';
 }
 
 function describeOffense(style: GameWorld['teams'][number]['offenseStyle']) {
   switch (style) {
     case 'passHeavy':
-      return 'leans on its quarterback and perimeter playmakers';
+      return 'строит нападение вокруг квотербека и принимающих';
     case 'runHeavy':
-      return 'wants to grind games out on the ground';
+      return 'любит давить соперника выносом';
     case 'spread':
-      return 'stretches defenses with tempo and spacing';
+      return 'растягивает защиту темпом и шириной поля';
     case 'powerRun':
-      return 'prefers a physical, downhill rushing attack';
+      return 'играет через силовой вынос';
     default:
-      return 'tries to stay balanced and take what the defense gives';
+      return 'держит баланс между пасом и выносом';
   }
 }
 
 function describeDefense(style: GameWorld['teams'][number]['defenseStyle']) {
   switch (style) {
     case 'blitzHeavy':
-      return 'bringing pressure from every angle';
+      return 'часто отправляет блицы';
     case 'aggressive':
-      return 'attacking downhill and forcing mistakes';
+      return 'играет агрессивно и ищет ошибки';
     case 'conservative':
-      return 'keeping the game in front and limiting explosives';
+      return 'сдерживает большие розыгрыши';
     default:
-      return 'staying disciplined and structurally sound';
+      return 'держит дисциплину и структуру';
   }
 }
 
 function describeProgramState(world: GameWorld, teamId: string) {
   const team = world.teams.find((entry) => entry.id === teamId);
-  if (!team) return 'This program is still searching for its first clear identity.';
+  if (!team) return 'Программа ещё ищет свою идентичность.';
 
   const history = getTeamHistorySnapshot(world, teamId);
   const titles = history.titlesCount;
   const playoffTrips = history.playoffAppearancesCount;
 
   if (titles > 0) {
-    return `The program already owns ${titles} state title${titles === 1 ? '' : 's'} and carries real championship expectations.`;
+    return `У программы уже есть титулы штата: ${titles}. Ожидания вокруг команды стали выше.`;
   }
 
   if (playoffTrips > 0) {
-    return `The program has already broken into the playoff picture ${playoffTrips} time${playoffTrips === 1 ? '' : 's'} and is trying to turn that into hardware.`;
+    return `Команда уже выходила в плей-офф: ${playoffTrips}. Теперь ей нужен следующий шаг.`;
   }
 
   if (team.wins > team.losses && team.wins > 0) {
-    return 'This season has momentum, and the locker room believes it can push into the state conversation.';
+    return 'Текущий сезон даёт импульс, и команда начинает верить в серьёзный рывок.';
   }
 
-  return 'This program is still writing its first chapter and trying to become a Friday night problem for the rest of the state.';
+  return 'Программа только пишет первую главу и пытается стать проблемой для остального штата.';
 }
 
 export function getTeamIdentityProfile(world: GameWorld, teamId: string): TeamIdentityProfile {
@@ -79,23 +79,23 @@ export function getTeamIdentityProfile(world: GameWorld, teamId: string): TeamId
   if (!team) {
     return {
       teamId,
-      programTier: 'Local Underdog',
-      description: 'This program is still searching for its first clear identity.'
+      programTier: 'местный андердог',
+      description: 'Программа ещё ищет свою идентичность.'
     };
   }
 
   const programTier = getProgramTier(team.prestige, team.overallRating);
   const strengthClause =
     team.offenseRating >= team.defenseRating + 5
-      ? 'Its edge comes from an offense that can carry the room.'
+      ? 'Главное оружие команды — нападение.'
       : team.defenseRating >= team.offenseRating + 5
-        ? 'Its backbone is a defense that can keep every game tight.'
-        : 'Its roster is shaped more by balance than by one overwhelming phase.';
+        ? 'Основа команды — защита.'
+        : 'Команда держится на балансе состава.';
 
   return {
     teamId,
     programTier,
-    description: `${team.shortName} ${describeOffense(team.offenseStyle)} while ${describeDefense(
+    description: `${team.shortName} ${describeOffense(team.offenseStyle)}, а в защите ${describeDefense(
       team.defenseStyle
     )}. ${strengthClause} ${describeProgramState(world, teamId)}`
   };

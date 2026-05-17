@@ -1,33 +1,18 @@
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { formatCareerEventType, formatCareerStage, formatClassYear } from '../localization';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { getPersonForPlayer } from '../../core/people/personUtils';
 import { Player } from '../../core/world/worldTypes';
 import { useGameStore } from '../store/useGameStore';
 
 function formatHeight(inches: number) {
-  const feet = Math.floor(inches / 12);
-  const rest = inches % 12;
-  return `${feet}'${rest}"`;
+  const cm = Math.round(inches * 2.54);
+  return `${cm} см`;
 }
 
 function getPlayerStageLabel(player: Player) {
-  switch (player.careerStage) {
-    case 'graduated':
-      return 'Graduate / alumni pool';
-    case 'collegeProspect':
-      return 'College prospect';
-    case 'college':
-      return 'College player';
-    case 'draftProspect':
-      return 'Draft prospect';
-    case 'pro':
-      return 'Pro player';
-    case 'retired':
-      return 'Retired';
-    default:
-      return 'High school player';
-  }
+  return formatCareerStage(player.careerStage);
 }
 
 export function PlayerProfileScreen() {
@@ -40,9 +25,9 @@ export function PlayerProfileScreen() {
 
   if (!player) {
     return (
-      <Card title="Player Profile">
-        <p className="muted">No player record found.</p>
-        <Button variant="ghost" onClick={closePlayerProfile}>Back</Button>
+      <Card title="Профиль игрока">
+        <p className="muted">Запись игрока не найдена.</p>
+        <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>
       </Card>
     );
   }
@@ -56,61 +41,61 @@ export function PlayerProfileScreen() {
 
   return (
     <div className="stack">
-      <Card title="Player Profile">
+      <Card title="Профиль игрока">
         <div className="stack compact-stack">
           <div className="eyebrow">{getPlayerStageLabel(player)}</div>
           <h3 className="profile-title">{player.firstName} {player.lastName}</h3>
           <div className="stat-strip">
             <span>{player.position}</span>
-            <span>{player.classYear}</span>
-            <span>OVR {player.overall}</span>
-            <span>POT {player.potential}</span>
+            <span>{formatClassYear(player.classYear)}</span>
+            <span>общ {player.overall}</span>
+            <span>пот {player.potential}</span>
             <span>{formatHeight(player.height)}</span>
-            <span>{player.weight} lbs</span>
+            <span>{Math.round(player.weight * 0.453592)} кг</span>
           </div>
           <p className="muted">
-            {school?.name ?? 'Unknown school'} / {team?.shortName ?? 'Unknown team'} / hometown {hometown?.name ?? 'Unknown'}
+            {school?.name ?? 'неизвестная школа'} / {team?.shortName ?? 'неизвестная команда'} / родной город {hometown?.name ?? 'неизвестен'}
           </p>
           <div className="button-row">
-            <Button variant="ghost" onClick={closePlayerProfile}>Back</Button>
-            {team ? <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'roster', 'playerProfile')}>Open Team</Button> : null}
+            <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>
+            {team ? <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'roster', 'playerProfile')}>Команда</Button> : null}
           </div>
         </div>
       </Card>
 
-      <Card title="Person Record">
+      <Card title="Запись человека">
         {person ? (
           <div className="stack compact-stack">
             <div className="stat-strip">
               <span>{person.personality}</span>
-              <span>REP {person.reputation}</span>
-              <span>Ambition {person.ambition}</span>
-              <span>Discipline {person.discipline}</span>
-              <span>Born {person.birthYear}</span>
+              <span>репутация {person.reputation}</span>
+              <span>амбиции {person.ambition}</span>
+              <span>дисциплина {person.discipline}</span>
+              <span>год рождения {person.birthYear}</span>
             </div>
             <p className="muted">
-              This is the tracked person layer: the same human can later become a college player, pro player, coach, scout or GM.
+              Это не временная карточка игрока, а человек мира. Позже он сможет стать игроком колледжа, профессионалом, тренером, скаутом или менеджером.
             </p>
           </div>
         ) : (
-          <p className="muted">No person record exists yet. Normalization will rebuild it from the player record.</p>
+          <p className="muted">Запись человека ещё не создана. Нормализация мира восстановит её по данным игрока.</p>
         )}
       </Card>
 
-      <Card title="Season / Career Stats">
+      <Card title="Статистика сезона и карьеры">
         <div className="table compact-table">
           <div className="table-head" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <span>Scope</span>
-            <span>Pass</span>
-            <span>Rush</span>
-            <span>Rec</span>
-            <span>TD</span>
-            <span>Tkl</span>
-            <span>Sack</span>
-            <span>INT</span>
+            <span>период</span>
+            <span>пас</span>
+            <span>вынос</span>
+            <span>приём</span>
+            <span>тач</span>
+            <span>захв</span>
+            <span>сэк</span>
+            <span>int</span>
           </div>
           <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <strong>Season</strong>
+            <strong>сезон</strong>
             <span>{player.seasonStats.passingYards}</span>
             <span>{player.seasonStats.rushingYards}</span>
             <span>{player.seasonStats.receivingYards}</span>
@@ -120,7 +105,7 @@ export function PlayerProfileScreen() {
             <span>{player.seasonStats.interceptions}</span>
           </div>
           <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <strong>Career</strong>
+            <strong>карьера</strong>
             <span>{player.careerStats.passingYards}</span>
             <span>{player.careerStats.rushingYards}</span>
             <span>{player.careerStats.receivingYards}</span>
@@ -132,14 +117,14 @@ export function PlayerProfileScreen() {
         </div>
       </Card>
 
-      <Card title="Award Watch">
+      <Card title="Награды">
         {awards.length === 0 ? (
-          <p className="muted">No active award watch spot yet.</p>
+          <p className="muted">Пока нет места в списке претендентов.</p>
         ) : (
           <div className="list">
             {awards.map((award) => (
               <div className="history-item" key={`${award.type}-${award.playerId}`}>
-                <div className="eyebrow">Score {award.score}</div>
+                <div className="eyebrow">оценка {award.score}</div>
                 <strong>{award.title}</strong>
                 <p>{award.reason}</p>
               </div>
@@ -148,14 +133,14 @@ export function PlayerProfileScreen() {
         )}
       </Card>
 
-      <Card title="Career Timeline">
+      <Card title="Хронология карьеры">
         {careerEvents.length === 0 ? (
-          <p className="muted">Career events will appear as this player moves through the ecosystem.</p>
+          <p className="muted">События появятся, когда игрок начнёт двигаться по экосистеме.</p>
         ) : (
           <div className="list">
             {careerEvents.map((event) => (
               <div className="history-item" key={event.id}>
-                <div className="eyebrow">{event.year} / Week {event.week + 1} / {event.type}</div>
+                <div className="eyebrow">{event.year} / неделя {event.week + 1} / {formatCareerEventType(event.type)}</div>
                 <strong>{event.title}</strong>
                 <p>{event.body}</p>
               </div>

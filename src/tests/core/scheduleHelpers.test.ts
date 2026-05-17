@@ -16,7 +16,7 @@ describe('state schedule helpers', () => {
     expect(uniqueTeams.size).toBe(world.teams.length);
   });
 
-  it('getUpcomingSchedule powers the All Games view without filtering to a selected team', () => {
+  it('getUpcomingSchedule powers the statewide schedule view without filtering to a selected team', () => {
     const world = simulateWeek(createWorld({ seed: 1206 }));
     const upcomingSchedule = getUpcomingSchedule(world);
     const uniqueTeams = new Set(upcomingSchedule.flatMap((game) => [game.awayTeamId, game.homeTeamId]));
@@ -53,7 +53,7 @@ describe('state schedule helpers', () => {
 
     expect(slate.gameOfTheWeek).not.toBeNull();
     expect(slate.gameOfTheWeek?.stage).toBe('final');
-    expect(slate.gameOfTheWeek?.reason).toMatch(/state championship|State Final/i);
+    expect(slate.gameOfTheWeek?.reason).toMatch(/титул|финал|штат/i);
   });
 
   it('getWeeklySlate reports completed games once a week has been simulated', () => {

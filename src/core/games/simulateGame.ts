@@ -118,16 +118,8 @@ export function simulateGame({
     85,
     390
   );
-  const homeSkillYards = clamp(
-    Math.round(55 + homeScore * 5 + rng.int(-18, 70)),
-    25,
-    235
-  );
-  const awaySkillYards = clamp(
-    Math.round(55 + awayScore * 5 + rng.int(-18, 70)),
-    25,
-    235
-  );
+  const homeSkillYards = clamp(Math.round(55 + homeScore * 5 + rng.int(-18, 70)), 25, 235);
+  const awaySkillYards = clamp(Math.round(55 + awayScore * 5 + rng.int(-18, 70)), 25, 235);
   const homeDefTackles = clamp(Math.round(6 + awayScore / 3 + rng.int(0, 4)), 4, 14);
   const awayDefTackles = clamp(Math.round(6 + homeScore / 3 + rng.int(0, 4)), 4, 14);
   const homeDefSplash = rng.int(0, 2);
@@ -190,16 +182,16 @@ export function simulateGame({
   const mvp = homeWon ? homeQb ?? homeSkill : awayQb ?? awaySkill;
   const mvpLine =
     mvp?.position === 'QB'
-      ? `${homeWon ? homePassYards : awayPassYards} pass yds`
-      : `${homeWon ? homeSkillYards : awaySkillYards} total yds`;
+      ? `${homeWon ? homePassYards : awayPassYards} ярдов пасом`
+      : `${homeWon ? homeSkillYards : awaySkillYards} ярдов суммарно`;
   const stageLabel =
-    game.stage === 'final' ? 'the state final' : game.stage === 'semifinal' ? 'the semifinal' : 'Friday night';
+    game.stage === 'final' ? 'финале штата' : game.stage === 'semifinal' ? 'полуфинале' : 'матче недели';
 
   const keyPlayers = [
-    keyPlayer(homeQb, home, `${homePassYards} pass yds`),
-    keyPlayer(homeSkill, home, `${homeSkillYards} total yds`),
-    keyPlayer(awayQb, away, `${awayPassYards} pass yds`),
-    keyPlayer(awaySkill, away, `${awaySkillYards} total yds`)
+    keyPlayer(homeQb, home, `${homePassYards} ярдов пасом`),
+    keyPlayer(homeSkill, home, `${homeSkillYards} ярдов суммарно`),
+    keyPlayer(awayQb, away, `${awayPassYards} ярдов пасом`),
+    keyPlayer(awaySkill, away, `${awaySkillYards} ярдов суммарно`)
   ].filter((entry): entry is GameKeyPlayer => entry !== null);
 
   return {
@@ -209,8 +201,8 @@ export function simulateGame({
       awayScore,
       winnerId: winner.id,
       loserId: loser.id,
-      summary: `${winner.shortName} beat ${loser.shortName} ${winnerScore}-${loserScore} in ${stageLabel}. ${
-        mvp ? `${mvp.firstName} ${mvp.lastName} led the way with ${mvpLine}.` : 'The winning side controlled the late drives.'
+      summary: `${winner.shortName} обыграла ${loser.shortName} ${winnerScore}-${loserScore} в ${stageLabel}. ${
+        mvp ? `${mvp.firstName} ${mvp.lastName} стал главным игроком матча: ${mvpLine}.` : 'Победитель лучше провёл концовку.'
       }`,
       keyPlayers,
       mvpPlayerId: mvp?.id ?? null

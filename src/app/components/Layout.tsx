@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
-import { GAME_VERSION } from '../version';
+import { GAME_VERSION_LABEL } from '../version';
 import { AppScreen, useGameStore } from '../store/useGameStore';
 
 export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'roster', label: 'Teams' },
-  { id: 'schedule', label: 'Schedule' },
-  { id: 'rankings', label: 'Standings' },
-  { id: 'news', label: 'News' },
-  { id: 'history', label: 'History' }
+  { id: 'dashboard', label: 'Главная' },
+  { id: 'roster', label: 'Команды' },
+  { id: 'prospects', label: 'Выпускники' },
+  { id: 'schedule', label: 'Календарь' },
+  { id: 'rankings', label: 'Таблица' },
+  { id: 'news', label: 'Новости' },
+  { id: 'history', label: 'История' }
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -20,8 +21,8 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <div className="eyebrow">Friday Night Dynasty / {GAME_VERSION}</div>
-          <h1>{world?.state.name ?? 'New State'}</h1>
+          <div className="eyebrow">Friday Night Dynasty / {GAME_VERSION_LABEL}</div>
+          <h1>{world?.state.name ?? 'Новый штат'}</h1>
         </div>
         <div className="year-pill">{world?.currentYear}</div>
       </header>

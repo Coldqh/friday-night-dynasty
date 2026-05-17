@@ -4,13 +4,14 @@ import { simulateWeek } from '../../core/season/simulateSeason';
 import { createWorld } from '../../core/world/createWorld';
 
 describe('season award watch', () => {
-  it('returns award candidates with player and team context', () => {
+  it('returns localized award candidates with player and team context', () => {
     const world = simulateWeek(createWorld({ seed: 4501 }));
     const awards = getSeasonAwardWatch(world);
 
     expect(awards.length).toBeGreaterThan(0);
     expect(awards[0]?.playerId).toBeTruthy();
     expect(awards[0]?.teamId).toBeTruthy();
-    expect(awards[0]?.title).toContain('Watch');
+    expect(awards[0]?.title.length).toBeGreaterThan(0);
+    expect(awards[0]?.title).not.toContain('Watch');
   });
 });

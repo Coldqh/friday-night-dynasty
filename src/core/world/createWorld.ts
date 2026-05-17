@@ -137,8 +137,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     id: makeId('news', rng),
     year: 2026,
     week: 0,
-    headline: 'Living State kickoff',
-    body: 'Texoma opens with 16 teams, 8 cities and a brand-new Friday night race for the state crown.'
+    headline: 'Старт живого штата',
+    body: 'Texoma начинает путь: 16 команд, 8 городов и первая гонка за титул штата.'
   };
 
   return {
@@ -172,8 +172,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
           id: makeId('history', rng),
           year: 2026,
           week: 0,
-          headline: 'Season begins',
-          body: 'Every city in Texoma is chasing the first Living State title.',
+          headline: 'Сезон начинается',
+          body: 'Каждый город Texoma начинает гонку за первый титул штата.',
           gameId: null
         }
       ]

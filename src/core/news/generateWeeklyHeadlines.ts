@@ -113,8 +113,8 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (game.stage === 'final') {
     return createHeadline(world, rng, {
       type: 'champion',
-      title: `${winner.shortName} captures the state title`,
-      body: `${winner.shortName} beat ${loser.shortName} ${game.homeTeamId === winner.id ? game.homeScore : game.awayScore}-${game.homeTeamId === loser.id ? game.homeScore : game.awayScore}. ${game.summary}`,
+      title: `${winner.shortName} берёт титул штата`,
+      body: `${winner.shortName} обыграла ${loser.shortName} ${game.homeTeamId === winner.id ? game.homeScore : game.awayScore}-${game.homeTeamId === loser.id ? game.homeScore : game.awayScore}. ${game.summary}`,
       teamIds: [winner.id, loser.id],
       gameId: game.id,
       week: game.week
@@ -124,7 +124,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (isUpset(world, game)) {
     return createHeadline(world, rng, {
       type: 'upset',
-      title: `Upset alert: ${winner.shortName} shocks ${loser.shortName}`,
+      title: `Апсет: ${winner.shortName} удивляет матчем против ${loser.shortName}`,
       body: game.summary,
       teamIds: [winner.id, loser.id],
       gameId: game.id,
@@ -135,7 +135,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (isBlowout(game)) {
     return createHeadline(world, rng, {
       type: 'blowout',
-      title: `${winner.shortName} runs away with Friday night`,
+      title: `${winner.shortName} устраивает разгром`,
       body: game.summary,
       teamIds: [winner.id, loser.id],
       gameId: game.id,
@@ -146,7 +146,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (isCloseFinish(game)) {
     return createHeadline(world, rng, {
       type: 'recap',
-      title: `${winner.shortName} survives a one-score finish`,
+      title: `${winner.shortName} выдерживает концовку`,
       body: game.summary,
       teamIds: [winner.id, loser.id],
       gameId: game.id,
@@ -157,7 +157,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (isHighScoring(game)) {
     return createHeadline(world, rng, {
       type: 'recap',
-      title: `${homeTeam.shortName} and ${awayTeam.shortName} light up the scoreboard`,
+      title: `${homeTeam.shortName} и ${awayTeam.shortName} выдают результативный матч`,
       body: game.summary,
       teamIds: [homeTeam.id, awayTeam.id],
       gameId: game.id,
@@ -168,7 +168,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
   if (isStrongDefense(game)) {
     return createHeadline(world, rng, {
       type: 'general',
-      title: `${winner.shortName} puts on a defensive clinic`,
+      title: `${winner.shortName} выигрывает через защиту`,
       body: game.summary,
       teamIds: [winner.id, loser.id],
       gameId: game.id,
@@ -178,7 +178,7 @@ function buildGameStoryHeadline(world: GameWorld, rng: SeededRng, game: Schedule
 
   return createHeadline(world, rng, {
     type: 'recap',
-    title: `${winner.shortName} takes another step forward`,
+    title: `${winner.shortName} делает шаг вперёд`,
     body: game.summary,
     teamIds: [winner.id, loser.id],
     gameId: game.id,
@@ -238,13 +238,13 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
       createHeadline(world, rng, {
         type: headlineType,
         title: isFinal
-          ? `${gameOfTheWeek.awayTeamName} at ${gameOfTheWeek.homeTeamName} lived up to the spotlight`
+          ? `${gameOfTheWeek.awayTeamName} и ${gameOfTheWeek.homeTeamName} сыграли матч недели`
           : gameOfTheWeek.isRivalry
-            ? `Rivalry week tension builds as ${gameOfTheWeek.awayTeamName} meets ${gameOfTheWeek.homeTeamName}`
-            : `Game of the Week: ${gameOfTheWeek.awayTeamName} at ${gameOfTheWeek.homeTeamName}`,
+            ? `Дерби недели: ${gameOfTheWeek.awayTeamName} против ${gameOfTheWeek.homeTeamName}`
+            : `Матч недели: ${gameOfTheWeek.awayTeamName} против ${gameOfTheWeek.homeTeamName}`,
         body: isFinal
-          ? gameOfTheWeek.summary || `${gameOfTheWeek.winnerName ?? 'The winner'} closed the headline matchup ${gameOfTheWeek.score}.`
-          : `${gameOfTheWeek.reason}. Records: ${getTeamRecord(awayStanding)} vs ${getTeamRecord(homeStanding)}.${gameOfTheWeek.shortLabel ? ` ${gameOfTheWeek.shortLabel}.` : ''}`,
+          ? gameOfTheWeek.summary || `${gameOfTheWeek.winnerName ?? 'Победитель'} закрыл матч со счётом ${gameOfTheWeek.score}.`
+          : `${gameOfTheWeek.reason}. Баланс: ${getTeamRecord(awayStanding)} против ${getTeamRecord(homeStanding)}.${gameOfTheWeek.shortLabel ? ` ${gameOfTheWeek.shortLabel}.` : ''}`,
         teamIds: [gameOfTheWeek.awayTeamId, gameOfTheWeek.homeTeamId],
         gameId: gameOfTheWeek.gameId,
         week: gameOfTheWeek.week
@@ -256,7 +256,7 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'lateSeason',
-        title: `Late-season pressure is building across ${world.state.name}`,
+        title: `Давление концовки сезона растёт в ${world.state.name}`,
         body: weekStakes.summary,
         teamIds: []
       })
@@ -269,12 +269,12 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
 
   const undefeatedTeams = standings.filter((entry) => entry.wins > 0 && entry.losses === 0).slice(0, 2);
   if (world.phase === 'regular' && undefeatedTeams.length > 0) {
-    const names = undefeatedTeams.map((entry) => entry.teamName).join(' and ');
+    const names = undefeatedTeams.map((entry) => entry.teamName).join(' и ');
     pushHeadline(
       createHeadline(world, rng, {
         type: 'undefeatedWatch',
-        title: 'Undefeated watch is on',
-        body: `${names} still carry perfect records into the next Friday night slate.`,
+        title: 'Погоня за идеальным сезоном',
+        body: `${names} всё ещё идут без поражений.`,
         teamIds: undefeatedTeams.map((entry) => entry.teamId)
       })
     );
@@ -285,8 +285,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'playoffRace',
-        title: 'The playoff race is tightening',
-        body: `${bubbleTeams.map((entry) => `${entry.teamName} (${entry.wins}-${entry.losses})`).join(', ')} are all fighting for the final four.`,
+        title: 'Гонка за плей-офф сжимается',
+        body: `${bubbleTeams.map((entry) => `${entry.teamName} (${entry.wins}-${entry.losses})`).join(', ')} борются за место в четвёрке.`,
         teamIds: bubbleTeams.map((entry) => entry.teamId)
       })
     );
@@ -297,8 +297,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'mustWin',
-        title: `${mustWinGame.awayTeamName} and ${mustWinGame.homeTeamName} face a must-win spotlight`,
-        body: `${mustWinGame.shortLabel ?? 'Late-season Must Win'} pressure is hanging over this clash in Week ${mustWinGame.week + 1}.`,
+        title: `${mustWinGame.awayTeamName} и ${mustWinGame.homeTeamName} играют матч с давлением`,
+        body: `В неделе ${mustWinGame.week + 1} этот матч может изменить борьбу за плей-офф.`,
         teamIds: [mustWinGame.awayTeamId, mustWinGame.homeTeamId],
         gameId: mustWinGame.gameId,
         week: mustWinGame.week
@@ -310,15 +310,15 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     const rivalryGame = weekStakes.rivalryGames[0];
     pushHeadline(
       createHeadline(world, rng, {
-        type: rivalryGame.status === 'Final' ? 'rivalry' : 'rivalry',
+        type: 'rivalry',
         title:
           rivalryGame.status === 'Final'
-            ? `${rivalryGame.winnerName ?? rivalryGame.homeTeamName} survives rivalry heat`
-            : `Rivalry heat is rising between ${rivalryGame.awayTeamName} and ${rivalryGame.homeTeamName}`,
+            ? `${rivalryGame.winnerName ?? rivalryGame.homeTeamName} выдерживает дерби`
+            : `Дерби: ${rivalryGame.awayTeamName} против ${rivalryGame.homeTeamName}`,
         body:
           rivalryGame.status === 'Final'
-            ? rivalryGame.summary || `${rivalryGame.winnerName ?? 'A program'} won a rivalry battle ${rivalryGame.score}.`
-            : `${rivalryGame.shortLabel ?? 'Rivalry Game'} takes center stage in Week ${rivalryGame.week + 1}.`,
+            ? rivalryGame.summary || `${rivalryGame.winnerName ?? 'Команда'} выиграла дерби ${rivalryGame.score}.`
+            : `Матч недели ${rivalryGame.week + 1} получает дополнительный вес из-за соперничества.`,
         teamIds: [rivalryGame.awayTeamId, rivalryGame.homeTeamId],
         gameId: rivalryGame.gameId,
         week: rivalryGame.week
@@ -331,8 +331,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'playoff',
-        title: 'The state title race is down to the heavyweights',
-        body: `${contenders.map((entry) => entry.teamName).join(', ')} are the programs still chasing the crown.`,
+        title: 'Гонка за титул вышла на решающую стадию',
+        body: `${contenders.map((entry) => entry.teamName).join(', ')} продолжают борьбу за корону штата.`,
         teamIds: contenders.map((entry) => entry.teamId)
       })
     );
@@ -343,8 +343,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'momentum',
-        title: `${hottestProgram.team.shortName} is building real momentum`,
-        body: `${hottestProgram.team.shortName} looks ${hottestProgram.momentum.label.toLowerCase()} after ${hottestProgram.momentum.reasons.join(', ').toLowerCase()}.`,
+        title: `${hottestProgram.team.shortName} набирает ход`,
+        body: `${hottestProgram.team.shortName} усиливает позиции по ходу сезона.`,
         teamIds: [hottestProgram.team.id]
       })
     );
@@ -355,8 +355,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'momentum',
-        title: `${coldProgram.team.shortName} is under pressure`,
-        body: `${coldProgram.team.shortName} feels shaky after ${coldProgram.momentum.reasons.join(', ').toLowerCase()}.`,
+        title: `${coldProgram.team.shortName} под давлением`,
+        body: `${coldProgram.team.shortName} нужно быстро вернуть устойчивость.`,
         teamIds: [coldProgram.team.id]
       })
     );
@@ -367,7 +367,7 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'pollPressure',
-        title: `${topMover.teamName} surges in the rankings`,
+        title: `${topMover.teamName} поднимается в рейтинге`,
         body: topMover.reason,
         teamIds: [topMover.teamId]
       })
@@ -381,12 +381,7 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'pollPressure',
-        title:
-          pressureProgram.pressureLabel === 'Playoff Bubble'
-            ? `${pressureProgram.teamName} is fighting for playoff air`
-            : pressureProgram.pressureLabel === 'Outside Looking In'
-              ? `${pressureProgram.teamName} is chasing the playoff line`
-              : `${pressureProgram.teamName} must answer quickly`,
+        title: `${pressureProgram.teamName} нужно отвечать`,
         body: pressureProgram.reason,
         teamIds: [pressureProgram.teamId]
       })
@@ -398,8 +393,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'champion',
-        title: `${latestChampion.championName} stands on top of the state`,
-        body: `${latestChampion.championName} beat ${latestChampion.runnerUpName} ${latestChampion.finalScore}. ${latestChampion.finalSummary}`,
+        title: `${latestChampion.championName} на вершине штата`,
+        body: `${latestChampion.championName} обыграла ${latestChampion.runnerUpName} ${latestChampion.finalScore}. ${latestChampion.finalSummary}`,
         teamIds: [latestChampion.championId, latestChampion.runnerUpId].filter((entry): entry is string => Boolean(entry)),
         gameId: latestChampion.finalGameId,
         week: world.season.currentWeek
@@ -408,8 +403,8 @@ export function generateWeeklyHeadlines(world: GameWorld): StateHeadline[] {
     pushHeadline(
       createHeadline(world, rng, {
         type: 'offseason',
-        title: `A new offseason begins in ${world.state.name}`,
-        body: `The ${world.season.year} title chase is in the books, and every program now turns toward next year's roster reset.`,
+        title: `Новое межсезонье в ${world.state.name}`,
+        body: `Сезон ${world.season.year} завершён, программы готовят новые составы.`,
         teamIds: [],
         week: world.season.currentWeek
       })

@@ -11,6 +11,7 @@ export type AppScreen =
   | 'roster'
   | 'teamProfile'
   | 'playerProfile'
+  | 'prospects'
   | 'schedule'
   | 'rankings'
   | 'news'
@@ -163,7 +164,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const loaded = await loadLatestWorld();
 
     if (!loaded) {
-      set({ error: 'No saved world found. Create a new one first.' });
+      set({ error: 'Сохранение не найдено. Сначала создай новый мир.' });
       return;
     }
 
@@ -231,7 +232,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     if (world.phase !== 'offseason' || world.season.championId === null) {
-      set({ error: 'Finish the current season before advancing to the next year.' });
+      set({ error: 'Сначала закончи текущий сезон.' });
       return;
     }
 
