@@ -69,21 +69,21 @@ export function DashboardScreen() {
               <p className="big-number">{world.season.year}</p>
             </div>
             <div>
-              <div className="eyebrow">колледжи</div>
+              <div className="eyebrow">уровень II</div>
               <p className="big-number">{collegeSeason?.championTeamId ? 'готово' : (collegeSeason?.currentWeek ?? 0) + 1}</p>
             </div>
             <div>
-              <div className="eyebrow">школа</div>
+              <div className="eyebrow">уровень I</div>
               <p className="big-number">{world.phase === 'offseason' ? 'готово' : world.season.currentWeek + 1}</p>
             </div>
           </div>
           <div className="stat-strip">
             <span>{GAME_VERSION_LABEL}</span>
             <span>{GAME_VERSION_NAME}</span>
-            <span>колледжей {collegeCount}</span>
-            <span>игроков колледжа {collegePlayerCount}</span>
-            <span>школа: {schoolStatus}</span>
-            <span>колледжи: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
+            <span>программ {collegeCount}</span>
+            <span>игроков уровня {collegePlayerCount}</span>
+            <span>первый уровень: {schoolStatus}</span>
+            <span>второй уровень: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
           </div>
           {worldReadyForNextYear ? (
             <div className="button-row">
@@ -91,18 +91,18 @@ export function DashboardScreen() {
             </div>
           ) : (
             <div className="button-row">
-              <Button onClick={simNextWeek}>Симулировать неделю мира</Button>
+              <Button onClick={simNextWeek}>Симулировать неделю</Button>
               <Button variant="ghost" onClick={simFullSeason}>
-                Симулировать год мира
+                Симулировать год
               </Button>
             </div>
           )}
         </Card>
 
-        <Card title="База колледжей">
+        <Card title="База программ">
           <div className="dashboard-grid">
             <div>
-              <div className="eyebrow">колледжей</div>
+              <div className="eyebrow">программ</div>
               <p className="big-number">{collegeCount}</p>
             </div>
             <div>
@@ -116,7 +116,7 @@ export function DashboardScreen() {
           </div>
         </Card>
 
-        <Card title="Чемпион колледжей">
+        <Card title="Чемпион программ">
           {collegeChampion ? <strong>{collegeChampion.shortName}</strong> : <p className="muted">Нет.</p>}
         </Card>
 
@@ -151,11 +151,11 @@ export function DashboardScreen() {
             <p className="big-number">{world.season.year}</p>
           </div>
           <div>
-            <div className="eyebrow">школа</div>
+            <div className="eyebrow">уровень I</div>
             <p className="big-number">{world.phase === 'offseason' ? 'готово' : world.season.currentWeek + 1}</p>
           </div>
           <div>
-            <div className="eyebrow">колледжи</div>
+            <div className="eyebrow">уровень II</div>
             <p className="big-number">{collegeSeason?.championTeamId ? 'готово' : (collegeSeason?.currentWeek ?? 0) + 1}</p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export function DashboardScreen() {
           {getDashboardStatusPills(schoolStatus, world.teams.length).map((item) => (
             <span key={item}>{item}</span>
           ))}
-          <span>колледжи: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
+          <span>второй уровень: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
           <span>{GAME_VERSION_LABEL}</span>
           <span>{GAME_VERSION_NAME}</span>
         </div>
@@ -175,9 +175,9 @@ export function DashboardScreen() {
           </div>
         ) : (
           <div className="button-row">
-            <Button onClick={simNextWeek}>Симулировать неделю мира</Button>
+            <Button onClick={simNextWeek}>Симулировать неделю</Button>
             <Button variant="ghost" onClick={simFullSeason}>
-              Симулировать год мира
+              Симулировать год
             </Button>
           </div>
         )}
@@ -190,7 +190,7 @@ export function DashboardScreen() {
             <p className="big-number">{peopleCount}</p>
           </div>
           <div>
-            <div className="eyebrow">игроков школы</div>
+            <div className="eyebrow">активных игроков</div>
             <p className="big-number">{activePlayerCount}</p>
           </div>
           <div>
@@ -198,7 +198,7 @@ export function DashboardScreen() {
             <p className="big-number">{graduatedCount}</p>
           </div>
           <div>
-            <div className="eyebrow">колледжей</div>
+            <div className="eyebrow">программ</div>
             <p className="big-number">{collegeCount}</p>
           </div>
           <div>
@@ -256,7 +256,7 @@ export function DashboardScreen() {
       </Card>
 
       {world.phase === 'offseason' && latestChampion ? (
-        <Card title="Чемпион школы">
+        <Card title="Чемпион">
           <div className="stack compact-stack">
             <strong>{latestChampion.championName}</strong>
             <div className="stat-strip">

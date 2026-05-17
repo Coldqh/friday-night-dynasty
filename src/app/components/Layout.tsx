@@ -33,13 +33,13 @@ export function Layout({ children }: { children: ReactNode }) {
           className={activeLeague === 'highSchool' ? 'filter-chip active' : 'filter-chip'}
           onClick={() => setActiveLeague('highSchool')}
         >
-          Старшая школа
+          Уровень I
         </button>
         <button
           className={activeLeague === 'college' ? 'filter-chip active' : 'filter-chip'}
           onClick={() => setActiveLeague('college')}
         >
-          Колледжи
+          Уровень II
         </button>
       </div>
 

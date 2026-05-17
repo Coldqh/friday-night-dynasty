@@ -15,10 +15,10 @@ export function HistoryScreen() {
     <div className="stack">
       <Card title="История лиги">
         <div className="stat-strip">
-          <span>сезонов школы {history.totalSeasonsCompleted}</span>
+          <span>сезонов уровня I {history.totalSeasonsCompleted}</span>
           <span>последний чемпион {history.latestChampion?.championName ?? 'нет'}</span>
-          <span>колледжей {world.colleges?.length ?? 0}</span>
-          <span>сезонов колледжей {collegeChampions.length}</span>
+          <span>программ {world.colleges?.length ?? 0}</span>
+          <span>сезонов программ {collegeChampions.length}</span>
           <span>коммитов {world.commitments?.length ?? 0}</span>
         </div>
       </Card>
@@ -40,7 +40,7 @@ export function HistoryScreen() {
         )}
       </Card>
 
-      <Card title="Чемпионы колледжей">
+      <Card title="Чемпионы программ">
         {collegeChampions.length === 0 ? (
           <p className="muted">Нет чемпионов.</p>
         ) : (
@@ -66,8 +66,8 @@ export function HistoryScreen() {
               <span>год</span>
               <span>игрок</span>
               <span>поз</span>
-              <span>школа</span>
-              <span>колледж</span>
+              <span>уровень I</span>
+              <span>уровень II</span>
               <span>рейт</span>
             </div>
             {commitments.map((commitment) => (

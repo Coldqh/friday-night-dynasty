@@ -32,7 +32,7 @@ export function ScheduleScreen() {
 
   return (
     <div className="stack">
-      <Card title={activeLeague === 'college' ? 'Календарь колледжей' : 'Календарь'}>
+      <Card title={activeLeague === 'college' ? 'Календарь' : 'Календарь'}>
         <div className="stack compact-stack">
           <div className="stat-strip">
             <span>год {activeLeague === 'college' ? world.collegeSeason?.year ?? world.season.year : world.season.year}</span>

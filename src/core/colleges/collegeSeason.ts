@@ -251,7 +251,10 @@ function finishCollegeSeason(world: GameWorld, rng: SeededRng): GameWorld {
       ? {
           ...world.collegeSeason,
           currentWeek: world.collegeSeason.regularSeasonWeeks + 1,
-          completedGames: [...world.collegeSeason.completedGames, simulated.game],
+          completedGames: [
+            ...world.collegeSeason.completedGames.filter((game) => game.id !== simulated.game.id),
+            simulated.game
+          ],
           standings: calculateCollegeStandings(nextTeams, nextCollegePlayers),
           championTeamId: champion?.id ?? null,
           championshipGameId: simulated.game.id
@@ -288,12 +291,32 @@ export function simulateCollegeWeek(input: GameWorld): GameWorld {
     return finishCollegeSeason(world, new SeededRng(world.seed + collegeSeason.year * 91 + collegeSeason.currentWeek * 17));
   }
 
+  const completedGameIds = new Set(collegeSeason.completedGames.map((game) => game.id));
+  const unsimulatedGames = week.games.filter((game) => !completedGameIds.has(game.id));
+
+  if (unsimulatedGames.length === 0) {
+    const skippedWeekWorld: GameWorld = {
+      ...world,
+      collegeSeason: {
+        ...collegeSeason,
+        currentWeek: collegeSeason.currentWeek + 1,
+        standings: calculateCollegeStandings(world.collegeTeams ?? [], world.collegePlayers ?? [])
+      }
+    };
+
+    if (skippedWeekWorld.collegeSeason && skippedWeekWorld.collegeSeason.currentWeek >= skippedWeekWorld.collegeSeason.regularSeasonWeeks) {
+      return finishCollegeSeason(skippedWeekWorld, new SeededRng(world.seed + collegeSeason.year * 91 + collegeSeason.currentWeek * 17));
+    }
+
+    return skippedWeekWorld;
+  }
+
   const rng = new SeededRng(world.seed + collegeSeason.year * 91 + collegeSeason.currentWeek * 17 + collegeSeason.completedGames.length);
   let nextTeams = world.collegeTeams ?? [];
   let nextCollegePlayers = world.collegePlayers ?? [];
   const completedGames: CollegeScheduledGame[] = [];
 
-  week.games.forEach((game) => {
+  unsimulatedGames.forEach((game) => {
     const simulated = simulateCollegeGame({
       world: {
         ...world,

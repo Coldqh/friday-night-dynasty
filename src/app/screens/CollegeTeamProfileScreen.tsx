@@ -26,7 +26,7 @@ export function CollegeTeamProfileScreen() {
 
   if (!team) {
     return (
-      <Card title="Профиль колледжа">
+      <Card title="Профиль программы">
         <p className="muted">Колледж не найден.</p>
         <Button variant="ghost" onClick={closeCollegeTeamProfile}>Назад</Button>
       </Card>
@@ -52,7 +52,7 @@ export function CollegeTeamProfileScreen() {
 
   return (
     <div className="stack">
-      <Card title="Профиль колледжа">
+      <Card title="Профиль программы">
         <div className="stack compact-stack">
           <div className="eyebrow">{college?.name ?? team.name}</div>
           <h3 className="profile-title">{team.shortName}</h3>

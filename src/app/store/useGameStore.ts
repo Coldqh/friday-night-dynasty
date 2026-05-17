@@ -336,7 +336,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!world) return;
 
     if (!canAdvanceWorldYear(world)) {
-      set({ error: 'Сначала закончи школьный и колледжский сезоны этого года.' });
+      set({ error: 'Сначала закончи оба сезона этого года.' });
       return;
     }
 

@@ -100,7 +100,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
       }))
     : layer.collegeTeams;
   const collegeTeams = updateCollegeTeamNeeds(baseCollegeTeams, collegePlayers);
-  const collegeSeason = !world.collegeSeason || seasonYearMismatch || mustRepairRosters
+  const collegeSeason = !world.collegeSeason || seasonYearMismatch
     ? createFreshCollegeSeason(
         {
           ...world,

@@ -111,7 +111,7 @@ export function PlayerProfileScreen() {
         <Card title="Профиль игрока">
           <div className="profile-header-row">
             <div>
-              <div className="eyebrow">игрок колледжа</div>
+              <div className="eyebrow">игрок уровня II</div>
               <h3 className="profile-title">{getFullName(player)}</h3>
             </div>
             <button
@@ -232,7 +232,7 @@ export function PlayerProfileScreen() {
   const collegeName = recruitingProfile
     ? getCollegeTeamName(world.colleges ?? [], world.collegeTeams ?? [], recruitingProfile.committedCollegeTeamId)
     : '—';
-  const stageLabel = target.kind === 'graduate' ? 'выпускник школы' : formatCareerStage(player.careerStage);
+  const stageLabel = target.kind === 'graduate' ? 'выпускник' : formatCareerStage(player.careerStage);
 
   return (
     <div className="stack">
@@ -261,7 +261,7 @@ export function PlayerProfileScreen() {
             <span>{Math.round(player.weight * 0.453592)} кг</span>
           </div>
           <p className="muted">
-            {school?.name ?? 'неизвестная школа'} / {team?.shortName ?? 'неизвестная команда'} / {hometown?.name ?? 'неизвестный город'}
+            {school?.name ?? 'неизвестная программа'} / {team?.shortName ?? 'неизвестная команда'} / {hometown?.name ?? 'неизвестный город'}
           </p>
           <div className="button-row">
             <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>

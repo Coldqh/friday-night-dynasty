@@ -12,7 +12,7 @@ export function RankingsScreen() {
     const standings = getCollegeStandings(world);
 
     return (
-      <Card title="Таблица колледжей">
+      <Card title="Турнирная таблица">
         <div className="table compact-table">
           <div className="table-head grid-standings">
             <span>#</span>

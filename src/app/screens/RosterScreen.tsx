@@ -15,9 +15,9 @@ export function RosterScreen() {
     const collegeTeams = getCollegeStandings(world);
 
     return (
-      <Card title="Колледжи">
+      <Card title="Программы">
         {collegeTeams.length === 0 ? (
-          <p className="muted">Нет колледжей.</p>
+          <p className="muted">Нет программ.</p>
         ) : (
           <div className="team-grid">
             {collegeTeams.map((team) => (
@@ -31,7 +31,7 @@ export function RosterScreen() {
                 </button>
 
                 <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.teamId, 'overview', 'roster')}>
-                  Профиль колледжа
+                  Профиль программы
                 </Button>
               </div>
             ))}
