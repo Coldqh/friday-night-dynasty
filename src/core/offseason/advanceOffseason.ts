@@ -261,11 +261,14 @@ export function advanceOffseason(input: GameWorld): GameWorld {
   world.collegePlayers = conversion.collegePlayers;
   world.commitments = conversion.commitments;
   nextPeople = conversion.people;
+
+  const nextWorldYear = world.season.year + 1;
+
   world.collegeTeams = resetCollegeTeamsForNewSeason(world);
   world.collegeSeason = createCollegeSeason({
     world,
     rng,
-    year: world.season.year + 1,
+    year: nextWorldYear,
     regularSeasonWeeks: 7
   });
 
@@ -317,11 +320,11 @@ export function advanceOffseason(input: GameWorld): GameWorld {
       }
     : world.collegeSeason;
 
-  world.currentYear = world.season.year + 1;
+  world.currentYear = nextWorldYear;
   world.currentWeek = 0;
   world.phase = 'regular';
   world.season = {
-    year: world.season.year + 1,
+    year: nextWorldYear,
     currentWeek: 0,
     regularSeasonWeeks: world.season.regularSeasonWeeks,
     schedule: generateSchedule({ rng, teams: world.teams, weeks: world.season.regularSeasonWeeks }),

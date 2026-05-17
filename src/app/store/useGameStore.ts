@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import { advanceCollegeSeason } from '../../core/colleges/advanceCollegeSeason';
-import { simulateCollegeSeason, simulateCollegeWeek } from '../../core/colleges/collegeSeason';
 import { advanceOffseason } from '../../core/offseason/advanceOffseason';
-import { simulateSeason, simulateWeek } from '../../core/season/simulateSeason';
+import { canAdvanceWorldYear, simulateUnifiedSeason, simulateUnifiedWeek } from '../../core/world/simulateUnifiedWorld';
 import { createWorld } from '../../core/world/createWorld';
 import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 import { GameWorld } from '../../core/world/worldTypes';
@@ -103,7 +101,6 @@ interface GameStore {
   simNextWeek: () => Promise<void>;
   simFullSeason: () => Promise<void>;
   advanceToNextSeason: () => Promise<void>;
-  advanceCollegeToNextSeason: () => Promise<void>;
 }
 
 const DEFAULT_SEED = 982451653;
@@ -304,11 +301,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const world = get().world;
     if (!world) return;
 
-    const normalized = normalizeWorldState(world);
-    const updated =
-      get().activeLeague === 'college'
-        ? normalizeWorldState(simulateCollegeWeek(normalized))
-        : normalizeWorldState(simulateWeek(normalized));
+    const updated = normalizeWorldState(simulateUnifiedWeek(normalizeWorldState(world)));
 
     set((state) => ({
       world: updated,
@@ -325,11 +318,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const world = get().world;
     if (!world) return;
 
-    const normalized = normalizeWorldState(world);
-    const updated =
-      get().activeLeague === 'college'
-        ? normalizeWorldState(simulateCollegeSeason(normalized))
-        : normalizeWorldState(simulateSeason(normalized));
+    const updated = normalizeWorldState(simulateUnifiedSeason(normalizeWorldState(world)));
 
     set((state) => ({
       world: updated,
@@ -346,8 +335,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const world = get().world;
     if (!world) return;
 
-    if (world.phase !== 'offseason' || world.season.championId === null) {
-      set({ error: 'Сначала закончи текущий сезон.' });
+    if (!canAdvanceWorldYear(world)) {
+      set({ error: 'Сначала закончи школьный и колледжский сезоны этого года.' });
       return;
     }
 
@@ -356,27 +345,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       world: updated,
       selectedTeamId: resolveSelectedTeamId(updated, state.selectedTeamId),
-      selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
-      selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
-      error: null
-    }));
-
-    await saveWorld(updated);
-  },
-
-  advanceCollegeToNextSeason: async () => {
-    const world = get().world;
-    if (!world) return;
-
-    if (!world.collegeSeason?.championTeamId) {
-      set({ error: 'Сначала закончи колледжский сезон.' });
-      return;
-    }
-
-    const updated = normalizeWorldState(advanceCollegeSeason(normalizeWorldState(world)));
-
-    set((state) => ({
-      world: updated,
       selectedCollegeTeamId: resolveSelectedCollegeTeamId(updated, state.selectedCollegeTeamId),
       selectedPlayerId: resolveSelectedPlayerId(updated, state.selectedPlayerId),
       error: null

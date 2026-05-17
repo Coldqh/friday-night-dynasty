@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { advanceCollegeSeason } from '../../core/colleges/advanceCollegeSeason';
 import { getCollegeTeamSchedule } from '../../core/colleges/getCollegeDisplayData';
-import { simulateCollegeSeason } from '../../core/colleges/collegeSeason';
 import { advanceOffseason } from '../../core/offseason/advanceOffseason';
-import { simulateSeason } from '../../core/season/simulateSeason';
+import { canAdvanceWorldYear, simulateUnifiedSeason, simulateUnifiedWeek } from '../../core/world/simulateUnifiedWorld';
 import { createWorld } from '../../core/world/createWorld';
+import { normalizeWorldState } from '../../core/world/normalizeWorldState';
 
-describe('real college layer', () => {
+describe('unified school and college ecosystem', () => {
   it('college teams have rivalries and team schedules', () => {
     const world = createWorld({ seed: 8101 });
     const team = world.collegeTeams?.[0];
@@ -14,27 +13,56 @@ describe('real college layer', () => {
     expect(team).toBeTruthy();
     expect(world.collegeTeams?.some((entry) => entry.rivalryIds.length > 0)).toBe(true);
     expect(getCollegeTeamSchedule(world, team!.id).length).toBeGreaterThan(0);
+    expect(world.collegeSeason?.year).toBe(world.season.year);
   });
 
-  it('converts committed high school graduates into current college players', () => {
-    const finished = simulateSeason(createWorld({ seed: 8102 }));
-    const next = advanceOffseason(finished);
-    const converted = next.commitments?.find((entry) => entry.convertedToCollegePlayerId);
+  it('unified week advances both layers inside the same world year', () => {
+    const world = createWorld({ seed: 8102 });
+    const next = simulateUnifiedWeek(world);
 
-    expect(converted).toBeTruthy();
-    expect(next.collegePlayers?.some((player) => player.id === converted?.convertedToCollegePlayerId)).toBe(true);
+    expect(next.season.year).toBe(world.season.year);
+    expect(next.collegeSeason?.year).toBe(next.season.year);
+    expect(next.season.completedGames.length).toBeGreaterThan(0);
+    expect(next.collegeSeason?.completedGames.length).toBeGreaterThan(0);
   });
 
-  it('college season can advance independently after the college champion is crowned', () => {
-    const finished = simulateSeason(createWorld({ seed: 8103 }));
-    const next = advanceOffseason(finished);
-    const collegeFinished = simulateCollegeSeason(next);
-    const oldCollegeYear = collegeFinished.collegeSeason?.year;
-    const newCollegeSeason = advanceCollegeSeason(collegeFinished);
+  it('unified full season finishes school and college in the same year', () => {
+    const world = createWorld({ seed: 8103 });
+    const finished = simulateUnifiedSeason(world);
 
-    expect(collegeFinished.collegeSeason?.championTeamId).toBeTruthy();
-    expect(newCollegeSeason.collegeSeason?.year).toBe((oldCollegeYear ?? 0) + 1);
-    expect(newCollegeSeason.collegeSeason?.championTeamId).toBeNull();
-    expect(newCollegeSeason.collegeSeason?.completedGames).toEqual([]);
+    expect(finished.season.year).toBe(world.season.year);
+    expect(finished.collegeSeason?.year).toBe(finished.season.year);
+    expect(finished.phase).toBe('offseason');
+    expect(finished.season.championId).toBeTruthy();
+    expect(finished.collegeSeason?.championTeamId).toBeTruthy();
+    expect(canAdvanceWorldYear(finished)).toBe(true);
+  });
+
+  it('offseason advances the entire world by exactly one year', () => {
+    const world = createWorld({ seed: 8104 });
+    const finished = simulateUnifiedSeason(world);
+    const nextYear = advanceOffseason(finished);
+
+    expect(nextYear.season.year).toBe(finished.season.year + 1);
+    expect(nextYear.collegeSeason?.year).toBe(nextYear.season.year);
+    expect(nextYear.currentYear).toBe(nextYear.season.year);
+    expect(nextYear.phase).toBe('regular');
+    expect(nextYear.collegeSeason?.championTeamId).toBeNull();
+  });
+
+  it('normalizes mismatched old saves back to one world year', () => {
+    const world = createWorld({ seed: 8105 });
+    const broken = structuredClone(world);
+    broken.collegeSeason = {
+      ...broken.collegeSeason!,
+      year: broken.season.year + 4
+    };
+
+    const normalized = normalizeWorldState(broken);
+
+    expect(normalized.collegeSeason?.year).toBe(normalized.season.year);
+    expect(normalized.currentYear).toBe(normalized.season.year);
+    expect(normalized.collegeSeason?.completedGames).toEqual([]);
+    expect(normalized.collegeSeason?.championTeamId).toBeNull();
   });
 });

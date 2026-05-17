@@ -6,6 +6,7 @@ import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { getRecentCommitments } from '../../core/recruiting/getRecruitingProfile';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
+import { canAdvanceWorldYear } from '../../core/world/simulateUnifiedWorld';
 import { useGameStore } from '../store/useGameStore';
 
 function getSeasonStatusLabel({
@@ -33,7 +34,6 @@ export function DashboardScreen() {
   const simNextWeek = useGameStore((state) => state.simNextWeek);
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
-  const advanceCollegeToNextSeason = useGameStore((state) => state.advanceCollegeToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
   const slate = getWeeklySlate(world);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
@@ -41,7 +41,7 @@ export function DashboardScreen() {
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
   const collegeStandings = getCollegeStandings(world).slice(0, 5);
-  const seasonStatus = getSeasonStatusLabel({
+  const schoolStatus = getSeasonStatusLabel({
     phase: world.phase,
     currentWeek: world.season.currentWeek,
     completedGames: world.season.completedGames.length
@@ -57,23 +57,24 @@ export function DashboardScreen() {
   const collegeChampion = collegeSeason?.championTeamId
     ? (world.collegeTeams ?? []).find((team) => team.id === collegeSeason.championTeamId)
     : null;
+  const worldReadyForNextYear = canAdvanceWorldYear(world);
 
   if (activeLeague === 'college') {
     return (
       <div className="stack">
-        <Card title="Состояние колледжей">
+        <Card title="Состояние года">
           <div className="dashboard-grid">
             <div>
-              <div className="eyebrow">год</div>
-              <p className="big-number">{collegeSeason?.year ?? world.season.year}</p>
+              <div className="eyebrow">год мира</div>
+              <p className="big-number">{world.season.year}</p>
             </div>
             <div>
-              <div className="eyebrow">неделя</div>
+              <div className="eyebrow">колледжи</div>
               <p className="big-number">{collegeSeason?.championTeamId ? 'готово' : (collegeSeason?.currentWeek ?? 0) + 1}</p>
             </div>
             <div>
-              <div className="eyebrow">регулярка</div>
-              <p className="big-number">{collegeSeason?.regularSeasonWeeks ?? 0}</p>
+              <div className="eyebrow">школа</div>
+              <p className="big-number">{world.phase === 'offseason' ? 'готово' : world.season.currentWeek + 1}</p>
             </div>
           </div>
           <div className="stat-strip">
@@ -81,16 +82,18 @@ export function DashboardScreen() {
             <span>{GAME_VERSION_NAME}</span>
             <span>колледжей {collegeCount}</span>
             <span>игроков колледжа {collegePlayerCount}</span>
+            <span>школа: {schoolStatus}</span>
+            <span>колледжи: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
           </div>
-          {collegeSeason?.championTeamId ? (
+          {worldReadyForNextYear ? (
             <div className="button-row">
-              <Button onClick={advanceCollegeToNextSeason}>Новый сезон колледжей</Button>
+              <Button onClick={advanceToNextSeason}>Перейти к новому году</Button>
             </div>
           ) : (
             <div className="button-row">
-              <Button onClick={simNextWeek}>Симулировать неделю</Button>
+              <Button onClick={simNextWeek}>Симулировать неделю мира</Button>
               <Button variant="ghost" onClick={simFullSeason}>
-                Симулировать сезон
+                Симулировать год мира
               </Button>
             </div>
           )}
@@ -141,42 +144,41 @@ export function DashboardScreen() {
 
   return (
     <div className="stack">
-      <Card title="Состояние сезона">
+      <Card title="Состояние года">
         <div className="dashboard-grid">
           <div>
-            <div className="eyebrow">год</div>
+            <div className="eyebrow">год мира</div>
             <p className="big-number">{world.season.year}</p>
           </div>
           <div>
-            <div className="eyebrow">неделя</div>
+            <div className="eyebrow">школа</div>
             <p className="big-number">{world.phase === 'offseason' ? 'готово' : world.season.currentWeek + 1}</p>
           </div>
           <div>
-            <div className="eyebrow">регулярка</div>
-            <p className="big-number">{world.season.regularSeasonWeeks}</p>
+            <div className="eyebrow">колледжи</div>
+            <p className="big-number">{collegeSeason?.championTeamId ? 'готово' : (collegeSeason?.currentWeek ?? 0) + 1}</p>
           </div>
         </div>
 
         <div className="stat-strip">
-          {getDashboardStatusPills(seasonStatus, world.teams.length).map((item) => (
+          {getDashboardStatusPills(schoolStatus, world.teams.length).map((item) => (
             <span key={item}>{item}</span>
           ))}
+          <span>колледжи: {collegeSeason?.championTeamId ? 'сезон завершён' : 'сезон идёт'}</span>
           <span>{GAME_VERSION_LABEL}</span>
           <span>{GAME_VERSION_NAME}</span>
         </div>
 
-        <div className="button-row">
-          <Button disabled={world.phase === 'offseason'} onClick={simNextWeek}>
-            Симулировать неделю
-          </Button>
-          <Button disabled={world.phase === 'offseason'} variant="ghost" onClick={simFullSeason}>
-            Симулировать сезон
-          </Button>
-        </div>
-
-        {world.phase === 'offseason' && world.season.championId && (
+        {worldReadyForNextYear ? (
           <div className="button-row">
-            <Button onClick={advanceToNextSeason}>Перейти к новому сезону</Button>
+            <Button onClick={advanceToNextSeason}>Перейти к новому году</Button>
+          </div>
+        ) : (
+          <div className="button-row">
+            <Button onClick={simNextWeek}>Симулировать неделю мира</Button>
+            <Button variant="ghost" onClick={simFullSeason}>
+              Симулировать год мира
+            </Button>
           </div>
         )}
       </Card>
@@ -254,7 +256,7 @@ export function DashboardScreen() {
       </Card>
 
       {world.phase === 'offseason' && latestChampion ? (
-        <Card title="Чемпион">
+        <Card title="Чемпион школы">
           <div className="stack compact-stack">
             <strong>{latestChampion.championName}</strong>
             <div className="stat-strip">
