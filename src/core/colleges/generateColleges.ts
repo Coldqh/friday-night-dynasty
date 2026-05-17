@@ -77,7 +77,10 @@ export function generateCollegeLayer({
       rosterPlayerIds: [],
       recruitingNeeds: pickNeeds(rng),
       wins: 0,
-      losses: 0
+      losses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      history: []
     };
 
     colleges.push(college);

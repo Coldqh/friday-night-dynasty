@@ -1,6 +1,7 @@
 import { cityNames, mascots } from '../../content/names';
 import { generateCoach } from '../coaches/generateCoach';
 import { generateCollegeLayer } from '../colleges/generateColleges';
+import { createCollegeSeason } from '../colleges/collegeSeason';
 import { createPeopleFromPlayers } from '../people/personUtils';
 import { generatePlayersForTeam } from '../players/generatePlayers';
 import { makeId, SeededRng } from '../random/rng';
@@ -138,7 +139,54 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     cities,
     rng
   });
+  const baseWorldForCollegeSeason: GameWorld = {
+    id: 'temp',
+    seed,
+    currentYear: 2026,
+    currentWeek: 0,
+    phase: 'regular' as const,
+    state,
+    cities,
+    schools,
+    teams,
+    coaches,
+    players,
+    people,
+    graduatedPlayers: [],
+    colleges,
+    collegeTeams,
+    collegePlayers: [],
+    recruitingProfiles: [],
+    commitments: [],
+    season: {
+      year: 2026,
+      currentWeek: 0,
+      regularSeasonWeeks: 10,
+      schedule: [],
+      completedGames: [],
+      standings: [],
+      previousRankings: [],
+      playoffTeams: [],
+      playoffGames: [],
+      championId: null,
+      championTeamId: null,
+      seasonLog: []
+    },
+    news: [],
+    history: {
+      champions: [],
+      titleGames: [],
+      rivalryResults: [],
+      collegeChampions: []
+    }
+  };
   const schedule = generateSchedule({ rng, teams, weeks: 10 });
+  const collegeSeason = createCollegeSeason({
+    world: baseWorldForCollegeSeason,
+    rng,
+    year: 2026,
+    regularSeasonWeeks: 7
+  });
   const kickoffNews = {
     id: makeId('news', rng),
     year: 2026,
@@ -163,8 +211,10 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     graduatedPlayers: [],
     colleges,
     collegeTeams,
+    collegePlayers: [],
     recruitingProfiles: [],
     commitments: [],
+    collegeSeason,
     season: {
       year: 2026,
       currentWeek: 0,
@@ -192,7 +242,8 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     history: {
       champions: [],
       titleGames: [],
-      rivalryResults: []
+      rivalryResults: [],
+      collegeChampions: []
     }
   };
 }

@@ -1,3 +1,3 @@
-export const GAME_VERSION = '0.6.2';
+export const GAME_VERSION = '1.0.0';
 export const GAME_VERSION_LABEL = `v${GAME_VERSION}`;
-export const GAME_VERSION_NAME = 'Фикс колледжей и тестов';
+export const GAME_VERSION_NAME = 'Полный цикл школа-колледж';

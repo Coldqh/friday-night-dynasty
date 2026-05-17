@@ -22,8 +22,9 @@ export function RosterScreen() {
               <div className="team-chip" key={team.teamId}>
                 <strong>{team.teamName}</strong>
                 <span>
-                  {team.wins}-{team.losses} / престиж {team.prestige}
+                  {team.wins}-{team.losses} / престиж {team.prestige} / сила {team.rosterStrength}
                 </span>
+                <span>игроков: {(world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.teamId).length}</span>
                 <span>позиции: {team.recruitingNeeds}</span>
               </div>
             ))}

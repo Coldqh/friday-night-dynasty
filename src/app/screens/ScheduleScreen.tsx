@@ -34,14 +34,17 @@ export function ScheduleScreen() {
       <Card title={activeLeague === 'college' ? 'Календарь колледжей' : 'Календарь'}>
         <div className="stack compact-stack">
           <div className="stat-strip">
-            <span>год {world.season.year}</span>
+            <span>год {activeLeague === 'college' ? world.collegeSeason?.year ?? world.season.year : world.season.year}</span>
             {activeLeague === 'highSchool' ? (
               <>
                 <span>неделя {world.season.currentWeek + 1}</span>
                 <span>{world.phase === 'regular' ? 'регулярный сезон' : world.phase === 'playoffs' ? 'плей-офф' : 'сезон завершён'}</span>
               </>
             ) : (
-              <span>колледжи</span>
+              <>
+                <span>неделя {(world.collegeSeason?.currentWeek ?? 0) + 1}</span>
+                <span>{world.collegeSeason?.championTeamId ? 'сезон завершён' : 'регулярный сезон'}</span>
+              </>
             )}
           </div>
 

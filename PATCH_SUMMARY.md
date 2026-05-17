@@ -1,4 +1,4 @@
-# Friday Night Dynasty v0.6.2 — test fix
+# Friday Night Dynasty v1.0.1 — PlayerProfile build fix
 
 ## Команда проекта
 
@@ -8,20 +8,23 @@ cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 
 ## Исправлено
 
-- Выпускники после межсезонья снова остаются `careerStage: 'graduated'`.
-- Коммит в колледж теперь хранится через `recruitingProfile`, `commitment`, `collegeId`, `collegeTeamId`, но не ломает alumni pool.
-- `getWeekStakes().summary` больше не пустой.
-- `getWeeklySlate().gameOfTheWeek.reason` больше не пустой.
-- Тексты оставлены функциональными:
-  - `неделя X / матчей Y / дерби Z...`
-  - `приоритет N`
-  - `дерби`
-  - `финал штата`
+`PlayerProfileScreen.tsx` был переписан так, чтобы TypeScript нормально разделял:
+
+- `Player`
+- `CollegePlayer`
+
+Ошибка была из-за union-типа после строки:
+
+```ts
+const player = target.player;
+```
+
+Теперь ветка `college` обрабатывается отдельно, а школьник/выпускник отдельно.
 
 ## Проверка
 
 ```bash
-pnpm test
 pnpm build
+pnpm test
 pnpm check:index
 ```

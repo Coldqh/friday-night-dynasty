@@ -17,7 +17,7 @@ export function RankingsScreen() {
             <span>#</span>
             <span>команда</span>
             <span>п-б</span>
-            <span>престиж</span>
+            <span>сила</span>
             <span>позиции</span>
           </div>
 
@@ -28,7 +28,7 @@ export function RankingsScreen() {
               <span>
                 {entry.wins}-{entry.losses}
               </span>
-              <strong>{entry.prestige}</strong>
+              <strong>{entry.rosterStrength}</strong>
               <span>{entry.recruitingNeeds}</span>
             </div>
           ))}

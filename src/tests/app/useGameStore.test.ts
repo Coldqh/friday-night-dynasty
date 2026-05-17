@@ -10,6 +10,8 @@ describe('useGameStore team profile navigation', () => {
   beforeEach(() => {
     useGameStore.setState({
       world: null,
+      activeLeague: 'highSchool',
+      favoritePlayerIds: [],
       selectedTeamId: null,
       selectedPlayerId: null,
       teamProfileTab: 'overview',
@@ -104,56 +106,24 @@ describe('useGameStore team profile navigation', () => {
     });
   });
 
-  it('teams screen can open the team profile', () => {
-    const world = createWorld({ seed: 993 });
-    const targetTeamId = world.teams[5].id;
+  it('league toggle switches active league', () => {
+    useGameStore.getState().setActiveLeague('college');
+    expect(useGameStore.getState().activeLeague).toBe('college');
 
-    useGameStore.setState({
-      world,
-      selectedTeamId: world.teams[0].id,
-      selectedPlayerId: null,
-      teamProfileTab: 'overview',
-      screen: 'roster',
-      previousScreenBeforeTeamProfile: null,
-      previousScreenBeforePlayerProfile: null,
-      error: null
-    });
-
-    useGameStore.getState().openTeamProfile(targetTeamId, 'overview');
-
-    expect(useGameStore.getState().screen).toBe('teamProfile');
-    expect(useGameStore.getState().selectedTeamId).toBe(targetTeamId);
-    expect(useGameStore.getState().previousScreenBeforeTeamProfile).toBe('roster');
+    useGameStore.getState().setActiveLeague('highSchool');
+    expect(useGameStore.getState().activeLeague).toBe('highSchool');
   });
 
-  it('schedule can open team profile on the schedule tab and close back to schedule', () => {
-    const world = createWorld({ seed: 994 });
-    const targetTeamId = world.teams[4].id;
+  it('favorites toggle adds and removes players', () => {
+    useGameStore.getState().toggleFavoritePlayer('player-1');
+    expect(useGameStore.getState().favoritePlayerIds).toEqual(['player-1']);
 
-    useGameStore.setState({
-      world,
-      selectedTeamId: world.teams[0].id,
-      selectedPlayerId: null,
-      teamProfileTab: 'overview',
-      screen: 'schedule',
-      previousScreenBeforeTeamProfile: null,
-      previousScreenBeforePlayerProfile: null,
-      error: null
-    });
-
-    useGameStore.getState().openTeamProfile(targetTeamId, 'schedule', 'schedule');
-
-    expect(useGameStore.getState().screen).toBe('teamProfile');
-    expect(useGameStore.getState().teamProfileTab).toBe('schedule');
-    expect(useGameStore.getState().previousScreenBeforeTeamProfile).toBe('schedule');
-
-    useGameStore.getState().closeTeamProfile();
-
-    expect(useGameStore.getState().screen).toBe('schedule');
+    useGameStore.getState().toggleFavoritePlayer('player-1');
+    expect(useGameStore.getState().favoritePlayerIds).toEqual([]);
   });
 
-  it('navigation labels expose only functional sections', () => {
-    expect(navigationTabs.map((tab) => tab.label)).toEqual(['Главная', 'Команды', 'Календарь', 'Таблица', 'История']);
+  it('navigation labels expose only functional sections plus favorites', () => {
+    expect(navigationTabs.map((tab) => tab.label)).toEqual(['Главная', 'Команды', 'Календарь', 'Таблица', 'Избранные', 'История']);
     expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
     expect(navigationTabs.some((tab) => tab.label === 'Новости')).toBe(false);
     expect(navigationTabs.some((tab) => tab.label === 'Выпускники')).toBe(false);

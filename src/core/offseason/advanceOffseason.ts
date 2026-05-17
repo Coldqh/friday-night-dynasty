@@ -1,3 +1,6 @@
+import { createCollegeSeason } from '../colleges/collegeSeason';
+import { convertCommitmentsToCollegePlayers, developCollegePlayers } from '../colleges/collegePlayerLifecycle';
+import { calculateCollegeStandings } from '../colleges/collegeStandings';
 import { recordSeasonHistory } from '../history/recordSeasonHistory';
 import { appendCareerEvent, createCareerEvent, createPeopleFromPlayers, normalizePlayerIdentity } from '../people/personUtils';
 import { developPlayer } from '../players/developPlayer';
@@ -167,6 +170,31 @@ function graduatePeople({
   });
 }
 
+function refreshCollegeTeamRosters(world: GameWorld) {
+  const playersByTeam = new Map<string, string[]>();
+
+  (world.collegePlayers ?? []).forEach((player) => {
+    const ids = playersByTeam.get(player.collegeTeamId) ?? [];
+    ids.push(player.id);
+    playersByTeam.set(player.collegeTeamId, ids);
+  });
+
+  return (world.collegeTeams ?? []).map((team) => ({
+    ...team,
+    rosterPlayerIds: playersByTeam.get(team.id) ?? []
+  }));
+}
+
+function resetCollegeTeamsForNewSeason(world: GameWorld) {
+  return refreshCollegeTeamRosters(world).map((team) => ({
+    ...team,
+    wins: 0,
+    losses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0
+  }));
+}
+
 export function advanceOffseason(input: GameWorld): GameWorld {
   const world = cloneWorld(input);
 
@@ -215,7 +243,31 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     ...(world.recruitingProfiles ?? []).filter((profile) => profile.year !== world.season.year),
     ...recruitingResult.profiles
   ];
-  world.commitments = [...(world.commitments ?? []), ...recruitingResult.commitments];
+  const combinedCommitments = [...(world.commitments ?? []), ...recruitingResult.commitments];
+  const developedCollege = developCollegePlayers({
+    players: world.collegePlayers ?? [],
+    rng
+  });
+  world.collegePlayers = developedCollege.returningPlayers;
+  const conversion = convertCommitmentsToCollegePlayers({
+    world,
+    commitments: combinedCommitments,
+    graduatedPlayers: world.graduatedPlayers,
+    people: nextPeople,
+    rng,
+    year: world.season.year + 1
+  });
+
+  world.collegePlayers = conversion.collegePlayers;
+  world.commitments = conversion.commitments;
+  nextPeople = conversion.people;
+  world.collegeTeams = resetCollegeTeamsForNewSeason(world);
+  world.collegeSeason = createCollegeSeason({
+    world,
+    rng,
+    year: world.season.year + 1,
+    regularSeasonWeeks: 7
+  });
 
   const nextPlayers: Player[] = [];
 
@@ -258,6 +310,12 @@ export function advanceOffseason(input: GameWorld): GameWorld {
       overallRating: ratings.overall
     };
   });
+  world.collegeSeason = world.collegeSeason
+    ? {
+        ...world.collegeSeason,
+        standings: calculateCollegeStandings(world.collegeTeams ?? [], world.collegePlayers ?? [])
+      }
+    : world.collegeSeason;
 
   world.currentYear = world.season.year + 1;
   world.currentWeek = 0;

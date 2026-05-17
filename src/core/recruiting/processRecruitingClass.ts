@@ -169,7 +169,8 @@ export function processRecruitingClass({
         collegeTeamId: committedCollegeTeam.id,
         collegeName: committedCollege.shortName,
         stars,
-        prospectScore: score
+        prospectScore: score,
+        convertedToCollegePlayerId: null
       };
 
       commitments.push(commitment);

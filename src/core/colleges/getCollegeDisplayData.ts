@@ -1,10 +1,12 @@
 import { GameWorld } from '../world/worldTypes';
+import { calculateCollegeStandings } from './collegeStandings';
+import { getCollegeRosterStrength } from './collegeRatings';
 
 export interface CollegeScheduleEntry {
   gameId: string;
   week: number;
-  stage: 'regular';
-  stageLabel: 'Regular Season';
+  stage: 'regular' | 'semifinal' | 'final';
+  stageLabel: string;
   awayTeamId: string;
   awayTeamName: string;
   homeTeamId: string;
@@ -22,77 +24,76 @@ export interface CollegeStandingEntry {
   losses: number;
   prestige: number;
   recruitingNeeds: string;
+  rosterStrength: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  pointDifferential: number;
 }
 
-function getCollegeTeams(world: GameWorld) {
-  return [...(world.collegeTeams ?? [])].sort((left, right) => right.prestige - left.prestige || left.shortName.localeCompare(right.shortName));
+function getTeamName(world: GameWorld, teamId: string) {
+  return (world.collegeTeams ?? []).find((team) => team.id === teamId)?.shortName ?? '—';
+}
+
+function toScore(homeScore: number | null, awayScore: number | null) {
+  if (homeScore === null || awayScore === null) {
+    return '';
+  }
+
+  return `${awayScore}-${homeScore}`;
+}
+
+function toScheduleEntry(world: GameWorld, game: NonNullable<GameWorld['collegeSeason']>['schedule'][number]['games'][number]): CollegeScheduleEntry {
+  const winnerName = game.winnerId ? getTeamName(world, game.winnerId) : null;
+  const stageLabel = game.stage === 'final' ? 'State Final' : game.stage === 'semifinal' ? 'Semifinal' : 'Regular Season';
+
+  return {
+    gameId: game.id,
+    week: game.week,
+    stage: game.stage,
+    stageLabel,
+    awayTeamId: game.awayTeamId,
+    awayTeamName: getTeamName(world, game.awayTeamId),
+    homeTeamId: game.homeTeamId,
+    homeTeamName: getTeamName(world, game.homeTeamId),
+    status: game.homeScore === null || game.awayScore === null ? 'Upcoming' : 'Final',
+    score: toScore(game.homeScore, game.awayScore),
+    winnerName
+  };
 }
 
 export function getCollegeStandings(world: GameWorld): CollegeStandingEntry[] {
-  return getCollegeTeams(world)
-    .map((team) => ({
-      teamId: team.id,
-      teamName: team.shortName,
-      wins: team.wins,
-      losses: team.losses,
-      prestige: team.prestige,
-      recruitingNeeds: team.recruitingNeeds.join(', ')
-    }))
-    .sort((left, right) => right.wins - left.wins || left.losses - right.losses || right.prestige - left.prestige)
-    .map((entry, index) => ({
-      rank: index + 1,
-      ...entry
-    }));
+  const standings = world.collegeSeason?.standings?.length
+    ? world.collegeSeason.standings
+    : calculateCollegeStandings(world.collegeTeams ?? [], world.collegePlayers ?? []);
+
+  return standings.map((standing) => {
+    const team = (world.collegeTeams ?? []).find((entry) => entry.id === standing.teamId);
+
+    return {
+      rank: standing.rank,
+      teamId: standing.teamId,
+      teamName: standing.teamName,
+      wins: standing.wins,
+      losses: standing.losses,
+      prestige: standing.prestige,
+      recruitingNeeds: team?.recruitingNeeds.join(', ') ?? '',
+      rosterStrength: standing.rosterStrength ?? (team ? getCollegeRosterStrength(team, world.collegePlayers ?? []) : 0),
+      pointsFor: standing.pointsFor,
+      pointsAgainst: standing.pointsAgainst,
+      pointDifferential: standing.pointDifferential
+    };
+  });
 }
 
 export function getCollegeSchedule(world: GameWorld): CollegeScheduleEntry[] {
-  const teams = getCollegeTeams(world);
+  const fromSchedule = (world.collegeSeason?.schedule ?? []).flatMap((week) => week.games.map((game) => toScheduleEntry(world, game)));
+  const fromCompleted = (world.collegeSeason?.completedGames ?? []).map((game) => toScheduleEntry(world, game));
+  const byId = new Map<string, CollegeScheduleEntry>();
 
-  if (teams.length < 2) {
-    return [];
-  }
+  fromSchedule.forEach((game) => byId.set(game.gameId, game));
+  fromCompleted.forEach((game) => byId.set(game.gameId, game));
 
-  const rotation = [...teams];
-  const weeks = Math.min(7, teams.length - 1);
-  const games: CollegeScheduleEntry[] = [];
-
-  for (let week = 0; week < weeks; week += 1) {
-    for (let index = 0; index < rotation.length / 2; index += 1) {
-      const left = rotation[index];
-      const right = rotation[rotation.length - 1 - index];
-
-      if (!left || !right) {
-        continue;
-      }
-
-      const home = (week + index) % 2 === 0 ? left : right;
-      const away = home.id === left.id ? right : left;
-
-      games.push({
-        gameId: `college-${week}-${away.id}-${home.id}`,
-        week,
-        stage: 'regular',
-        stageLabel: 'Regular Season',
-        awayTeamId: away.id,
-        awayTeamName: away.shortName,
-        homeTeamId: home.id,
-        homeTeamName: home.shortName,
-        status: 'Upcoming',
-        score: '',
-        winnerName: null
-      });
-    }
-
-    const fixed = rotation[0];
-    const rest = rotation.slice(1);
-    const moved = rest.pop();
-
-    if (fixed && moved) {
-      rotation.splice(0, rotation.length, fixed, moved, ...rest);
-    }
-  }
-
-  return games;
+  return [...byId.values()].sort((left, right) => left.week - right.week || left.awayTeamName.localeCompare(right.awayTeamName));
 }
 
 export function getCollegeUpcomingSchedule(world: GameWorld) {

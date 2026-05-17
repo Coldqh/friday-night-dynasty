@@ -7,6 +7,7 @@ export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'roster', label: 'Команды' },
   { id: 'schedule', label: 'Календарь' },
   { id: 'rankings', label: 'Таблица' },
+  { id: 'favorites', label: 'Избранные' },
   { id: 'history', label: 'История' }
 ];
 

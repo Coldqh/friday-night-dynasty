@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { simulateCollegeSeason, simulateCollegeWeek } from '../../core/colleges/collegeSeason';
 import { advanceOffseason } from '../../core/offseason/advanceOffseason';
 import { simulateSeason, simulateWeek } from '../../core/season/simulateSeason';
 import { createWorld } from '../../core/world/createWorld';
@@ -13,11 +14,37 @@ export type AppScreen =
   | 'roster'
   | 'teamProfile'
   | 'playerProfile'
+  | 'favorites'
   | 'schedule'
   | 'rankings'
   | 'history';
 
 export type TeamProfileTab = 'overview' | 'roster' | 'schedule' | 'history';
+
+const FAVORITES_STORAGE_KEY = 'fnd_favorite_player_ids';
+
+function loadFavoritePlayerIds() {
+  if (typeof localStorage === 'undefined') {
+    return [];
+  }
+
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavoritePlayerIds(ids: string[]) {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(ids));
+}
 
 export function resolveSelectedTeamId(world: GameWorld | null, selectedTeamId: string | null): string | null {
   if (!world || world.teams.length === 0) {
@@ -36,7 +63,7 @@ export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerI
     return null;
   }
 
-  const allPlayers = [...world.players, ...(world.graduatedPlayers ?? [])];
+  const allPlayers = [...world.players, ...(world.graduatedPlayers ?? []), ...(world.collegePlayers ?? [])];
 
   if (selectedPlayerId && allPlayers.some((player) => player.id === selectedPlayerId)) {
     return selectedPlayerId;
@@ -48,6 +75,7 @@ export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerI
 interface GameStore {
   world: GameWorld | null;
   activeLeague: LeagueLevel;
+  favoritePlayerIds: string[];
   selectedTeamId: string | null;
   selectedPlayerId: string | null;
   teamProfileTab: TeamProfileTab;
@@ -59,6 +87,7 @@ interface GameStore {
   setScreen: (screen: AppScreen) => void;
   selectTeam: (teamId: string) => void;
   setTeamProfileTab: (tab: TeamProfileTab) => void;
+  toggleFavoritePlayer: (playerId: string) => void;
   openTeamProfile: (teamId: string, tab?: TeamProfileTab, returnScreen?: AppScreen) => void;
   closeTeamProfile: () => void;
   openPlayerProfile: (playerId: string, returnScreen?: AppScreen) => void;
@@ -76,6 +105,7 @@ const DEFAULT_SEED = 982451653;
 export const useGameStore = create<GameStore>((set, get) => ({
   world: null,
   activeLeague: 'highSchool',
+  favoritePlayerIds: loadFavoritePlayerIds(),
   selectedTeamId: null,
   selectedPlayerId: null,
   teamProfileTab: 'overview',
@@ -109,6 +139,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
 
   setTeamProfileTab: (tab) => set({ teamProfileTab: tab }),
+
+  toggleFavoritePlayer: (playerId) =>
+    set((state) => {
+      const exists = state.favoritePlayerIds.includes(playerId);
+      const favoritePlayerIds = exists
+        ? state.favoritePlayerIds.filter((id) => id !== playerId)
+        : [...state.favoritePlayerIds, playerId];
+
+      saveFavoritePlayerIds(favoritePlayerIds);
+
+      return { favoritePlayerIds };
+    }),
 
   openTeamProfile: (teamId, tab = 'overview', returnScreen) =>
     set((state) => {
@@ -209,7 +251,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const updated = normalizeWorldState(simulateWeek(normalizeWorldState(world)));
+    const normalized = normalizeWorldState(world);
+    const updated =
+      get().activeLeague === 'college'
+        ? normalizeWorldState(simulateCollegeWeek(normalized))
+        : normalizeWorldState(simulateWeek(normalized));
 
     set((state) => ({
       world: updated,
@@ -227,7 +273,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const updated = normalizeWorldState(simulateSeason(normalizeWorldState(world)));
+    const normalized = normalizeWorldState(world);
+    const updated =
+      get().activeLeague === 'college'
+        ? normalizeWorldState(simulateCollegeSeason(normalized))
+        : normalizeWorldState(simulateSeason(normalized));
 
     set((state) => ({
       world: updated,

@@ -1,12 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #070b13;
   color: #e5edf7;
 }
@@ -109,6 +103,44 @@ button:disabled {
 .profile-title {
   font-size: 28px;
   margin: 0;
+}
+
+.profile-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.favorite-star {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #71809f;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.favorite-star.active,
+.favorite-mini.active {
+  color: #ffd666;
+  background: rgba(255, 214, 102, 0.14);
+  border-color: rgba(255, 214, 102, 0.35);
+}
+
+.favorite-mini {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #71809f;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
 }
 
 .home-screen {
@@ -256,6 +288,10 @@ button:disabled {
 
 .grid-commitments {
   grid-template-columns: 0.55fr 1.25fr 0.45fr 1.05fr 1.1fr 0.75fr;
+}
+
+.grid-favorites {
+  grid-template-columns: 1.35fr 0.75fr 1fr 0.45fr 0.55fr 0.55fr 0.35fr;
 }
 
 .dashboard-grid {
@@ -428,7 +464,7 @@ button:disabled {
   transform: translateX(-50%);
   width: min(720px, 100%);
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
   padding: 8px;
   background: rgba(7, 11, 19, 0.94);
@@ -442,7 +478,7 @@ button:disabled {
   color: #8fa3c7;
   padding: 10px 4px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
 }
 
@@ -467,7 +503,8 @@ button:disabled {
   .grid-team-schedule,
   .grid-full-schedule,
   .grid-schedule-upcoming,
-  .grid-commitments {
+  .grid-commitments,
+  .grid-favorites {
     font-size: 12px;
   }
 
@@ -485,6 +522,10 @@ button:disabled {
 
   .grid-commitments {
     grid-template-columns: 0.45fr 1.1fr 0.4fr 0.9fr 0.9fr 0.7fr;
+  }
+
+  .grid-favorites {
+    grid-template-columns: 1.25fr 0.7fr 0.9fr 0.4fr 0.5fr 0.5fr 0.3fr;
   }
 
   .tab-row {

@@ -8,6 +8,10 @@ export function getCommitmentForPlayer(world: GameWorld, playerId: string) {
   return (world.commitments ?? []).find((commitment) => commitment.playerId === playerId) ?? null;
 }
 
+export function getCommitmentForCollegePlayer(world: GameWorld, collegePlayerId: string) {
+  return (world.commitments ?? []).find((commitment) => commitment.convertedToCollegePlayerId === collegePlayerId) ?? null;
+}
+
 export function getRecentCommitments(world: GameWorld, limit = 8) {
   return [...(world.commitments ?? [])]
     .sort((left, right) => right.year - left.year || right.prospectScore - left.prospectScore)

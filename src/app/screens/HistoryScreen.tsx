@@ -9,14 +9,16 @@ export function HistoryScreen() {
   const world = useGameStore((state) => state.world)!;
   const history = getLeagueHistorySnapshot(world);
   const commitments = getRecentCommitments(world, 12);
+  const collegeChampions = world.history.collegeChampions ?? [];
 
   return (
     <div className="stack">
       <Card title="История лиги">
         <div className="stat-strip">
-          <span>сезонов {history.totalSeasonsCompleted}</span>
+          <span>сезонов школы {history.totalSeasonsCompleted}</span>
           <span>последний чемпион {history.latestChampion?.championName ?? 'нет'}</span>
           <span>колледжей {world.colleges?.length ?? 0}</span>
+          <span>сезонов колледжей {collegeChampions.length}</span>
           <span>коммитов {world.commitments?.length ?? 0}</span>
         </div>
       </Card>
@@ -31,6 +33,23 @@ export function HistoryScreen() {
                 <div className="eyebrow">{entry.year}</div>
                 <h3>{entry.championName}</h3>
                 <p>финалист: {entry.runnerUpName}</p>
+                <p>счёт: {entry.finalScore}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card title="Чемпионы колледжей">
+        {collegeChampions.length === 0 ? (
+          <p className="muted">Нет чемпионов.</p>
+        ) : (
+          <div className="list">
+            {collegeChampions.map((entry) => (
+              <div className="history-item" key={`college-champion-${entry.year}`}>
+                <div className="eyebrow">{entry.year}</div>
+                <h3>{entry.championName}</h3>
+                <p>финалист: {entry.runnerUpName ?? '—'}</p>
                 <p>счёт: {entry.finalScore}</p>
               </div>
             ))}

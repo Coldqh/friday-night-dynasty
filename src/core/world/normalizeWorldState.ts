@@ -1,12 +1,14 @@
 import { ensureCollegeLayer } from '../colleges/ensureCollegeLayer';
+import { calculateCollegeStandings } from '../colleges/collegeStandings';
 import { ensurePeopleForPlayers, normalizePlayerIdentity } from '../people/personUtils';
 import { SeededRng } from '../random/rng';
 import {
+  CollegeCommitment,
+  CollegePlayer,
   GameWorld,
   Person,
   Player,
   RecruitingProfile,
-  CollegeCommitment,
   RivalryGameResult,
   SeasonLogEntry,
   TeamHistoryEntry,
@@ -29,6 +31,7 @@ type LegacySeasonHistory = {
 type LegacyWorld = GameWorld & {
   people?: Person[];
   graduatedPlayers?: Player[];
+  collegePlayers?: CollegePlayer[];
   recruitingProfiles?: RecruitingProfile[];
   commitments?: CollegeCommitment[];
   season: GameWorld['season'] & {
@@ -104,6 +107,32 @@ function toTitleGameHistory(season: LegacySeasonHistory) {
   };
 }
 
+function normalizeCollegePlayer(player: CollegePlayer): CollegePlayer {
+  return {
+    ...player,
+    eligibilityRemaining: player.eligibilityRemaining ?? 4,
+    stars: player.stars ?? 1,
+    seasonStats: player.seasonStats ?? {
+      passingYards: 0,
+      rushingYards: 0,
+      receivingYards: 0,
+      tackles: 0,
+      sacks: 0,
+      touchdowns: 0,
+      interceptions: 0
+    },
+    careerStats: player.careerStats ?? {
+      passingYards: 0,
+      rushingYards: 0,
+      receivingYards: 0,
+      tackles: 0,
+      sacks: 0,
+      touchdowns: 0,
+      interceptions: 0
+    }
+  };
+}
+
 export function normalizeWorldState(input: GameWorld): GameWorld {
   const world = structuredClone(input) as LegacyWorld;
   const rng = new SeededRng(world.seed + (world.currentYear ?? world.season.year) * 31);
@@ -172,8 +201,14 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     players: world.players,
     people,
     graduatedPlayers: world.graduatedPlayers,
+    collegePlayers: Array.isArray(world.collegePlayers) ? world.collegePlayers.map(normalizeCollegePlayer) : [],
     recruitingProfiles: Array.isArray(world.recruitingProfiles) ? world.recruitingProfiles : [],
-    commitments: Array.isArray(world.commitments) ? world.commitments : [],
+    commitments: Array.isArray(world.commitments)
+      ? world.commitments.map((commitment) => ({
+          ...commitment,
+          convertedToCollegePlayerId: commitment.convertedToCollegePlayerId ?? null
+        }))
+      : [],
     teams: world.teams,
     season: {
       ...world.season,
@@ -183,9 +218,20 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     history: {
       champions,
       titleGames,
-      rivalryResults
+      rivalryResults,
+      collegeChampions: Array.isArray(world.history?.collegeChampions) ? world.history.collegeChampions : []
     }
   };
 
-  return ensureCollegeLayer(normalized);
+  const withCollegeLayer = ensureCollegeLayer(normalized);
+
+  return {
+    ...withCollegeLayer,
+    collegeSeason: withCollegeLayer.collegeSeason
+      ? {
+          ...withCollegeLayer.collegeSeason,
+          standings: calculateCollegeStandings(withCollegeLayer.collegeTeams ?? [], withCollegeLayer.collegePlayers ?? [])
+        }
+      : withCollegeLayer.collegeSeason
+  };
 }

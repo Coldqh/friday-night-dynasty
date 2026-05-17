@@ -1,15 +1,15 @@
-import { CareerEventType, ClassYear, DefenseStyle, MatchStage, OffenseStyle, Phase, Player, StateHeadlineType } from '../core/world/worldTypes';
+import { CareerEventType, ClassYear, DefenseStyle, MatchStage, OffenseStyle, Player, StateHeadlineType } from '../core/world/worldTypes';
 
 export function formatClassYear(classYear: ClassYear) {
   switch (classYear) {
     case 'FR':
-      return '1 курс школы';
+      return 'FR';
     case 'SO':
-      return '2 курс школы';
+      return 'SO';
     case 'JR':
-      return '3 курс школы';
+      return 'JR';
     case 'SR':
-      return 'выпускник школы';
+      return 'SR';
     default:
       return classYear;
   }
@@ -34,7 +34,7 @@ export function formatCareerStage(stage: Player['careerStage']) {
   }
 }
 
-export function formatPhase(phase: Phase) {
+export function formatPhase(phase: string) {
   switch (phase) {
     case 'regular':
       return 'регулярный сезон';
@@ -51,13 +51,13 @@ export function formatStage(stage: MatchStage | string) {
   switch (stage) {
     case 'regular':
     case 'Regular Season':
-      return 'регулярный сезон';
+      return 'регулярка';
     case 'semifinal':
     case 'Semifinal':
       return 'полуфинал';
     case 'final':
     case 'State Final':
-      return 'финал штата';
+      return 'финал';
     default:
       return stage;
   }
@@ -77,15 +77,15 @@ export function formatScheduleStatus(status: string) {
 export function formatOffenseStyle(style: OffenseStyle) {
   switch (style) {
     case 'balanced':
-      return 'сбалансированное нападение';
+      return 'баланс';
     case 'runHeavy':
-      return 'упор на вынос';
+      return 'вынос';
     case 'passHeavy':
-      return 'упор на пас';
+      return 'пас';
     case 'spread':
-      return 'spread-нападение';
+      return 'spread';
     case 'powerRun':
-      return 'силовой вынос';
+      return 'power';
     default:
       return style;
   }
@@ -94,13 +94,13 @@ export function formatOffenseStyle(style: OffenseStyle) {
 export function formatDefenseStyle(style: DefenseStyle) {
   switch (style) {
     case 'balanced':
-      return 'сбалансированная защита';
+      return 'баланс';
     case 'aggressive':
-      return 'агрессивная защита';
+      return 'агрессия';
     case 'conservative':
-      return 'осторожная защита';
+      return 'консервативно';
     case 'blitzHeavy':
-      return 'много блицев';
+      return 'blitz';
     default:
       return style;
   }
@@ -144,24 +144,24 @@ export function formatHeadlineType(type: StateHeadlineType) {
 export function formatStakeLabel(label: string | null) {
   switch (label) {
     case 'State Final':
-      return 'финал штата';
+      return 'финал';
     case 'Playoff Semifinal':
       return 'полуфинал';
     case 'Rivalry with Playoff Pressure':
-      return 'дерби с давлением плей-офф';
+      return 'дерби';
     case 'Rivalry Game':
       return 'дерби';
     case 'Unbeaten Watch':
     case 'Undefeated Watch':
-      return 'серия без поражений';
+      return 'без поражений';
     case 'Playoff Race':
-      return 'гонка за плей-офф';
+      return 'плей-офф';
     case 'Top-Four Showdown':
-      return 'матч топ-4';
+      return 'топ-4';
     case 'Evenly Matched Programs':
-      return 'равные команды';
+      return 'равные';
     case 'Late-season Must Win':
-      return 'матч на выживание';
+      return 'must win';
     default:
       return label ?? '';
   }
@@ -170,9 +170,9 @@ export function formatStakeLabel(label: string | null) {
 export function formatCareerEventType(type: CareerEventType) {
   switch (type) {
     case 'created':
-      return 'начало пути';
+      return 'старт';
     case 'freshmanArrival':
-      return 'приход новичка';
+      return 'новичок';
     case 'development':
       return 'развитие';
     case 'graduation':
@@ -180,7 +180,13 @@ export function formatCareerEventType(type: CareerEventType) {
     case 'recruiting':
       return 'рекрутинг';
     case 'commitment':
-      return 'выбор программы';
+      return 'коммит';
+    case 'collegeArrival':
+      return 'колледж';
+    case 'collegeSeason':
+      return 'сезон колледжа';
+    case 'collegeGraduation':
+      return 'выпуск колледжа';
     case 'draft':
       return 'драфт';
     case 'proDebut':

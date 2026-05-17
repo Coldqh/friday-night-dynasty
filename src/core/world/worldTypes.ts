@@ -2,6 +2,7 @@ export type Phase = 'regular' | 'playoffs' | 'offseason';
 export type MatchStage = 'regular' | 'semifinal' | 'final';
 export type Position = 'QB' | 'RB' | 'WR' | 'TE' | 'OL' | 'DL' | 'LB' | 'CB' | 'S' | 'K';
 export type ClassYear = 'FR' | 'SO' | 'JR' | 'SR';
+export type CollegeClassYear = 'FR' | 'SO' | 'JR' | 'SR';
 export type OffenseStyle = 'balanced' | 'runHeavy' | 'passHeavy' | 'spread' | 'powerRun';
 export type DefenseStyle = 'balanced' | 'aggressive' | 'conservative' | 'blitzHeavy';
 
@@ -14,7 +15,7 @@ export type CareerStage =
   | 'pro'
   | 'retired';
 
-export type PersonRoleType = 'player' | 'coach' | 'graduate' | 'scout' | 'gm' | 'retired';
+export type PersonRoleType = 'player' | 'coach' | 'graduate' | 'collegePlayer' | 'scout' | 'gm' | 'retired';
 
 export type CareerEventType =
   | 'created'
@@ -23,6 +24,9 @@ export type CareerEventType =
   | 'graduation'
   | 'recruiting'
   | 'commitment'
+  | 'collegeArrival'
+  | 'collegeSeason'
+  | 'collegeGraduation'
   | 'draft'
   | 'proDebut'
   | 'retirement'
@@ -113,6 +117,15 @@ export interface College {
   scholarshipBudget: number;
 }
 
+export interface CollegeTeamHistoryEntry {
+  year: number;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  wonTitle: boolean;
+}
+
 export interface CollegeTeam {
   id: string;
   collegeId: string;
@@ -126,6 +139,9 @@ export interface CollegeTeam {
   recruitingNeeds: Position[];
   wins: number;
   losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  history: CollegeTeamHistoryEntry[];
 }
 
 export interface PlayerStats {
@@ -169,6 +185,36 @@ export interface Player {
   careerStats: PlayerStats;
 }
 
+export interface CollegePlayer {
+  id: string;
+  sourcePlayerId: string;
+  personId: string | null;
+  collegeId: string;
+  collegeTeamId: string;
+  sourceHighSchoolTeamId: string;
+  sourceSchoolId: string;
+  hometownCityId: string;
+  firstName: string;
+  lastName: string;
+  age: number;
+  classYear: CollegeClassYear;
+  eligibilityRemaining: number;
+  position: Position;
+  height: number;
+  weight: number;
+  overall: number;
+  potential: number;
+  workEthic: number;
+  discipline: number;
+  confidence: number;
+  leadership: number;
+  injuryRisk: number;
+  ambition: number;
+  stars: number;
+  seasonStats: PlayerStats;
+  careerStats: PlayerStats;
+}
+
 export interface RecruitingProfile {
   id: string;
   year: number;
@@ -203,6 +249,7 @@ export interface CollegeCommitment {
   collegeName: string;
   stars: number;
   prospectScore: number;
+  convertedToCollegePlayerId: string | null;
 }
 
 export interface TeamHistoryEntry {
@@ -268,9 +315,28 @@ export interface ScheduledGame {
   mvpPlayerId: string | null;
 }
 
+export interface CollegeScheduledGame {
+  id: string;
+  stage: MatchStage;
+  week: number;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  winnerId: string | null;
+  loserId: string | null;
+  summary: string;
+  mvpPlayerId: string | null;
+}
+
 export interface ScheduleWeek {
   week: number;
   games: ScheduledGame[];
+}
+
+export interface CollegeScheduleWeek {
+  week: number;
+  games: CollegeScheduledGame[];
 }
 
 export interface TeamStanding {
@@ -283,6 +349,19 @@ export interface TeamStanding {
   pointsAgainst: number;
   pointDifferential: number;
   overallRating: number;
+}
+
+export interface CollegeStanding {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  pointDifferential: number;
+  prestige: number;
+  rosterStrength: number;
 }
 
 export interface RankingSnapshotEntry {
@@ -343,6 +422,18 @@ export interface SeasonState {
   seasonLog: SeasonLogEntry[];
 }
 
+export interface CollegeSeasonState {
+  year: number;
+  currentWeek: number;
+  regularSeasonWeeks: number;
+  schedule: CollegeScheduleWeek[];
+  completedGames: CollegeScheduledGame[];
+  standings: CollegeStanding[];
+  championTeamId: string | null;
+  championshipGameId: string | null;
+  seasonLog: SeasonLogEntry[];
+}
+
 export interface NewsItem {
   id: string;
   year: number;
@@ -388,10 +479,20 @@ export interface RivalryGameResult {
   summary: string;
 }
 
+export interface CollegeChampionHistoryEntry {
+  year: number;
+  championTeamId: string;
+  championName: string;
+  runnerUpTeamId: string | null;
+  runnerUpName: string | null;
+  finalScore: string;
+}
+
 export interface WorldHistory {
   champions: ChampionHistoryEntry[];
   titleGames: TitleGameHistoryEntry[];
   rivalryResults: RivalryGameResult[];
+  collegeChampions?: CollegeChampionHistoryEntry[];
 }
 
 export interface GameWorld {
@@ -410,8 +511,10 @@ export interface GameWorld {
   graduatedPlayers?: Player[];
   colleges?: College[];
   collegeTeams?: CollegeTeam[];
+  collegePlayers?: CollegePlayer[];
   recruitingProfiles?: RecruitingProfile[];
   commitments?: CollegeCommitment[];
+  collegeSeason?: CollegeSeasonState;
   season: SeasonState;
   news: NewsItem[];
   history: WorldHistory;
