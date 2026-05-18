@@ -15,7 +15,7 @@ export type CareerStage =
   | 'pro'
   | 'retired';
 
-export type PersonRoleType = 'player' | 'coach' | 'graduate' | 'collegePlayer' | 'scout' | 'gm' | 'retired';
+export type PersonRoleType = 'player' | 'coach' | 'graduate' | 'collegePlayer' | 'collegeGraduate' | 'scout' | 'gm' | 'retired';
 
 export type CareerEventType =
   | 'created'
@@ -214,6 +214,12 @@ export interface CollegePlayer {
   stars: number;
   seasonStats: PlayerStats;
   careerStats: PlayerStats;
+}
+
+export interface CollegeGraduate extends CollegePlayer {
+  graduationYear: number;
+  finalCollegeTeamId: string;
+  finalCollegeName: string;
 }
 
 export interface RecruitingProfile {
@@ -513,6 +519,7 @@ export interface GameWorld {
   colleges?: College[];
   collegeTeams?: CollegeTeam[];
   collegePlayers?: CollegePlayer[];
+  graduatedCollegePlayers?: CollegeGraduate[];
   recruitingProfiles?: RecruitingProfile[];
   commitments?: CollegeCommitment[];
   collegeSeason?: CollegeSeasonState;

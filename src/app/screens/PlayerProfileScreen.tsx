@@ -5,13 +5,14 @@ import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { getPersonForPlayer } from '../../core/people/personUtils';
 import { getCollegeTeamName, getRecruitingStatusLabel } from '../../core/recruiting/recruitingUtils';
 import { getCommitmentForCollegePlayer, getRecruitingProfileForPlayer } from '../../core/recruiting/getRecruitingProfile';
-import { CollegePlayer, GameWorld, Player } from '../../core/world/worldTypes';
+import { CollegeGraduate, CollegePlayer, GameWorld, Player } from '../../core/world/worldTypes';
 import { useGameStore } from '../store/useGameStore';
 
 type ProfileTarget =
   | { kind: 'school'; player: Player }
-  | { kind: 'graduate'; player: Player }
-  | { kind: 'college'; player: CollegePlayer };
+  | { kind: 'schoolGraduate'; player: Player }
+  | { kind: 'college'; player: CollegePlayer }
+  | { kind: 'collegeGraduate'; player: CollegeGraduate };
 
 function formatHeight(inches: number) {
   const cm = Math.round(inches * 2.54);
@@ -22,7 +23,7 @@ function getFullName(player: Pick<Player, 'firstName' | 'lastName'> | Pick<Colle
   return `${player.firstName} ${player.lastName}`;
 }
 
-function getCollegePlayerBySourcePlayerId(world: GameWorld, sourcePlayerId: string | null) {
+function getCollegeTargetBySourcePlayerId(world: GameWorld, sourcePlayerId: string | null): ProfileTarget | null {
   if (!sourcePlayerId) {
     return null;
   }
@@ -32,10 +33,28 @@ function getCollegePlayerBySourcePlayerId(world: GameWorld, sourcePlayerId: stri
   );
 
   if (commitment?.convertedToCollegePlayerId) {
-    return (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId) ?? null;
+    const current = (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId);
+    if (current) {
+      return { kind: 'college', player: current };
+    }
+
+    const graduate = (world.graduatedCollegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId);
+    if (graduate) {
+      return { kind: 'collegeGraduate', player: graduate };
+    }
   }
 
-  return (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId) ?? null;
+  const current = (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId);
+  if (current) {
+    return { kind: 'college', player: current };
+  }
+
+  const graduate = (world.graduatedCollegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId);
+  if (graduate) {
+    return { kind: 'collegeGraduate', player: graduate };
+  }
+
+  return null;
 }
 
 function getTarget(world: GameWorld | null, selectedPlayerId: string | null): ProfileTarget | null {
@@ -48,9 +67,14 @@ function getTarget(world: GameWorld | null, selectedPlayerId: string | null): Pr
     return { kind: 'college', player: directCollege };
   }
 
-  const convertedCollege = getCollegePlayerBySourcePlayerId(world, selectedPlayerId);
-  if (convertedCollege) {
-    return { kind: 'college', player: convertedCollege };
+  const directCollegeGraduate = (world.graduatedCollegePlayers ?? []).find((entry) => entry.id === selectedPlayerId);
+  if (directCollegeGraduate) {
+    return { kind: 'collegeGraduate', player: directCollegeGraduate };
+  }
+
+  const convertedCollegeTarget = getCollegeTargetBySourcePlayerId(world, selectedPlayerId);
+  if (convertedCollegeTarget) {
+    return convertedCollegeTarget;
   }
 
   const school = world.players.find((entry) => entry.id === selectedPlayerId);
@@ -60,7 +84,7 @@ function getTarget(world: GameWorld | null, selectedPlayerId: string | null): Pr
 
   const graduate = (world.graduatedPlayers ?? []).find((entry) => entry.id === selectedPlayerId);
   if (graduate) {
-    return { kind: 'graduate', player: graduate };
+    return { kind: 'schoolGraduate', player: graduate };
   }
 
   const fallbackSchool = world.players[0];
@@ -73,7 +97,70 @@ function getTarget(world: GameWorld | null, selectedPlayerId: string | null): Pr
     return { kind: 'college', player: fallbackCollege };
   }
 
+  const fallbackCollegeGraduate = (world.graduatedCollegePlayers ?? [])[0];
+  if (fallbackCollegeGraduate) {
+    return { kind: 'collegeGraduate', player: fallbackCollegeGraduate };
+  }
+
   return null;
+}
+
+function StatsTable({ player }: { player: Player | CollegePlayer }) {
+  return (
+    <Card title="Статистика">
+      <div className="table compact-table">
+        <div className="table-head" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
+          <span>период</span>
+          <span>пас</span>
+          <span>вынос</span>
+          <span>приём</span>
+          <span>тач</span>
+          <span>захв</span>
+          <span>сэк</span>
+          <span>int</span>
+        </div>
+        <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
+          <strong>сезон</strong>
+          <span>{player.seasonStats.passingYards}</span>
+          <span>{player.seasonStats.rushingYards}</span>
+          <span>{player.seasonStats.receivingYards}</span>
+          <span>{player.seasonStats.touchdowns}</span>
+          <span>{player.seasonStats.tackles}</span>
+          <span>{player.seasonStats.sacks}</span>
+          <span>{player.seasonStats.interceptions}</span>
+        </div>
+        <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
+          <strong>карьера</strong>
+          <span>{player.careerStats.passingYards}</span>
+          <span>{player.careerStats.rushingYards}</span>
+          <span>{player.careerStats.receivingYards}</span>
+          <span>{player.careerStats.touchdowns}</span>
+          <span>{player.careerStats.tackles}</span>
+          <span>{player.careerStats.sacks}</span>
+          <span>{player.careerStats.interceptions}</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function CareerCard({ careerEvents }: { careerEvents: Array<{ id: string; year: number; week: number; type: Parameters<typeof formatCareerEventType>[0]; title: string }> }) {
+  return (
+    <Card title="Карьера">
+      {careerEvents.length === 0 ? (
+        <p className="muted">Нет событий.</p>
+      ) : (
+        <div className="list">
+          {careerEvents.map((event) => (
+            <div className="history-item" key={event.id}>
+              <div className="eyebrow">{event.year} / неделя {event.week + 1} / {formatCareerEventType(event.type)}</div>
+              <strong>{event.title}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
 }
 
 export function PlayerProfileScreen() {
@@ -94,24 +181,25 @@ export function PlayerProfileScreen() {
     );
   }
 
-  if (target.kind === 'college') {
+  if (target.kind === 'college' || target.kind === 'collegeGraduate') {
     const player = target.player;
     const favoriteKey = favoritePlayerIds.includes(player.sourcePlayerId) ? player.sourcePlayerId : player.id;
     const isFavorite = favoritePlayerIds.includes(favoriteKey);
     const person = (world.people ?? []).find((entry) => entry.id === player.personId) ?? null;
-    const school = world.schools.find((entry) => entry.id === player.sourceSchoolId) ?? null;
+    const sourceSchool = world.schools.find((entry) => entry.id === player.sourceSchoolId) ?? null;
     const collegeTeam = (world.collegeTeams ?? []).find((entry) => entry.id === player.collegeTeamId) ?? null;
     const hometown = world.cities.find((entry) => entry.id === player.hometownCityId) ?? null;
     const careerEvents = person?.careerEvents ?? [];
     const collegeCommitment = getCommitmentForCollegePlayer(world, player.id);
-    const collegeName = collegeCommitment?.collegeName ?? collegeTeam?.shortName ?? '—';
+    const collegeName = collegeCommitment?.collegeName ?? collegeTeam?.shortName ?? (target.kind === 'collegeGraduate' ? player.finalCollegeName : '—');
+    const stageLabel = target.kind === 'collegeGraduate' ? 'выпускник колледжа' : 'игрок колледжа';
 
     return (
       <div className="stack">
         <Card title="Профиль игрока">
           <div className="profile-header-row">
             <div>
-              <div className="eyebrow">игрок уровня II</div>
+              <div className="eyebrow">{stageLabel}</div>
               <h3 className="profile-title">{getFullName(player)}</h3>
             </div>
             <button
@@ -127,14 +215,14 @@ export function PlayerProfileScreen() {
             <div className="stat-strip">
               <span>{player.position}</span>
               <span>{formatClassYear(player.classYear)}</span>
-              <span>лет допуска {player.eligibilityRemaining}</span>
+              {target.kind === 'collegeGraduate' ? <span>выпуск {player.graduationYear}</span> : <span>лет допуска {player.eligibilityRemaining}</span>}
               <span>общ {player.overall}</span>
               <span>пот {player.potential}</span>
               <span>{formatHeight(player.height)}</span>
               <span>{Math.round(player.weight * 0.453592)} кг</span>
             </div>
             <p className="muted">
-              {collegeTeam?.shortName ?? '—'} / {school?.name ?? '—'} / {hometown?.name ?? '—'}
+              {collegeName} / {sourceSchool?.name ?? '—'} / {hometown?.name ?? '—'}
             </p>
             <div className="button-row">
               <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>
@@ -167,55 +255,8 @@ export function PlayerProfileScreen() {
           )}
         </Card>
 
-        <Card title="Статистика">
-          <div className="table compact-table">
-            <div className="table-head" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-              <span>период</span>
-              <span>пас</span>
-              <span>вынос</span>
-              <span>приём</span>
-              <span>тач</span>
-              <span>захв</span>
-              <span>сэк</span>
-              <span>int</span>
-            </div>
-            <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-              <strong>сезон</strong>
-              <span>{player.seasonStats.passingYards}</span>
-              <span>{player.seasonStats.rushingYards}</span>
-              <span>{player.seasonStats.receivingYards}</span>
-              <span>{player.seasonStats.touchdowns}</span>
-              <span>{player.seasonStats.tackles}</span>
-              <span>{player.seasonStats.sacks}</span>
-              <span>{player.seasonStats.interceptions}</span>
-            </div>
-            <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-              <strong>карьера</strong>
-              <span>{player.careerStats.passingYards}</span>
-              <span>{player.careerStats.rushingYards}</span>
-              <span>{player.careerStats.receivingYards}</span>
-              <span>{player.careerStats.touchdowns}</span>
-              <span>{player.careerStats.tackles}</span>
-              <span>{player.careerStats.sacks}</span>
-              <span>{player.careerStats.interceptions}</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card title="Карьера">
-          {careerEvents.length === 0 ? (
-            <p className="muted">Нет событий.</p>
-          ) : (
-            <div className="list">
-              {careerEvents.map((event) => (
-                <div className="history-item" key={event.id}>
-                  <div className="eyebrow">{event.year} / неделя {event.week + 1} / {formatCareerEventType(event.type)}</div>
-                  <strong>{event.title}</strong>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+        <StatsTable player={player} />
+        <CareerCard careerEvents={careerEvents} />
       </div>
     );
   }
@@ -232,7 +273,7 @@ export function PlayerProfileScreen() {
   const collegeName = recruitingProfile
     ? getCollegeTeamName(world.colleges ?? [], world.collegeTeams ?? [], recruitingProfile.committedCollegeTeamId)
     : '—';
-  const stageLabel = target.kind === 'graduate' ? 'выпускник' : formatCareerStage(player.careerStage);
+  const stageLabel = target.kind === 'schoolGraduate' ? 'выпускник школы' : formatCareerStage(player.careerStage);
 
   return (
     <div className="stack">
@@ -261,7 +302,7 @@ export function PlayerProfileScreen() {
             <span>{Math.round(player.weight * 0.453592)} кг</span>
           </div>
           <p className="muted">
-            {school?.name ?? 'неизвестная программа'} / {team?.shortName ?? 'неизвестная команда'} / {hometown?.name ?? 'неизвестный город'}
+            {school?.name ?? 'неизвестная школа'} / {team?.shortName ?? 'неизвестная команда'} / {hometown?.name ?? 'неизвестный город'}
           </p>
           <div className="button-row">
             <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>
@@ -297,40 +338,7 @@ export function PlayerProfileScreen() {
         )}
       </Card>
 
-      <Card title="Статистика">
-        <div className="table compact-table">
-          <div className="table-head" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <span>период</span>
-            <span>пас</span>
-            <span>вынос</span>
-            <span>приём</span>
-            <span>тач</span>
-            <span>захв</span>
-            <span>сэк</span>
-            <span>int</span>
-          </div>
-          <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <strong>сезон</strong>
-            <span>{player.seasonStats.passingYards}</span>
-            <span>{player.seasonStats.rushingYards}</span>
-            <span>{player.seasonStats.receivingYards}</span>
-            <span>{player.seasonStats.touchdowns}</span>
-            <span>{player.seasonStats.tackles}</span>
-            <span>{player.seasonStats.sacks}</span>
-            <span>{player.seasonStats.interceptions}</span>
-          </div>
-          <div className="table-row" style={{ gridTemplateColumns: '0.95fr repeat(7, 0.55fr)' }}>
-            <strong>карьера</strong>
-            <span>{player.careerStats.passingYards}</span>
-            <span>{player.careerStats.rushingYards}</span>
-            <span>{player.careerStats.receivingYards}</span>
-            <span>{player.careerStats.touchdowns}</span>
-            <span>{player.careerStats.tackles}</span>
-            <span>{player.careerStats.sacks}</span>
-            <span>{player.careerStats.interceptions}</span>
-          </div>
-        </div>
-      </Card>
+      <StatsTable player={player} />
 
       <Card title="Награды">
         {awards.length === 0 ? (
@@ -347,20 +355,7 @@ export function PlayerProfileScreen() {
         )}
       </Card>
 
-      <Card title="Карьера">
-        {careerEvents.length === 0 ? (
-          <p className="muted">Нет событий.</p>
-        ) : (
-          <div className="list">
-            {careerEvents.map((event) => (
-              <div className="history-item" key={event.id}>
-                <div className="eyebrow">{event.year} / неделя {event.week + 1} / {formatCareerEventType(event.type)}</div>
-                <strong>{event.title}</strong>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      <CareerCard careerEvents={careerEvents} />
     </div>
   );
 }

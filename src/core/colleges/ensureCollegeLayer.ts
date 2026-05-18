@@ -78,6 +78,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
         rng
       });
   const originalCollegePlayers = Array.isArray(world.collegePlayers) ? world.collegePlayers : [];
+  const graduatedCollegePlayers = Array.isArray(world.graduatedCollegePlayers) ? world.graduatedCollegePlayers : [];
   const mustRepairRosters =
     originalCollegePlayers.length === 0 ||
     layer.collegeTeams.some((team) => shouldRepairCollegeRoster(team, originalCollegePlayers));
@@ -121,6 +122,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
     colleges: layer.colleges,
     collegeTeams,
     collegePlayers,
+    graduatedCollegePlayers,
     recruitingProfiles: Array.isArray(world.recruitingProfiles) ? world.recruitingProfiles : [],
     commitments: Array.isArray(world.commitments)
       ? world.commitments.map((commitment) => ({

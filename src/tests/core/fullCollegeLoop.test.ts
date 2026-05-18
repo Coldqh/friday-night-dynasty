@@ -57,7 +57,7 @@ describe('full school to college loop', () => {
 
     expect(normalized.colleges?.length).toBeGreaterThan(0);
     expect(normalized.collegeTeams?.length).toBeGreaterThan(0);
-    expect(normalized.collegePlayers).toEqual([]);
+    expect(normalized.collegePlayers?.length).toBeGreaterThan(0);
     expect(normalized.collegeSeason?.schedule.length).toBeGreaterThan(0);
     expect(normalized.collegeSeason?.year).toBe(normalized.season.year);
   });

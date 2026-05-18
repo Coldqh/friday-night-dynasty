@@ -1,21 +1,44 @@
 import { Card } from '../components/Card';
 import { formatClassYear } from '../localization';
-import { CollegePlayer, GameWorld, Player } from '../../core/world/worldTypes';
+import { CollegeGraduate, CollegePlayer, GameWorld, Player } from '../../core/world/worldTypes';
 import { useGameStore } from '../store/useGameStore';
 
 type FavoriteEntry =
   | { id: string; openId: string; level: 'Школа'; player: Player; teamName: string }
-  | { id: string; openId: string; level: 'Выпускник'; player: Player; teamName: string }
-  | { id: string; openId: string; level: 'Колледж'; player: CollegePlayer; teamName: string };
+  | { id: string; openId: string; level: 'Выпускник школы'; player: Player; teamName: string }
+  | { id: string; openId: string; level: 'Колледж'; player: CollegePlayer; teamName: string }
+  | { id: string; openId: string; level: 'Выпускник колледжа'; player: CollegeGraduate; teamName: string };
 
-function getConvertedCollegePlayer(world: GameWorld, sourcePlayerId: string) {
+function getConvertedCollegeTarget(world: GameWorld, sourcePlayerId: string) {
   const commitment = (world.commitments ?? []).find((entry) => entry.playerId === sourcePlayerId && entry.convertedToCollegePlayerId);
 
   if (commitment?.convertedToCollegePlayerId) {
-    return (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId) ?? null;
+    const current = (world.collegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId);
+    if (current) {
+      return { kind: 'college' as const, player: current };
+    }
+
+    const graduate = (world.graduatedCollegePlayers ?? []).find((player) => player.id === commitment.convertedToCollegePlayerId);
+    if (graduate) {
+      return { kind: 'collegeGraduate' as const, player: graduate };
+    }
   }
 
-  return (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId) ?? null;
+  const current = (world.collegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId);
+  if (current) {
+    return { kind: 'college' as const, player: current };
+  }
+
+  const graduate = (world.graduatedCollegePlayers ?? []).find((player) => player.sourcePlayerId === sourcePlayerId);
+  if (graduate) {
+    return { kind: 'collegeGraduate' as const, player: graduate };
+  }
+
+  return null;
+}
+
+function getCollegeTeamName(world: GameWorld, teamId: string) {
+  return (world.collegeTeams ?? []).find((team) => team.id === teamId)?.shortName ?? '—';
 }
 
 function getFavoriteEntries(world: GameWorld, favoriteIds: string[]): FavoriteEntry[] {
@@ -29,19 +52,42 @@ function getFavoriteEntries(world: GameWorld, favoriteIds: string[]): FavoriteEn
         openId: directCollege.id,
         level: 'Колледж',
         player: directCollege,
-        teamName: (world.collegeTeams ?? []).find((team) => team.id === directCollege.collegeTeamId)?.shortName ?? '—'
+        teamName: getCollegeTeamName(world, directCollege.collegeTeamId)
       });
       return;
     }
 
-    const converted = getConvertedCollegePlayer(world, id);
-    if (converted) {
+    const directCollegeGraduate = (world.graduatedCollegePlayers ?? []).find((player) => player.id === id);
+    if (directCollegeGraduate) {
       entries.push({
         id,
-        openId: converted.id,
+        openId: directCollegeGraduate.id,
+        level: 'Выпускник колледжа',
+        player: directCollegeGraduate,
+        teamName: directCollegeGraduate.finalCollegeName || getCollegeTeamName(world, directCollegeGraduate.collegeTeamId)
+      });
+      return;
+    }
+
+    const converted = getConvertedCollegeTarget(world, id);
+    if (converted?.kind === 'college') {
+      entries.push({
+        id,
+        openId: converted.player.id,
         level: 'Колледж',
-        player: converted,
-        teamName: (world.collegeTeams ?? []).find((team) => team.id === converted.collegeTeamId)?.shortName ?? '—'
+        player: converted.player,
+        teamName: getCollegeTeamName(world, converted.player.collegeTeamId)
+      });
+      return;
+    }
+
+    if (converted?.kind === 'collegeGraduate') {
+      entries.push({
+        id,
+        openId: converted.player.id,
+        level: 'Выпускник колледжа',
+        player: converted.player,
+        teamName: converted.player.finalCollegeName || getCollegeTeamName(world, converted.player.collegeTeamId)
       });
       return;
     }
@@ -63,7 +109,7 @@ function getFavoriteEntries(world: GameWorld, favoriteIds: string[]): FavoriteEn
       entries.push({
         id,
         openId: graduate.id,
-        level: 'Выпускник',
+        level: 'Выпускник школы',
         player: graduate,
         teamName: world.teams.find((team) => team.id === graduate.teamId)?.shortName ?? '—'
       });
@@ -99,10 +145,10 @@ export function FavoritesScreen() {
           <div className="table compact-table">
             <div className="table-head grid-favorites">
               <span>игрок</span>
-              <span>уровень</span>
+              <span>роль</span>
               <span>команда</span>
               <span>поз</span>
-              <span>класс</span>
+              <span>курс</span>
               <span>общ</span>
               <span></span>
             </div>

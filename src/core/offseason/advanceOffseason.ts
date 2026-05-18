@@ -12,7 +12,7 @@ import { processRecruitingClass } from '../recruiting/processRecruitingClass';
 import { generateSchedule } from '../schedule/generateSchedule';
 import { calculateStandings } from '../standings/calculateStandings';
 import { calculateTeamRatings } from '../teams/calculateTeamRatings';
-import { GameWorld, Person, Player, Team, TeamHistoryEntry } from '../world/worldTypes';
+import { CollegeGraduate, CollegePlayer, GameWorld, Person, Player, Team, TeamHistoryEntry } from '../world/worldTypes';
 
 const TARGET_ROSTER_SIZE = 40;
 const MAX_ROSTER_SIZE = 45;
@@ -114,6 +114,80 @@ function buildGraduatedPlayer(player: Player): Player {
     careerStage: 'graduated',
     seasonStats: emptyStats()
   };
+}
+
+function buildCollegeGraduate(player: CollegePlayer, world: GameWorld, graduationYear: number): CollegeGraduate {
+  const collegeTeam = (world.collegeTeams ?? []).find((team) => team.id === player.collegeTeamId);
+
+  return {
+    ...player,
+    eligibilityRemaining: 0,
+    graduationYear,
+    finalCollegeTeamId: player.collegeTeamId,
+    finalCollegeName: collegeTeam?.shortName ?? '—',
+    seasonStats: emptyStats()
+  };
+}
+
+function graduateCollegePeople({
+  people,
+  graduates,
+  year,
+  rng
+}: {
+  people: Person[];
+  graduates: CollegeGraduate[];
+  year: number;
+  rng: SeededRng;
+}): Person[] {
+  const graduatesByPersonId = new Map(
+    graduates.filter((player) => player.personId).map((player) => [player.personId!, player])
+  );
+
+  return people.map((person) => {
+    const graduate = graduatesByPersonId.get(person.id);
+
+    if (!graduate) {
+      return person;
+    }
+
+    const event = createCareerEvent({
+      rng,
+      year,
+      week: 0,
+      type: 'collegeGraduation',
+      title: `${graduate.firstName} ${graduate.lastName}: выпуск ${graduate.finalCollegeName}`,
+      body: '',
+      teamId: graduate.collegeTeamId,
+      schoolId: null
+    });
+
+    return appendCareerEvent(
+      {
+        ...person,
+        reputation: Math.max(person.reputation, Math.round((graduate.overall + graduate.potential + graduate.leadership) / 3)),
+        roles: [
+          ...person.roles.map((role) =>
+            role.entityId === graduate.id && role.type === 'collegePlayer'
+              ? {
+                  ...role,
+                  endedYear: year
+                }
+              : role
+          ),
+          {
+            type: 'collegeGraduate',
+            entityId: graduate.id,
+            teamId: graduate.collegeTeamId,
+            schoolId: null,
+            startedYear: year,
+            endedYear: null
+          }
+        ]
+      },
+      event
+    );
+  });
 }
 
 function graduatePeople({
@@ -234,7 +308,22 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     players: world.collegePlayers ?? [],
     rng
   });
+  const newCollegeGraduates = developedCollege.graduatedCollegePlayers.map((player) =>
+    buildCollegeGraduate(player, world, world.season.year)
+  );
+  const existingCollegeGraduateIds = new Set((world.graduatedCollegePlayers ?? []).map((player) => player.id));
+
   world.collegePlayers = developedCollege.returningPlayers;
+  world.graduatedCollegePlayers = [
+    ...(world.graduatedCollegePlayers ?? []),
+    ...newCollegeGraduates.filter((player) => !existingCollegeGraduateIds.has(player.id))
+  ];
+  nextPeople = graduateCollegePeople({
+    people: nextPeople,
+    graduates: newCollegeGraduates,
+    year: world.season.year,
+    rng
+  });
   world.collegeTeams = updateCollegeTeamNeeds(world.collegeTeams ?? [], world.collegePlayers ?? []);
 
   const recruitingResult = processRecruitingClass({

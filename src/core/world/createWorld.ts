@@ -164,6 +164,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     colleges,
     collegeTeams,
     collegePlayers,
+    graduatedCollegePlayers: [],
     recruitingProfiles: [],
     commitments: [],
     season: {
@@ -220,6 +221,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     colleges,
     collegeTeams,
     collegePlayers,
+    graduatedCollegePlayers: [],
     recruitingProfiles: [],
     commitments: [],
     collegeSeason,

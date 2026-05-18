@@ -5,6 +5,7 @@ import { SeededRng } from '../random/rng';
 import {
   CollegeCommitment,
   CollegePlayer,
+  CollegeGraduate,
   GameWorld,
   Person,
   Player,
@@ -32,6 +33,7 @@ type LegacyWorld = GameWorld & {
   people?: Person[];
   graduatedPlayers?: Player[];
   collegePlayers?: CollegePlayer[];
+  graduatedCollegePlayers?: CollegeGraduate[];
   recruitingProfiles?: RecruitingProfile[];
   commitments?: CollegeCommitment[];
   season: GameWorld['season'] & {
@@ -133,6 +135,17 @@ function normalizeCollegePlayer(player: CollegePlayer): CollegePlayer {
   };
 }
 
+function normalizeCollegeGraduate(player: CollegeGraduate): CollegeGraduate {
+  const normalized = normalizeCollegePlayer(player);
+
+  return {
+    ...normalized,
+    graduationYear: player.graduationYear ?? 0,
+    finalCollegeTeamId: player.finalCollegeTeamId ?? player.collegeTeamId,
+    finalCollegeName: player.finalCollegeName ?? ''
+  };
+}
+
 export function normalizeWorldState(input: GameWorld): GameWorld {
   const world = structuredClone(input) as LegacyWorld;
   const rng = new SeededRng(world.seed + (world.currentYear ?? world.season.year) * 31);
@@ -202,6 +215,9 @@ export function normalizeWorldState(input: GameWorld): GameWorld {
     people,
     graduatedPlayers: world.graduatedPlayers,
     collegePlayers: Array.isArray(world.collegePlayers) ? world.collegePlayers.map(normalizeCollegePlayer) : [],
+    graduatedCollegePlayers: Array.isArray(world.graduatedCollegePlayers)
+      ? world.graduatedCollegePlayers.map(normalizeCollegeGraduate)
+      : [],
     recruitingProfiles: Array.isArray(world.recruitingProfiles) ? world.recruitingProfiles : [],
     commitments: Array.isArray(world.commitments)
       ? world.commitments.map((commitment) => ({

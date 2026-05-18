@@ -2,7 +2,17 @@ import type { ReactNode } from 'react';
 import { GAME_VERSION_LABEL } from '../version';
 import { AppScreen, useGameStore } from '../store/useGameStore';
 
-export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
+export const highSchoolNavigationTabs: Array<{ id: AppScreen; label: string }> = [
+  { id: 'dashboard', label: 'Главная' },
+  { id: 'roster', label: 'Команды' },
+  { id: 'prospects', label: 'Проспекты' },
+  { id: 'schedule', label: 'Календарь' },
+  { id: 'rankings', label: 'Таблица' },
+  { id: 'favorites', label: 'Избранные' },
+  { id: 'history', label: 'История' }
+];
+
+export const collegeNavigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'dashboard', label: 'Главная' },
   { id: 'roster', label: 'Команды' },
   { id: 'schedule', label: 'Календарь' },
@@ -10,6 +20,8 @@ export const navigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'favorites', label: 'Избранные' },
   { id: 'history', label: 'История' }
 ];
+
+export const navigationTabs = highSchoolNavigationTabs;
 
 export function Layout({ children }: { children: ReactNode }) {
   const screen = useGameStore((state) => state.screen);
@@ -46,7 +58,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <main className="screen">{children}</main>
 
       <nav className="bottom-nav">
-        {navigationTabs.map((tab) => (
+        {(activeLeague === 'highSchool' ? highSchoolNavigationTabs : collegeNavigationTabs).map((tab) => (
           <button
             key={tab.id}
             className={screen === tab.id ? 'nav-button active' : 'nav-button'}

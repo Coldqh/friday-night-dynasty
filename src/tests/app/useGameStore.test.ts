@@ -123,7 +123,7 @@ describe('useGameStore team profile navigation', () => {
   });
 
   it('navigation labels expose only functional sections plus favorites', () => {
-    expect(navigationTabs.map((tab) => tab.label)).toEqual(['Главная', 'Команды', 'Календарь', 'Таблица', 'Избранные', 'История']);
+    expect(navigationTabs.map((tab) => tab.label)).toEqual(['Главная', 'Команды', 'Проспекты', 'Календарь', 'Таблица', 'Избранные', 'История']);
     expect(navigationTabs.some((tab) => /game log/i.test(tab.label))).toBe(false);
     expect(navigationTabs.some((tab) => tab.label === 'Новости')).toBe(false);
     expect(navigationTabs.some((tab) => tab.label === 'Выпускники')).toBe(false);

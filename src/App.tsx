@@ -6,6 +6,7 @@ import { TeamProfileScreen } from './app/screens/TeamProfileScreen';
 import { CollegeTeamProfileScreen } from './app/screens/CollegeTeamProfileScreen';
 import { PlayerProfileScreen } from './app/screens/PlayerProfileScreen';
 import { FavoritesScreen } from './app/screens/FavoritesScreen';
+import { ProspectsScreen } from './app/screens/ProspectsScreen';
 import { ScheduleScreen } from './app/screens/ScheduleScreen';
 import { RankingsScreen } from './app/screens/RankingsScreen';
 import { HistoryScreen } from './app/screens/HistoryScreen';
@@ -27,6 +28,7 @@ export function App() {
       {screen === 'collegeTeamProfile' && <CollegeTeamProfileScreen />}
       {screen === 'playerProfile' && <PlayerProfileScreen />}
       {screen === 'favorites' && <FavoritesScreen />}
+      {screen === 'prospects' && <ProspectsScreen />}
       {screen === 'schedule' && <ScheduleScreen />}
       {screen === 'rankings' && <RankingsScreen />}
       {screen === 'history' && <HistoryScreen />}

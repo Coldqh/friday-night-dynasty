@@ -294,6 +294,10 @@ button:disabled {
   grid-template-columns: 1.35fr 0.75fr 1fr 0.45fr 0.55fr 0.55fr 0.35fr;
 }
 
+.grid-prospects {
+  grid-template-columns: 1.35fr 1.15fr 0.45fr 0.55fr 0.75fr 0.55fr 0.55fr 0.6fr;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -464,7 +468,7 @@ button:disabled {
   transform: translateX(-50%);
   width: min(720px, 100%);
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 4px;
   padding: 8px;
   background: rgba(7, 11, 19, 0.94);
@@ -504,7 +508,8 @@ button:disabled {
   .grid-full-schedule,
   .grid-schedule-upcoming,
   .grid-commitments,
-  .grid-favorites {
+  .grid-favorites,
+  .grid-prospects {
     font-size: 12px;
   }
 
@@ -526,6 +531,10 @@ button:disabled {
 
   .grid-favorites {
     grid-template-columns: 1.25fr 0.7fr 0.9fr 0.4fr 0.5fr 0.5fr 0.3fr;
+  }
+
+  .grid-prospects {
+    grid-template-columns: 1.2fr 0.9fr 0.4fr 0.45fr 0.65fr 0.45fr 0.45fr 0.5fr;
   }
 
   .tab-row {

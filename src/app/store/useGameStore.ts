@@ -15,6 +15,7 @@ export type AppScreen =
   | 'collegeTeamProfile'
   | 'playerProfile'
   | 'favorites'
+  | 'prospects'
   | 'schedule'
   | 'rankings'
   | 'history';
@@ -57,11 +58,16 @@ export function resolveSelectedPlayerId(world: GameWorld | null, selectedPlayerI
   if (!world) return null;
 
   const converted = (world.commitments ?? []).find((commitment) => commitment.playerId === selectedPlayerId && commitment.convertedToCollegePlayerId);
-  if (converted?.convertedToCollegePlayerId && (world.collegePlayers ?? []).some((player) => player.id === converted.convertedToCollegePlayerId)) {
-    return converted.convertedToCollegePlayerId;
+  if (converted?.convertedToCollegePlayerId) {
+    const convertedCollegePlayerExists = (world.collegePlayers ?? []).some((player) => player.id === converted.convertedToCollegePlayerId);
+    const convertedCollegeGraduateExists = (world.graduatedCollegePlayers ?? []).some((player) => player.id === converted.convertedToCollegePlayerId);
+
+    if (convertedCollegePlayerExists || convertedCollegeGraduateExists) {
+      return converted.convertedToCollegePlayerId;
+    }
   }
 
-  const allPlayers = [...world.players, ...(world.graduatedPlayers ?? []), ...(world.collegePlayers ?? [])];
+  const allPlayers = [...world.players, ...(world.graduatedPlayers ?? []), ...(world.collegePlayers ?? []), ...(world.graduatedCollegePlayers ?? [])];
 
   if (selectedPlayerId && allPlayers.some((player) => player.id === selectedPlayerId)) return selectedPlayerId;
 
@@ -124,7 +130,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       activeLeague,
       screen:
-        activeLeague === 'college' && state.screen === 'teamProfile'
+        activeLeague === 'college' && (state.screen === 'teamProfile' || state.screen === 'prospects')
           ? 'roster'
           : activeLeague === 'highSchool' && state.screen === 'collegeTeamProfile'
             ? 'roster'
