@@ -477,7 +477,7 @@ function finishNFLSeason(input: WorldWithNFL, rng: SeededRng): WorldWithNFL {
   };
 }
 
-export function simulateNFLWeek(input: GameWorld): GameWorld {
+export function simulateNFLWeek(input: GameWorld): WorldWithNFL {
   let world = ensureNFLLayer(input);
   const season = world.nflSeason;
 
@@ -524,7 +524,7 @@ export function simulateNFLWeek(input: GameWorld): GameWorld {
   return updated;
 }
 
-export function simulateNFLSeason(input: GameWorld): GameWorld {
+export function simulateNFLSeason(input: GameWorld): WorldWithNFL {
   let world = ensureNFLLayer(input);
   let guard = 0;
 
@@ -578,7 +578,7 @@ function trimNFLRosters(players: NFLPlayer[]) {
   return players.filter((player) => kept.has(player.id));
 }
 
-export function runNFLDraft(input: GameWorld): GameWorld {
+export function runNFLDraft(input: GameWorld): WorldWithNFL {
   const world = ensureNFLLayer(input);
   const rng = new SeededRng(world.seed + world.currentYear * 997);
   const alreadyDrafted = new Set((world.nflDraftHistory ?? []).map((pick) => pick.sourceCollegePlayerId));
@@ -633,7 +633,7 @@ export function runNFLDraft(input: GameWorld): GameWorld {
   };
 }
 
-export function runNFLTrades(input: GameWorld): GameWorld {
+export function runNFLTrades(input: GameWorld): WorldWithNFL {
   const world = ensureNFLLayer(input);
   const rng = new SeededRng(world.seed + world.currentYear * 887 + (world.nflTrades?.length ?? 0));
   let players = [...(world.nflPlayers ?? [])];
@@ -681,7 +681,7 @@ export function runNFLTrades(input: GameWorld): GameWorld {
   };
 }
 
-export function advanceNFLToNextSeason(input: GameWorld): GameWorld {
+export function advanceNFLToNextSeason(input: GameWorld): WorldWithNFL {
   let world = ensureNFLLayer(input);
   const year = world.season.year;
   const rng = new SeededRng(world.seed + year * 1_177);
