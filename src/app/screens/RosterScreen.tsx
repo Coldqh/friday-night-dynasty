@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../components/Button';
 import { CollegeLogo } from '../components/CollegeLogo';
+import { SchoolLogo } from '../components/SchoolLogo';
 import { Card } from '../components/Card';
 import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { getCollegeRosterStrength } from '../../core/colleges/collegeRatings';
@@ -33,7 +34,7 @@ export function RosterScreen() {
             return (
               <div className="thin-team-row" key={team.id}>
                 <button className="thin-team-main" onClick={() => selectCollegeTeam(team.id)}>
-                  <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="team-logo tiny" placeholderClassName="team-logo-placeholder tiny" />
+                  <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="team-logo list-big" placeholderClassName="team-logo-placeholder list-big" />
                   <span className="thin-team-name">{team.shortName}</span>
                   <span>{team.conference ?? 'Independent'}</span>
                   <strong className="ovr-value">OVR {team.overall}</strong>
@@ -63,7 +64,7 @@ export function RosterScreen() {
         {pageItems.map((team) => (
           <div className="thin-team-row" key={team.id}>
             <button className="thin-team-main" onClick={() => selectTeam(team.id)}>
-              <span className="team-logo-placeholder tiny">{team.mascot.slice(0, 2)}</span>
+              <SchoolLogo schoolName={team.schoolName} mascot={team.mascot} name={team.shortName} className="school-logo list" placeholderClassName="team-logo-placeholder list" />
               <span className="thin-team-name">{team.shortName}</span>
               <span>{team.cityName}</span>
               <strong className="ovr-value">OVR {team.overallRating}</strong>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/Button';
+import { SchoolLogo } from '../components/SchoolLogo';
 import { Card } from '../components/Card';
 import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
@@ -151,10 +152,21 @@ export function TeamProfileScreen() {
     <div className="stack">
       <Card title="Профиль команды">
         <div className="stack compact-stack">
-          <div className="eyebrow">
-            {team.schoolName} / {team.cityName} / {team.mascot}
+          <div className="profile-program-header">
+            <SchoolLogo
+              schoolName={team.schoolName}
+              mascot={team.mascot}
+              name={team.shortName}
+              className="profile-school-logo large"
+              placeholderClassName="team-logo-placeholder large"
+            />
+            <div>
+              <div className="eyebrow">
+                {team.schoolName} / {team.cityName} / {team.mascot}
+              </div>
+              <h3 className="profile-title">{team.name}</h3>
+            </div>
           </div>
-          <h3 className="profile-title">{team.name}</h3>
           <div className="stat-strip">
             <span>сезон {team.wins}-{team.losses}</span>
             <span>престиж {team.prestige}</span>

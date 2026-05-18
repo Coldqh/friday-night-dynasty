@@ -685,3 +685,61 @@ button:disabled {
     display: none;
   }
 }
+
+
+/* v1.2.4 — larger logo presentation */
+.team-logo.list-big,
+.team-logo-placeholder.list-big,
+.school-logo.list,
+.team-logo-placeholder.list {
+  width: 68px;
+  height: 68px;
+  border-radius: 0;
+  object-fit: contain;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.profile-program-logo.large,
+.profile-school-logo.large,
+.team-logo-placeholder.large {
+  width: 128px;
+  height: 128px;
+  border-radius: 0;
+  object-fit: contain;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.thin-team-main {
+  grid-template-columns: 78px minmax(140px, 1.35fr) minmax(80px, 0.8fr) 72px 52px minmax(70px, 0.6fr);
+  min-height: 76px;
+}
+
+.profile-program-header {
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .thin-team-main {
+    grid-template-columns: 72px 1fr 64px;
+    min-height: 76px;
+  }
+
+  .team-logo.list-big,
+  .team-logo-placeholder.list-big,
+  .school-logo.list,
+  .team-logo-placeholder.list {
+    width: 60px;
+    height: 60px;
+  }
+
+  .profile-program-logo.large,
+  .profile-school-logo.large,
+  .team-logo-placeholder.large {
+    width: 104px;
+    height: 104px;
+  }
+}

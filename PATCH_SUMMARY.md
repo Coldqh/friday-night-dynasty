@@ -1,4 +1,4 @@
-# Friday Night Dynasty v1.2.3 — Official Logo Override Support
+# Friday Night Dynasty v1.2.4 — Bigger Logos + School Logo Support
 
 ## Команда проекта
 
@@ -6,53 +6,56 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Что добавлено
+## Что изменено
 
-### 1. Поддержка локальных official overrides
+### 1. Колледжские логотипы стали крупнее
 
-Добавлена папка:
+Во вкладке `Команды` логотипы увеличены примерно в 2 раза.
+
+В профиле колледжской команды логотип тоже увеличен примерно в 2 раза.
+
+### 2. Убраны рамки у логотипов
+
+Для крупных логотипов убраны:
 
 ```text
-public/logos/college-official
+border
+background
+box-shadow
 ```
 
-Игра теперь сначала ищет логотип там.
+### 3. Добавлена поддержка школьных логотипов
 
-Если файла нет — берёт текущий игровой бейдж из:
+Добавлен компонент:
 
 ```text
-public/logos/college
+src/app/components/SchoolLogo.tsx
 ```
 
-### 2. Новый компонент логотипа
-
-Добавлен:
+Логика:
 
 ```text
-src/app/components/CollegeLogo.tsx
+public/logos/school-official → public/logos/school → initials placeholder
 ```
 
-Он сам выбирает:
+### 4. Добавлены сгенерированные школьные бейджи
+
+Фоллбек-логотипы лежат тут:
 
 ```text
-official override → fallback badge → initials placeholder
+public/logos/school
 ```
 
-### 3. Подключено в UI
-
-Обновлены:
+### 5. Добавлена папка для официальных школьных PNG
 
 ```text
-src/app/screens/RosterScreen.tsx
-src/app/screens/CollegeTeamProfileScreen.tsx
+public/logos/school-official
 ```
 
-### 4. Манифест имён файлов
-
-Добавлен список ожидаемых PNG:
+И манифест имён:
 
 ```text
-public/logos/college-official/MANIFEST.txt
+public/logos/school-official/MANIFEST.txt
 ```
 
 ## Проверка
@@ -69,6 +72,6 @@ pnpm check:index
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 git status -sb
 git add .
-git commit -m "Add official college logo override support"
+git commit -m "Increase logo size and add school logo support"
 git push origin main
 ```

@@ -123,7 +123,7 @@ export function CollegeTeamProfileScreen() {
       <Card title="Профиль программы">
         <div className="stack compact-stack">
           <div className="profile-program-header">
-            <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="profile-program-logo" placeholderClassName="team-logo-placeholder" />
+            <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="profile-program-logo large" placeholderClassName="team-logo-placeholder" />
             <div>
               <div className="eyebrow">{team.conference ?? college?.conference ?? '—'}</div>
               <h3 className="profile-title">{team.shortName}</h3>
