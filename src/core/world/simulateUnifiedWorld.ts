@@ -1,4 +1,5 @@
 import { simulateCollegeSeason, simulateCollegeWeek } from '../colleges/collegeSeason';
+import { isNFLSeasonComplete, simulateNFLSeason, simulateNFLWeek } from '../nfl/nflLayer';
 import { simulateSeason, simulateWeek } from '../season/simulateSeason';
 import { GameWorld } from './worldTypes';
 
@@ -15,10 +16,12 @@ export function isCollegeSeasonComplete(world: GameWorld) {
 }
 
 export function canAdvanceWorldYear(world: GameWorld) {
-  return isSchoolSeasonComplete(world) && isCollegeSeasonComplete(world);
+  return isSchoolSeasonComplete(world) && isCollegeSeasonComplete(world) && isNFLSeasonComplete(world);
 }
 
 function syncWorldYear(world: GameWorld): GameWorld {
+  const withAny = world as GameWorld & { nflSeason?: { year: number } };
+
   return {
     ...world,
     currentYear: world.season.year,
@@ -27,8 +30,14 @@ function syncWorldYear(world: GameWorld): GameWorld {
           ...world.collegeSeason,
           year: world.season.year
         }
-      : world.collegeSeason
-  };
+      : world.collegeSeason,
+    nflSeason: withAny.nflSeason
+      ? {
+          ...withAny.nflSeason,
+          year: world.season.year
+        }
+      : withAny.nflSeason
+  } as GameWorld;
 }
 
 function dedupeScheduledGames<T extends { id: string }>(games: T[]) {
@@ -81,8 +90,33 @@ function dedupeCollegeProgress(world: GameWorld): GameWorld {
   };
 }
 
+function dedupeNFLProgress(world: GameWorld): GameWorld {
+  const withAny = world as GameWorld & {
+    nflSeason?: {
+      completedGames: Array<{ id: string }>;
+      schedule: Array<{ week: number; games: Array<{ id: string }> }>;
+    };
+  };
+
+  if (!withAny.nflSeason) {
+    return world;
+  }
+
+  return {
+    ...withAny,
+    nflSeason: {
+      ...withAny.nflSeason,
+      completedGames: dedupeScheduledGames(withAny.nflSeason.completedGames),
+      schedule: withAny.nflSeason.schedule.map((week) => ({
+        ...week,
+        games: dedupeScheduledGames(week.games)
+      }))
+    }
+  } as GameWorld;
+}
+
 export function cleanWorldProgress(world: GameWorld): GameWorld {
-  return syncWorldYear(dedupeCollegeProgress(dedupeSchoolProgress(world)));
+  return syncWorldYear(dedupeNFLProgress(dedupeCollegeProgress(dedupeSchoolProgress(world))));
 }
 
 function hasSchoolRegularGameThisWeek(world: GameWorld) {
@@ -152,6 +186,12 @@ export function simulateUnifiedWeek(input: GameWorld): GameWorld {
     };
   }
 
+  world = cleanWorldProgress(world);
+
+  if (!isNFLSeasonComplete(world)) {
+    world = simulateNFLWeek(world);
+  }
+
   return cleanWorldProgress(world);
 }
 
@@ -170,6 +210,12 @@ export function simulateUnifiedSeason(input: GameWorld): GameWorld {
 
   if (!isCollegeSeasonComplete(world)) {
     world = simulateCollegeSeason(world);
+  }
+
+  world = cleanWorldProgress(world);
+
+  if (!isNFLSeasonComplete(world)) {
+    world = simulateNFLSeason(world);
   }
 
   return cleanWorldProgress(world);

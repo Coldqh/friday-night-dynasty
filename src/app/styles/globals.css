@@ -743,3 +743,29 @@ button:disabled {
     height: 104px;
   }
 }
+
+
+/* v1.3.0 — NFL layer */
+.grid-nfl-roster {
+  grid-template-columns: 1.35fr 0.45fr 0.45fr 0.45fr 0.55fr 0.7fr;
+}
+
+.grid-draft {
+  grid-template-columns: 0.45fr 0.65fr 1fr 1.25fr 0.45fr 1.1fr 0.45fr;
+}
+
+.grid-draft-board {
+  grid-template-columns: 0.35fr 1.45fr 0.45fr 1.15fr 0.45fr 0.45fr;
+}
+
+.league-switch {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 640px) {
+  .grid-nfl-roster,
+  .grid-draft,
+  .grid-draft-board {
+    grid-template-columns: 1fr 0.45fr 0.45fr;
+  }
+}

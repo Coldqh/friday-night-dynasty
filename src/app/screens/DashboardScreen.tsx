@@ -4,6 +4,8 @@ import { Card } from '../components/Card';
 import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear } from '../localization';
 import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
+import { ensureNFLLayer, getNFLStandings } from '../../core/nfl/nflLayer';
+import { NFLWorld } from '../../core/nfl/nflTypes';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
 import { getRecentCommitments } from '../../core/recruiting/getRecruitingProfile';
 import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
@@ -16,9 +18,12 @@ export function getDashboardStatusPills(seasonStatus: string, teamCount: number)
   return [seasonStatus, `${teamCount} команд`];
 }
 
-function getWorldWeekLabel(world: ReturnType<typeof useGameStore.getState>['world'], activeLeague: 'highSchool' | 'college') {
-  if (!world) {
-    return '—';
+function getWorldWeekLabel(world: ReturnType<typeof useGameStore.getState>['world'], activeLeague: 'highSchool' | 'college' | 'nfl') {
+  if (!world) return '—';
+
+  if (activeLeague === 'nfl') {
+    const nflWorld = ensureNFLLayer(world) as NFLWorld;
+    return nflWorld.nflSeason?.championTeamId ? `${world.currentYear} / готово` : `${world.currentYear} / Н${(nflWorld.nflSeason?.currentWeek ?? 0) + 1}`;
   }
 
   if (activeLeague === 'college') {
@@ -35,6 +40,8 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const runDraft = useGameStore((state) => state.runDraft);
+  const runTrades = useGameStore((state) => state.runTrades);
   const [commitmentPage, setCommitmentPage] = useState(0);
   const slate = getWeeklySlate(world);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
@@ -49,6 +56,11 @@ export function DashboardScreen() {
   const collegeStandings = getCollegeStandings(world).slice(0, 5);
   const collegeChampion = world.collegeSeason?.championTeamId
     ? (world.collegeTeams ?? []).find((team) => team.id === world.collegeSeason?.championTeamId)
+    : null;
+  const nflWorld = ensureNFLLayer(world) as NFLWorld;
+  const nflStandings = getNFLStandings(world).slice(0, 5);
+  const nflChampion = nflWorld.nflSeason?.championTeamId
+    ? (nflWorld.nflTeams ?? []).find((team) => team.id === nflWorld.nflSeason?.championTeamId)
     : null;
   const worldReadyForNextYear = canAdvanceWorldYear(world);
 
@@ -65,10 +77,54 @@ export function DashboardScreen() {
           <Button variant="ghost" onClick={simFullSeason}>
             Симулировать год
           </Button>
+          {activeLeague === 'nfl' ? <Button variant="ghost" onClick={runTrades}>Трейды</Button> : null}
         </div>
       )}
     </Card>
   );
+
+  if (activeLeague === 'nfl') {
+    return (
+      <div className="stack">
+        {controlCard}
+
+        <Card title="Super Bowl">
+          {nflChampion ? <strong>{nflChampion.shortName}</strong> : <p className="muted">Нет.</p>}
+        </Card>
+
+        <Card title="NFL">
+          <div className="stat-strip">
+            <span>команд {(nflWorld.nflTeams ?? []).length}</span>
+            <span>игроков {(nflWorld.nflPlayers ?? []).length}</span>
+            <span>пиков {(nflWorld.nflDraftHistory ?? []).length}</span>
+            <span>трейдов {(nflWorld.nflTrades ?? []).length}</span>
+          </div>
+          <div className="button-row">
+            <Button variant="ghost" onClick={runDraft}>Провести драфт</Button>
+          </div>
+        </Card>
+
+        <Card title="Топ таблицы">
+          {nflStandings.length === 0 ? (
+            <p className="muted">Нет данных.</p>
+          ) : (
+            <div className="list">
+              {nflStandings.map((entry) => (
+                <div className="list-row" key={entry.teamId}>
+                  <span>
+                    #{entry.rank} {entry.teamName}
+                  </span>
+                  <strong>
+                    {entry.wins}-{entry.losses} / {entry.pointDifferential}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
 
   if (activeLeague === 'college') {
     return (

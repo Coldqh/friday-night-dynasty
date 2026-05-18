@@ -15,13 +15,29 @@ export const highSchoolNavigationTabs: Array<{ id: AppScreen; label: string }> =
 export const collegeNavigationTabs: Array<{ id: AppScreen; label: string }> = [
   { id: 'dashboard', label: 'Главная' },
   { id: 'roster', label: 'Команды' },
+  { id: 'draft', label: 'Драфт' },
   { id: 'schedule', label: 'Календарь' },
   { id: 'rankings', label: 'Таблица' },
   { id: 'favorites', label: 'Избранные' },
   { id: 'history', label: 'История' }
 ];
 
+export const nflNavigationTabs: Array<{ id: AppScreen; label: string }> = [
+  { id: 'dashboard', label: 'Главная' },
+  { id: 'roster', label: 'Команды' },
+  { id: 'draft', label: 'Драфт' },
+  { id: 'schedule', label: 'Календарь' },
+  { id: 'rankings', label: 'Таблица' },
+  { id: 'history', label: 'История' }
+];
+
 export const navigationTabs = highSchoolNavigationTabs;
+
+function tabsForLeague(league: 'highSchool' | 'college' | 'nfl') {
+  if (league === 'college') return collegeNavigationTabs;
+  if (league === 'nfl') return nflNavigationTabs;
+  return highSchoolNavigationTabs;
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const screen = useGameStore((state) => state.screen);
@@ -52,12 +68,18 @@ export function Layout({ children }: { children: ReactNode }) {
         >
           Колледж
         </button>
+        <button
+          className={activeLeague === 'nfl' ? 'filter-chip active' : 'filter-chip'}
+          onClick={() => setActiveLeague('nfl')}
+        >
+          NFL
+        </button>
       </div>
 
       <main className="screen">{children}</main>
 
       <nav className="bottom-nav">
-        {(activeLeague === 'highSchool' ? highSchoolNavigationTabs : collegeNavigationTabs).map((tab) => (
+        {tabsForLeague(activeLeague).map((tab) => (
           <button
             key={tab.id}
             className={screen === tab.id ? 'nav-button active' : 'nav-button'}
