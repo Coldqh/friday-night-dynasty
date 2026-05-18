@@ -1,38 +1,44 @@
-# Real data notes
+# Real data notes for v1.2.0
 
-## Conferences
+## College teams
 
-The layer now uses real SEC and Big Ten program names.
+The patch adds 136 FBS-style ESPN-visible programs across:
 
-Implemented:
-
-- 16 SEC programs
-- 18 Big Ten programs
-- conference/division field on each program
-- generated prestige baseline
-- generated full balanced roster for each program
-- generated local PNG badge for each program
+- ACC
+- Big Ten
+- Big 12
+- SEC
+- American
+- CUSA
+- MAC
+- Mountain West
+- Pac-12
+- Sun Belt
+- Independent
 
 ## Rosters
 
-Current full real rosters are not embedded.
+The game now creates full balanced rosters for every real program.
 
-Reason:
-
-- current player rosters change constantly;
-- reliable full roster ingestion needs a proper data source;
-- this patch keeps the sim stable by generating balanced rosters for every real program.
-
-The code is now ready for a future importer that can replace generated rosters with real roster CSV/JSON.
+These are not claimed to be exact current ESPN roster records. Exact current rosters need a maintained importer because rosters change constantly and are too large to safely hard-code by hand.
 
 ## Logos
 
-Official trademarked logos are not bundled.
+Official trademarked team logos are not bundled.
 
-Instead, this patch includes generated local PNG badges in:
+The patch includes local generated PNG badges for every team in:
 
 ```text
 public/logos/college
 ```
 
-The data model already has `logoAsset`, so official licensed assets can be swapped later by replacing the files.
+The data model uses `logoAsset`, so replacing the generated badges with licensed official files later only requires swapping PNG files with the same names.
+
+## Playoff
+
+College postseason now uses a 12-team playoff model:
+
+- five highest-ranked conference champions are guaranteed access;
+- next seven teams are at-large;
+- seeds 1-4 receive byes;
+- first round, quarterfinals, semifinals, final.

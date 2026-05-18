@@ -1,5 +1,4 @@
-
-# Friday Night Dynasty v1.1.7 — Logo Path TypeScript Fix
+# Friday Night Dynasty v1.2.0 — FBS Expansion + College Playoff
 
 ## Команда проекта
 
@@ -7,31 +6,94 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Исправлено
+## Что добавлено
 
-TypeScript падал в двух файлах:
+### 1. Все основные FBS/ESPN-программы
+
+Добавлено 136 программ уровня II:
+
+- ACC
+- Big Ten
+- Big 12
+- SEC
+- American
+- CUSA
+- MAC
+- Mountain West
+- Pac-12
+- Sun Belt
+- Independent
+
+Файл:
 
 ```text
-src/app/screens/CollegeTeamProfileScreen.tsx
+src/core/colleges/generateColleges.ts
+```
+
+### 2. Конференции в списках и таблицах
+
+В командах и таблице уровень II теперь группируется по конференциям.
+
+Файлы:
+
+```text
 src/app/screens/RosterScreen.tsx
+src/app/screens/RankingsScreen.tsx
 ```
 
-Причина:
+### 3. Логотипы
 
-```ts
-path.replace(/^\\//, '')
+Добавлены локальные PNG-бейджи для каждой программы:
+
+```text
+public/logos/college
 ```
 
-Внутри шаблонной строки это ломало парсер TypeScript.
+Это игровые бейджи, не официальные trademark-логотипы.
 
-## Новая безопасная версия
+### 4. Полный playoff уровня II
 
-Теперь без regex:
+Добавлен 12-командный playoff:
 
-```ts
-function getLogoSrc(path: string) {
-  return path.startsWith('/') ? path.slice(1) : path;
-}
+- 5 лучших чемпионов конференций;
+- 7 at-large;
+- seeds 1-4 получают bye;
+- first round;
+- quarterfinals;
+- semifinals;
+- final.
+
+Файл:
+
+```text
+src/core/colleges/collegeSeason.ts
+```
+
+### 5. Неделя в меню
+
+В верхнем меню теперь отображается:
+
+```text
+год / текущая неделя
+```
+
+Файл:
+
+```text
+src/app/components/Layout.tsx
+```
+
+### 6. Реальные школьные программы
+
+Добавлено 204 реально существующие школьные программы уровня I.
+
+Это ровно 1.5x от 136 колледжских программ.
+
+Файлы:
+
+```text
+src/content/realHighSchoolSeeds.ts
+src/core/world/createWorld.ts
 ```
 
 ## Проверка
@@ -48,6 +110,6 @@ pnpm check:index
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 git status -sb
 git add .
-git commit -m "Fix logo path TypeScript parsing"
+git commit -m "Expand FBS programs and add college playoff"
 git push origin main
 ```

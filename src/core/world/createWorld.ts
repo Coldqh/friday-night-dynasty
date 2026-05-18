@@ -1,4 +1,4 @@
-import { cityNames, mascots } from '../../content/names';
+import { realHighSchoolSeeds } from '../../content/realHighSchoolSeeds';
 import { generateCoach } from '../coaches/generateCoach';
 import { generateCollegeLayer } from '../colleges/generateColleges';
 import { generateInitialCollegeRoster } from '../colleges/generateCollegePlayers';
@@ -22,96 +22,114 @@ import {
 } from './worldTypes';
 
 function assignRivalries(teams: Team[]) {
-  const teamsByCity = new Map<string, Team[]>();
+  const teamsByState = new Map<string, Team[]>();
 
   teams.forEach((team) => {
-    const cityTeams = teamsByCity.get(team.cityId) ?? [];
-    cityTeams.push(team);
-    teamsByCity.set(team.cityId, cityTeams);
+    const stateCode = team.cityName.split(',').pop()?.trim() ?? team.cityName;
+    const stateTeams = teamsByState.get(stateCode) ?? [];
+    stateTeams.push(team);
+    teamsByState.set(stateCode, stateTeams);
   });
 
   teams.forEach((team) => {
     team.rivalryIds = [];
   });
 
-  teamsByCity.forEach((cityTeams) => {
-    if (cityTeams.length < 2) {
-      return;
-    }
+  teamsByState.forEach((stateTeams) => {
+    for (let index = 0; index < stateTeams.length - 1; index += 2) {
+      const first = stateTeams[index];
+      const second = stateTeams[index + 1];
 
-    const [first, second] = cityTeams;
-    if (!first || !second) {
-      return;
-    }
+      if (!first || !second) {
+        continue;
+      }
 
-    first.rivalryIds = [second.id];
-    second.rivalryIds = [first.id];
+      first.rivalryIds = [...new Set([...first.rivalryIds, second.id])];
+      second.rivalryIds = [...new Set([...second.rivalryIds, first.id])];
+    }
   });
+}
+
+function makeCityKey(city: string, state: string) {
+  return `${city}, ${state}`;
 }
 
 export function createWorld({ seed }: { seed: number }): GameWorld {
   const rng = new SeededRng(seed);
-  const state = { id: 'state_texoma', name: 'Texoma' };
-
-  const cities: City[] = cityNames.slice(0, 8).map((name) => ({
-    id: makeId('city', rng),
-    stateId: state.id,
-    name,
-    population: rng.int(6_000, 95_000),
-    footballCulture: rng.int(45, 95)
-  }));
-
+  const state = { id: 'state_usa', name: 'United States' };
   const offenseStyles: OffenseStyle[] = ['balanced', 'runHeavy', 'passHeavy', 'spread', 'powerRun'];
   const defenseStyles: DefenseStyle[] = ['balanced', 'aggressive', 'conservative', 'blitzHeavy'];
+  const cityByKey = new Map<string, City>();
+
+  realHighSchoolSeeds.forEach((schoolSeed) => {
+    const key = makeCityKey(schoolSeed.city, schoolSeed.state);
+
+    if (cityByKey.has(key)) {
+      return;
+    }
+
+    cityByKey.set(key, {
+      id: makeId('city', rng),
+      stateId: state.id,
+      name: key,
+      population: rng.int(8_000, 950_000),
+      footballCulture: rng.int(55, 99)
+    });
+  });
+
+  const cities = [...cityByKey.values()];
   const schools: School[] = [];
   const teams: Team[] = [];
   const coaches: Coach[] = [];
   const players: Player[] = [];
 
-  cities.forEach((city, cityIndex) => {
-    for (let slot = 0; slot < 2; slot += 1) {
-      const mascot = mascots[(cityIndex * 2 + slot) % mascots.length];
-      const school: School = {
-        id: makeId('school', rng),
-        cityId: city.id,
-        name: `${city.name} ${slot === 0 ? 'High' : 'Central'}`,
-        mascot,
-        prestige: rng.int(32, 82),
-        facilities: rng.int(25, 78)
-      };
-      const coach = generateCoach(rng);
-      const team: Team = {
-        id: makeId('team', rng),
-        schoolId: school.id,
-        cityId: city.id,
-        coachId: coach.id,
-        schoolName: school.name,
-        cityName: city.name,
-        mascot,
-        prestige: school.prestige,
-        name: `${school.name} ${mascot}`,
-        shortName: `${city.name} ${mascot}`,
-        offenseStyle: rng.pick(offenseStyles),
-        defenseStyle: rng.pick(defenseStyles),
-        morale: rng.int(45, 75),
-        wins: 0,
-        losses: 0,
-        pointsFor: 0,
-        pointsAgainst: 0,
-        offenseRating: 0,
-        defenseRating: 0,
-        overallRating: 0,
-        roster: [],
-        playerIds: [],
-        history: [],
-        rivalryIds: []
-      };
+  realHighSchoolSeeds.forEach((schoolSeed) => {
+    const city = cityByKey.get(makeCityKey(schoolSeed.city, schoolSeed.state));
 
-      schools.push(school);
-      coaches.push(coach);
-      teams.push(team);
-      players.push(...generatePlayersForTeam({ rng, team, school, city }));
+    if (!city) {
+      return;
     }
+
+    const school: School = {
+      id: makeId('school', rng),
+      cityId: city.id,
+      name: schoolSeed.schoolName,
+      mascot: schoolSeed.mascot,
+      prestige: rng.int(42, 92),
+      facilities: rng.int(36, 90)
+    };
+    const coach = generateCoach(rng);
+    const team: Team = {
+      id: makeId('team', rng),
+      schoolId: school.id,
+      cityId: city.id,
+      coachId: coach.id,
+      schoolName: school.name,
+      cityName: city.name,
+      mascot: school.mascot,
+      prestige: school.prestige,
+      name: `${school.name} ${school.mascot}`,
+      shortName: `${school.name.replace(/ High School| Senior High School| College Preparatory| Preparatory School| School/g, '')} ${school.mascot}`,
+      offenseStyle: rng.pick(offenseStyles),
+      defenseStyle: rng.pick(defenseStyles),
+      morale: rng.int(45, 82),
+      wins: 0,
+      losses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      offenseRating: 0,
+      defenseRating: 0,
+      overallRating: 0,
+      roster: [],
+      playerIds: [],
+      history: [],
+      rivalryIds: []
+    };
+
+    schools.push(school);
+    coaches.push(coach);
+    teams.push(team);
+    players.push(...generatePlayersForTeam({ rng, team, school, city }));
   });
 
   teams.forEach((team) => {
@@ -125,7 +143,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     team.mascot = school.mascot;
     team.prestige = school.prestige;
     team.name = `${school.name} ${school.mascot}`;
-    team.shortName = `${city.name} ${school.mascot}`;
+    team.shortName = `${school.name.replace(/ High School| Senior High School| College Preparatory| Preparatory School| School/g, '')} ${school.mascot}`;
     team.offenseRating = ratings.offense;
     team.defenseRating = ratings.defense;
     team.overallRating = ratings.overall;
@@ -194,7 +212,7 @@ export function createWorld({ seed }: { seed: number }): GameWorld {
     world: baseWorldForCollegeSeason,
     rng,
     year: 2026,
-    regularSeasonWeeks: 7
+    regularSeasonWeeks: 12
   });
   const kickoffNews = {
     id: makeId('news', rng),

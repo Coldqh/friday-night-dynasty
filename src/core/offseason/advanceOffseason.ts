@@ -361,7 +361,7 @@ export function advanceOffseason(input: GameWorld): GameWorld {
     world,
     rng,
     year: nextWorldYear,
-    regularSeasonWeeks: 7
+    regularSeasonWeeks: 12
   });
 
   const nextPlayers: Player[] = [];

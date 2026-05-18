@@ -69,7 +69,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
   const hasRealConferenceLayer =
     hasColleges &&
     hasCollegeTeams &&
-    (world.collegeTeams ?? []).length >= 30 &&
+    (world.collegeTeams ?? []).length >= 130 &&
     (world.collegeTeams ?? []).every((team) => team.conference && team.logoAsset);
   const rng = new SeededRng(world.seed + 64013 + world.season.year);
   const layer = hasRealConferenceLayer
