@@ -1,4 +1,4 @@
-# Friday Night Dynasty v1.1.1 — Clean Dashboard + Real Conferences
+# Friday Night Dynasty v1.1.2 — GitHub Actions Build Fix
 
 ## Команда проекта
 
@@ -6,87 +6,63 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Что исправлено
+## Что сломало Actions
 
-### 1. Скрыт блок состояния года
+GitHub Actions запускает:
 
-С главной убран блок с лишней информацией:
-
-```text
-уровень I
-уровень II
-предсезонье
-16 команд
-v1.0.5
-Замок года
+```bash
+pnpm build
 ```
 
-Осталась только рабочая карточка:
+А `pnpm build` запускает:
 
-```text
-Управление
+```bash
+tsc -b && vite build
 ```
 
-С кнопками:
+В прошлом патче был добавлен тест:
 
 ```text
-Симулировать неделю
-Симулировать год
-Перейти к новому году
+src/tests/app/dashboardLabels.test.ts
 ```
 
-### 2. Вкладка Проспекты должна появиться
-
-Дополнительно закреплён тест навигации. Если GitHub Actions падал из-за старой проверки вкладок, этот патч это закрывает.
-
-### 3. Дерби уровня I распределены по неделям
-
-Раньше все rivalry могли уходить в последнюю неделю.
-
-Теперь rivalry-пары раскладываются по регулярному сезону.
-
-### 4. Добавлены реальные конференции
-
-Уровень II теперь использует реальные программы из:
-
-```text
-SEC
-Big Ten
-```
-
-Всего:
-
-```text
-34 программы
-```
-
-### 5. Добавлены поля конференции и логотипа
-
-В `College` и `CollegeTeam` добавлены:
+В нём были импорты:
 
 ```ts
-conference?: string
-division?: string
-logoAsset?: string
+node:fs
+node:path
 ```
 
-### 6. Добавлены локальные PNG-бейджи
+Проект не имеет `@types/node`, а `tsconfig.json` включает весь `src`, поэтому `tsc` мог падать на build.
 
-Файлы лежат тут:
+## Что исправлено
+
+### 1. Убраны node:* импорты из dashboardLabels.test.ts
+
+Файл теперь не использует:
+
+```ts
+node:fs
+node:path
+```
+
+### 2. Убрана зависимость от import.meta.env в логотипах
+
+В компонентах логотипов теперь используется простой относительный путь:
+
+```ts
+logos/college/...
+```
+
+### 3. Добавлен vite-env.d.ts
+
+Добавлен файл:
 
 ```text
-public/logos/college
+src/vite-env.d.ts
 ```
 
-Это не официальные trademark-логотипы, а локальные игровые бейджи. Модель уже готова к замене на официальные лицензированные ассеты.
-
-### 7. Старые сохранения мигрируют на новый слой
-
-Если в сохранении остались старые выдуманные колледжи, `normalizeWorldState` пересоберёт уровень II в новый формат:
-
-```text
-SEC + Big Ten
-```
+Чтобы будущие обращения к `import.meta.env` не ломали TypeScript.
 
 ## Проверка
 
@@ -103,6 +79,6 @@ pnpm check:index
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 git status -sb
 git add .
-git commit -m "Clean dashboard and add real conference programs"
+git commit -m "Fix GitHub Actions build after conference patch"
 git push origin main
 ```

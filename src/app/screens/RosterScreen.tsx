@@ -4,7 +4,7 @@ import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { useGameStore } from '../store/useGameStore';
 
 function getLogoSrc(path: string) {
-  return `${import.meta.env.BASE_URL}${path.replace(/^\\//, '')}`;
+  return path.replace(/^\//, '');
 }
 
 export function RosterScreen() {
