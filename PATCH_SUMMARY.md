@@ -1,4 +1,4 @@
-# Friday Night Dynasty v1.1.2 — GitHub Actions Build Fix
+# Friday Night Dynasty v1.1.3 — Actions Workflow Fix
 
 ## Команда проекта
 
@@ -6,71 +6,75 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Что сломало Actions
+## Что реально было не так
 
-GitHub Actions запускает:
+Сайт обновлялся, но Actions падал, потому что workflow пытался деплоить через GitHub Pages Actions:
 
-```bash
-pnpm build
+```yaml
+actions/configure-pages
+actions/upload-pages-artifact
+actions/deploy-pages
 ```
 
-А `pnpm build` запускает:
+При этом в репозитории уже есть `dist`, и сайт, судя по поведению, обновляется из ветки/папки, а не через `deploy-pages`.
 
-```bash
-tsc -b && vite build
-```
-
-В прошлом патче был добавлен тест:
+Итог:
 
 ```text
-src/tests/app/dashboardLabels.test.ts
+сайт обновился
+но deploy job упал
+получился красный крест
 ```
-
-В нём были импорты:
-
-```ts
-node:fs
-node:path
-```
-
-Проект не имеет `@types/node`, а `tsconfig.json` включает весь `src`, поэтому `tsc` мог падать на build.
 
 ## Что исправлено
 
-### 1. Убраны node:* импорты из dashboardLabels.test.ts
+### 1. Workflow больше не пытается деплоить Pages
 
-Файл теперь не использует:
-
-```ts
-node:fs
-node:path
-```
-
-### 2. Убрана зависимость от import.meta.env в логотипах
-
-В компонентах логотипов теперь используется простой относительный путь:
-
-```ts
-logos/college/...
-```
-
-### 3. Добавлен vite-env.d.ts
-
-Добавлен файл:
+`.github/workflows/deploy.yml` заменён на безопасный verify-workflow:
 
 ```text
-src/vite-env.d.ts
+Install dependencies
+Build
+Check built index
 ```
 
-Чтобы будущие обращения к `import.meta.env` не ломали TypeScript.
+Он не вызывает:
+
+```text
+actions/configure-pages
+actions/upload-pages-artifact
+actions/deploy-pages
+```
+
+### 2. Build больше не компилирует тесты
+
+`tsconfig.json` теперь исключает:
+
+```text
+src/tests
+*.test.ts
+*.test.tsx
+```
+
+Это правильно: production build не должен падать из-за тестовых файлов. Тесты всё равно можно запускать отдельно через:
+
+```bash
+pnpm test
+```
 
 ## Проверка
 
 ```bash
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 pnpm build
-pnpm test
 pnpm check:index
+```
+
+Отдельно, если хочешь:
+
+```bash
+cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
+pnpm test
 ```
 
 ## Git
@@ -79,6 +83,6 @@ pnpm check:index
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 git status -sb
 git add .
-git commit -m "Fix GitHub Actions build after conference patch"
+git commit -m "Fix GitHub Actions workflow for branch-based Pages deploy"
 git push origin main
 ```

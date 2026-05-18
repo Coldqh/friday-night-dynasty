@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Verify web app
 
 on:
   push:
@@ -8,16 +8,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: github-pages
+  group: web-verify
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build web app
+  verify:
+    name: Verify build
     runs-on: ubuntu-latest
 
     steps:
@@ -41,24 +39,5 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    name: Deploy web app
-    needs: build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Check built index
+        run: pnpm check:index
