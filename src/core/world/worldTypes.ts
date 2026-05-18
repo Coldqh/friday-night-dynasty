@@ -115,6 +115,9 @@ export interface College {
   facilities: number;
   academicRating: number;
   scholarshipBudget: number;
+  conference?: string;
+  division?: string;
+  logoAsset?: string;
 }
 
 export interface CollegeTeamHistoryEntry {
@@ -143,6 +146,9 @@ export interface CollegeTeam {
   pointsFor: number;
   pointsAgainst: number;
   history: CollegeTeamHistoryEntry[];
+  conference?: string;
+  division?: string;
+  logoAsset?: string;
 }
 
 export interface PlayerStats {

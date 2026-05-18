@@ -1,8 +1,35 @@
 import { makeId, SeededRng } from '../random/rng';
-import { ScheduleWeek, Team } from '../world/worldTypes';
+import { ScheduleWeek, ScheduledGame, Team } from '../world/worldTypes';
 
 function pairKey(firstTeamId: string, secondTeamId: string) {
   return [firstTeamId, secondTeamId].sort().join(':');
+}
+
+function createGame({
+  rng,
+  week,
+  homeTeamId,
+  awayTeamId
+}: {
+  rng: SeededRng;
+  week: number;
+  homeTeamId: string;
+  awayTeamId: string;
+}): ScheduledGame {
+  return {
+    id: makeId('game', rng),
+    stage: 'regular',
+    week,
+    homeTeamId,
+    awayTeamId,
+    homeScore: null,
+    awayScore: null,
+    winnerId: null,
+    loserId: null,
+    summary: '',
+    keyPlayers: [],
+    mvpPlayerId: null
+  };
 }
 
 function getUniqueRivalryPairs(teams: Team[]) {
@@ -11,6 +38,12 @@ function getUniqueRivalryPairs(teams: Team[]) {
 
   teams.forEach((team) => {
     team.rivalryIds.forEach((rivalId, rivalIndex) => {
+      const rivalExists = teams.some((entry) => entry.id === rivalId);
+
+      if (!rivalExists) {
+        return;
+      }
+
       const key = pairKey(team.id, rivalId);
 
       if (seen.has(key)) {
@@ -33,14 +66,21 @@ function buildPairingForWeek({
   rng,
   teamIds,
   usedRegularPairs,
-  rivalryPairKeys
+  blockedPairs,
+  targetRivalryPair
 }: {
   rng: SeededRng;
   teamIds: string[];
   usedRegularPairs: Set<string>;
-  rivalryPairKeys: Set<string>;
+  blockedPairs: Set<string>;
+  targetRivalryPair?: { homeTeamId: string; awayTeamId: string; key: string };
 }): Array<[string, string]> {
-  const shuffled = rng.shuffle(teamIds);
+  const forcedPair: Array<[string, string]> = targetRivalryPair
+    ? [[targetRivalryPair.homeTeamId, targetRivalryPair.awayTeamId]]
+    : [];
+  const blockedTeamIds = new Set(forcedPair.flat());
+  const availableTeamIds = teamIds.filter((id) => !blockedTeamIds.has(id));
+  const shuffled = rng.shuffle(availableTeamIds);
 
   function search(available: string[], pairs: Array<[string, string]>, allowUsedPairs: boolean): Array<[string, string]> | null {
     if (available.length === 0) {
@@ -53,7 +93,7 @@ function buildPairingForWeek({
     for (const second of candidates) {
       const key = pairKey(first, second);
 
-      if (rivalryPairKeys.has(key)) {
+      if (blockedPairs.has(key)) {
         continue;
       }
 
@@ -72,7 +112,28 @@ function buildPairingForWeek({
     return null;
   }
 
-  return search(shuffled, [], false) ?? search(shuffled, [], true) ?? [];
+  const generated = search(shuffled, [], false) ?? search(shuffled, [], true) ?? [];
+
+  return [...forcedPair, ...generated];
+}
+
+function assignRivalryWeeks<T extends { key: string }>(rivalryPairs: T[], weeks: number) {
+  if (weeks <= 0) {
+    return new Map<number, T[]>();
+  }
+
+  const result = new Map<number, T[]>();
+  const usableWeeks = Math.max(1, weeks);
+
+  rivalryPairs.forEach((pair, index) => {
+    const week = index % usableWeeks;
+    const current = result.get(week) ?? [];
+
+    current.push(pair);
+    result.set(week, current);
+  });
+
+  return result;
 }
 
 export function generateSchedule({
@@ -86,55 +147,47 @@ export function generateSchedule({
 }): ScheduleWeek[] {
   const teamIds = teams.map((team) => team.id);
   const schedule: ScheduleWeek[] = [];
-  const rivalryPairs = getUniqueRivalryPairs(teams);
+  const rivalryPairs = rng.shuffle(getUniqueRivalryPairs(teams));
+  const rivalryWeeks = assignRivalryWeeks(rivalryPairs, weeks);
   const rivalryPairKeys = new Set(rivalryPairs.map((pair) => pair.key));
   const usedRegularPairs = new Set<string>();
-  const regularWeeks = rivalryPairs.length > 0 && weeks > 1 ? weeks - 1 : weeks;
 
-  for (let week = 0; week < regularWeeks; week += 1) {
-    const pairings = buildPairingForWeek({ rng, teamIds, usedRegularPairs, rivalryPairKeys });
-    const games = pairings.map(([first, second], index) => {
+  for (let week = 0; week < weeks; week += 1) {
+    const rivalryGamesThisWeek = rivalryWeeks.get(week) ?? [];
+    const games: ScheduledGame[] = [];
+    const usedTeamsThisWeek = new Set<string>();
+
+    rivalryGamesThisWeek.forEach((rivalryPair, index) => {
+      if (usedTeamsThisWeek.has(rivalryPair.homeTeamId) || usedTeamsThisWeek.has(rivalryPair.awayTeamId)) {
+        return;
+      }
+
+      const homeTeamId = (week + index) % 2 === 0 ? rivalryPair.homeTeamId : rivalryPair.awayTeamId;
+      const awayTeamId = homeTeamId === rivalryPair.homeTeamId ? rivalryPair.awayTeamId : rivalryPair.homeTeamId;
+
+      games.push(createGame({ rng, week, homeTeamId, awayTeamId }));
+      usedTeamsThisWeek.add(homeTeamId);
+      usedTeamsThisWeek.add(awayTeamId);
+      usedRegularPairs.add(rivalryPair.key);
+    });
+
+    const remainingTeamIds = teamIds.filter((teamId) => !usedTeamsThisWeek.has(teamId));
+    const pairings = buildPairingForWeek({
+      rng,
+      teamIds: remainingTeamIds,
+      usedRegularPairs,
+      blockedPairs: rivalryPairKeys
+    });
+
+    pairings.forEach(([first, second], index) => {
       const homeTeamId = (week + index) % 2 === 0 ? first : second;
-      const awayTeamId = (week + index) % 2 === 0 ? second : first;
-      usedRegularPairs.add(pairKey(first, second));
+      const awayTeamId = homeTeamId === first ? second : first;
 
-      return {
-        id: makeId('game', rng),
-        stage: 'regular' as const,
-        week,
-        homeTeamId,
-        awayTeamId,
-        homeScore: null,
-        awayScore: null,
-        winnerId: null,
-        loserId: null,
-        summary: '',
-        keyPlayers: [],
-        mvpPlayerId: null
-      };
+      usedRegularPairs.add(pairKey(first, second));
+      games.push(createGame({ rng, week, homeTeamId, awayTeamId }));
     });
 
     schedule.push({ week, games });
-  }
-
-  if (rivalryPairs.length > 0 && weeks > 1) {
-    schedule.push({
-      week: weeks - 1,
-      games: rivalryPairs.map((pair, index) => ({
-        id: makeId('game', rng),
-        stage: 'regular' as const,
-        week: weeks - 1,
-        homeTeamId: index % 2 === 0 ? pair.homeTeamId : pair.awayTeamId,
-        awayTeamId: index % 2 === 0 ? pair.awayTeamId : pair.homeTeamId,
-        homeScore: null,
-        awayScore: null,
-        winnerId: null,
-        loserId: null,
-        summary: '',
-        keyPlayers: [],
-        mvpPlayerId: null
-      }))
-    });
   }
 
   return schedule;

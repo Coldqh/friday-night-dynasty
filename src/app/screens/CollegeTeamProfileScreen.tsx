@@ -6,6 +6,10 @@ import { getCollegeRivalryRecord } from '../../core/colleges/collegeRivalries';
 import { getCollegeTeamSchedule } from '../../core/colleges/getCollegeDisplayData';
 import { CollegeTeamProfileTab, useGameStore } from '../store/useGameStore';
 
+function getLogoSrc(path: string) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\\//, '')}`;
+}
+
 const profileTabs: Array<{ id: CollegeTeamProfileTab; label: string }> = [
   { id: 'overview', label: 'Обзор' },
   { id: 'roster', label: 'Состав' },
@@ -54,10 +58,16 @@ export function CollegeTeamProfileScreen() {
     <div className="stack">
       <Card title="Профиль программы">
         <div className="stack compact-stack">
-          <div className="eyebrow">{college?.name ?? team.name}</div>
-          <h3 className="profile-title">{team.shortName}</h3>
+          <div className="profile-program-header">
+            {team.logoAsset ? <img className="profile-program-logo" src={getLogoSrc(team.logoAsset)} alt="" /> : null}
+            <div>
+              <div className="eyebrow">{team.conference ?? college?.conference ?? '—'}</div>
+              <h3 className="profile-title">{team.shortName}</h3>
+            </div>
+          </div>
           <div className="stat-strip">
             <span>сезон {team.wins}-{team.losses}</span>
+            <span>{team.conference ?? college?.conference ?? '—'}</span>
             <span>престиж {team.prestige}</span>
             <span>сила {getCollegeRosterStrength(team, world.collegePlayers ?? [])}</span>
             <span>игроков {roster.length}</span>

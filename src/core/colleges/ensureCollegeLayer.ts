@@ -66,8 +66,13 @@ function createFreshCollegeSeason(world: GameWorld, teams: NonNullable<GameWorld
 export function ensureCollegeLayer(world: GameWorld): GameWorld {
   const hasColleges = Array.isArray(world.colleges) && world.colleges.length > 0;
   const hasCollegeTeams = Array.isArray(world.collegeTeams) && world.collegeTeams.length > 0;
+  const hasRealConferenceLayer =
+    hasColleges &&
+    hasCollegeTeams &&
+    (world.collegeTeams ?? []).length >= 30 &&
+    (world.collegeTeams ?? []).every((team) => team.conference && team.logoAsset);
   const rng = new SeededRng(world.seed + 64013 + world.season.year);
-  const layer = hasColleges && hasCollegeTeams
+  const layer = hasRealConferenceLayer
     ? {
         colleges: world.colleges ?? [],
         collegeTeams: ensureFallbackRivalries((world.collegeTeams ?? []).map((team) => normalizeCollegeTeam(team, world.season.year)))
@@ -91,6 +96,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
       })
     : originalCollegePlayers;
   const seasonYearMismatch = world.collegeSeason?.year !== undefined && world.collegeSeason.year !== world.season.year;
+  const conferenceLayerMismatch = !hasRealConferenceLayer;
   const baseCollegeTeams = seasonYearMismatch
     ? layer.collegeTeams.map((team) => ({
         ...team,
@@ -101,7 +107,7 @@ export function ensureCollegeLayer(world: GameWorld): GameWorld {
       }))
     : layer.collegeTeams;
   const collegeTeams = updateCollegeTeamNeeds(baseCollegeTeams, collegePlayers);
-  const collegeSeason = !world.collegeSeason || seasonYearMismatch
+  const collegeSeason = !world.collegeSeason || seasonYearMismatch || conferenceLayerMismatch
     ? createFreshCollegeSeason(
         {
           ...world,

@@ -3,6 +3,10 @@ import { Card } from '../components/Card';
 import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { useGameStore } from '../store/useGameStore';
 
+function getLogoSrc(path: string) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\\//, '')}`;
+}
+
 export function RosterScreen() {
   const world = useGameStore((state) => state.world)!;
   const activeLeague = useGameStore((state) => state.activeLeague);
@@ -13,6 +17,7 @@ export function RosterScreen() {
 
   if (activeLeague === 'college') {
     const collegeTeams = getCollegeStandings(world);
+    const collegeTeamLookup = new Map((world.collegeTeams ?? []).map((team) => [team.id, team]));
 
     return (
       <Card title="Программы">
@@ -20,21 +25,31 @@ export function RosterScreen() {
           <p className="muted">Нет программ.</p>
         ) : (
           <div className="team-grid">
-            {collegeTeams.map((team) => (
-              <div className="team-chip" key={team.teamId}>
-                <button className="team-chip-button" onClick={() => selectCollegeTeam(team.teamId)}>
-                  <strong>{team.teamName}</strong>
-                  <span>
-                    {team.wins}-{team.losses} / очки {team.pointsFor}-{team.pointsAgainst} / разн {team.pointDifferential}
-                  </span>
-                  <span>игроков: {(world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.teamId).length}</span>
-                </button>
+            {collegeTeams.map((team) => {
+              const fullTeam = collegeTeamLookup.get(team.teamId);
+              const logo = fullTeam?.logoAsset ? getLogoSrc(fullTeam.logoAsset) : null;
+              const conference = fullTeam?.conference ?? '—';
 
-                <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.teamId, 'overview', 'roster')}>
-                  Профиль программы
-                </Button>
-              </div>
-            ))}
+              return (
+                <div className="team-chip" key={team.teamId}>
+                  <button className="team-chip-button team-chip-with-logo" onClick={() => selectCollegeTeam(team.teamId)}>
+                    {logo ? <img className="team-logo" src={logo} alt="" /> : <span className="team-logo-placeholder">{team.teamName.slice(0, 2)}</span>}
+                    <span className="team-chip-text">
+                      <strong>{team.teamName}</strong>
+                      <span>{conference}</span>
+                      <span>
+                        {team.wins}-{team.losses} / очки {team.pointsFor}-{team.pointsAgainst} / разн {team.pointDifferential}
+                      </span>
+                      <span>игроков: {(world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.teamId).length}</span>
+                    </span>
+                  </button>
+
+                  <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.teamId, 'overview', 'roster')}>
+                    Профиль программы
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         )}
       </Card>
