@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/Button';
+import { CollegeLogo } from '../components/CollegeLogo';
 import { Card } from '../components/Card';
 import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
@@ -8,11 +9,6 @@ import { getCollegeRivalryRecord } from '../../core/colleges/collegeRivalries';
 import { getCollegeTeamSchedule } from '../../core/colleges/getCollegeDisplayData';
 import { CollegePlayer } from '../../core/world/worldTypes';
 import { CollegeTeamProfileTab, useGameStore } from '../store/useGameStore';
-
-function getLogoSrc(path: string) {
-  return path.startsWith('/') ? path.slice(1) : path;
-}
-
 const profileTabs: Array<{ id: CollegeTeamProfileTab; label: string }> = [
   { id: 'overview', label: 'Обзор' },
   { id: 'roster', label: 'Состав' },
@@ -127,7 +123,7 @@ export function CollegeTeamProfileScreen() {
       <Card title="Профиль программы">
         <div className="stack compact-stack">
           <div className="profile-program-header">
-            {team.logoAsset ? <img className="profile-program-logo" src={getLogoSrc(team.logoAsset)} alt="" /> : null}
+            <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="profile-program-logo" placeholderClassName="team-logo-placeholder" />
             <div>
               <div className="eyebrow">{team.conference ?? college?.conference ?? '—'}</div>
               <h3 className="profile-title">{team.shortName}</h3>

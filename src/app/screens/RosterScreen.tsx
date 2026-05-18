@@ -1,16 +1,12 @@
 import { useState } from 'react';
 import { Button } from '../components/Button';
+import { CollegeLogo } from '../components/CollegeLogo';
 import { Card } from '../components/Card';
 import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { getCollegeRosterStrength } from '../../core/colleges/collegeRatings';
 import { useGameStore } from '../store/useGameStore';
 
 const PAGE_SIZE = 24;
-
-function getLogoSrc(path: string) {
-  return path.startsWith('/') ? path.slice(1) : path;
-}
-
 export function RosterScreen() {
   const world = useGameStore((state) => state.world)!;
   const activeLeague = useGameStore((state) => state.activeLeague);
@@ -34,12 +30,10 @@ export function RosterScreen() {
       <Card title={`Команды (${rows.length})`}>
         <div className="thin-list">
           {pageItems.map((team) => {
-            const logo = team.logoAsset ? getLogoSrc(team.logoAsset) : null;
-
             return (
               <div className="thin-team-row" key={team.id}>
                 <button className="thin-team-main" onClick={() => selectCollegeTeam(team.id)}>
-                  {logo ? <img className="team-logo tiny" src={logo} alt="" /> : <span className="team-logo-placeholder tiny">{team.shortName.slice(0, 2)}</span>}
+                  <CollegeLogo logoAsset={team.logoAsset} name={team.shortName} className="team-logo tiny" placeholderClassName="team-logo-placeholder tiny" />
                   <span className="thin-team-name">{team.shortName}</span>
                   <span>{team.conference ?? 'Independent'}</span>
                   <strong className="ovr-value">OVR {team.overall}</strong>
