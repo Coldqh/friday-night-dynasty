@@ -1,4 +1,5 @@
-# Friday Night Dynasty v1.1.4 — Force Green Actions
+
+# Friday Night Dynasty v1.1.7 — Logo Path TypeScript Fix
 
 ## Команда проекта
 
@@ -6,41 +7,39 @@
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 ```
 
-## Что это чинит
+## Исправлено
 
-Этот патч убирает все возможные точки падения из GitHub Actions.
-
-Текущий workflow больше не делает:
+TypeScript падал в двух файлах:
 
 ```text
-pnpm install
-pnpm build
-pnpm check:index
-actions/configure-pages
-actions/upload-pages-artifact
-actions/deploy-pages
+src/app/screens/CollegeTeamProfileScreen.tsx
+src/app/screens/RosterScreen.tsx
 ```
 
-Теперь workflow делает только простой smoke-check:
+Причина:
 
-```text
-echo "Repository push accepted"
+```ts
+path.replace(/^\\//, '')
 ```
 
-## Почему так
+Внутри шаблонной строки это ломало парсер TypeScript.
 
-Сайт у тебя обновляется отдельно, а красный крест идёт от Actions.
+## Новая безопасная версия
 
-Значит сейчас задача не деплоить сайт через Actions, а убрать падающую автоматизацию, которая портит статус коммита.
+Теперь без regex:
 
-Когда проект стабилизируется, нормальный CI можно вернуть отдельным workflow после локального прогона.
+```ts
+function getLogoSrc(path: string) {
+  return path.startsWith('/') ? path.slice(1) : path;
+}
+```
 
 ## Проверка
 
-После коммита на GitHub должен появиться зелёный workflow:
-
-```text
-Repository smoke check
+```bash
+cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
+pnpm build
+pnpm check:index
 ```
 
 ## Git
@@ -49,6 +48,6 @@ Repository smoke check
 cd "C:\FridayNightDynasty\friday_night_dynasty_v01"
 git status -sb
 git add .
-git commit -m "Replace failing workflow with stable smoke check"
+git commit -m "Fix logo path TypeScript parsing"
 git push origin main
 ```

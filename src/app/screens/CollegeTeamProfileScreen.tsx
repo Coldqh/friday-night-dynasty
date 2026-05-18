@@ -7,7 +7,7 @@ import { getCollegeTeamSchedule } from '../../core/colleges/getCollegeDisplayDat
 import { CollegeTeamProfileTab, useGameStore } from '../store/useGameStore';
 
 function getLogoSrc(path: string) {
-  return path.replace(/^\//, '');
+  return path.startsWith('/') ? path.slice(1) : path;
 }
 
 const profileTabs: Array<{ id: CollegeTeamProfileTab; label: string }> = [

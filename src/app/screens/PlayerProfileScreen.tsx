@@ -144,7 +144,17 @@ function StatsTable({ player }: { player: Player | CollegePlayer }) {
   );
 }
 
-function CareerCard({ careerEvents }: { careerEvents: Array<{ id: string; year: number; week: number; type: Parameters<typeof formatCareerEventType>[0]; title: string }> }) {
+function CareerCard({
+  careerEvents
+}: {
+  careerEvents: Array<{
+    id: string;
+    year: number;
+    week: number;
+    type: Parameters<typeof formatCareerEventType>[0];
+    title: string;
+  }>;
+}) {
   return (
     <Card title="Карьера">
       {careerEvents.length === 0 ? (
@@ -181,7 +191,7 @@ export function PlayerProfileScreen() {
     );
   }
 
-  if (target.kind === 'college' || target.kind === 'collegeGraduate') {
+  if (target.kind === 'college') {
     const player = target.player;
     const favoriteKey = favoritePlayerIds.includes(player.sourcePlayerId) ? player.sourcePlayerId : player.id;
     const isFavorite = favoritePlayerIds.includes(favoriteKey);
@@ -191,15 +201,14 @@ export function PlayerProfileScreen() {
     const hometown = world.cities.find((entry) => entry.id === player.hometownCityId) ?? null;
     const careerEvents = person?.careerEvents ?? [];
     const collegeCommitment = getCommitmentForCollegePlayer(world, player.id);
-    const collegeName = collegeCommitment?.collegeName ?? collegeTeam?.shortName ?? (target.kind === 'collegeGraduate' ? player.finalCollegeName : '—');
-    const stageLabel = target.kind === 'collegeGraduate' ? 'выпускник колледжа' : 'игрок колледжа';
+    const collegeName = collegeCommitment?.collegeName ?? collegeTeam?.shortName ?? '—';
 
     return (
       <div className="stack">
         <Card title="Профиль игрока">
           <div className="profile-header-row">
             <div>
-              <div className="eyebrow">{stageLabel}</div>
+              <div className="eyebrow">игрок колледжа</div>
               <h3 className="profile-title">{getFullName(player)}</h3>
             </div>
             <button
@@ -215,7 +224,85 @@ export function PlayerProfileScreen() {
             <div className="stat-strip">
               <span>{player.position}</span>
               <span>{formatClassYear(player.classYear)}</span>
-              {target.kind === 'collegeGraduate' ? <span>выпуск {player.graduationYear}</span> : <span>лет допуска {player.eligibilityRemaining}</span>}
+              <span>лет допуска {player.eligibilityRemaining}</span>
+              <span>общ {player.overall}</span>
+              <span>пот {player.potential}</span>
+              <span>{formatHeight(player.height)}</span>
+              <span>{Math.round(player.weight * 0.453592)} кг</span>
+            </div>
+            <p className="muted">
+              {collegeName} / {sourceSchool?.name ?? '—'} / {hometown?.name ?? '—'}
+            </p>
+            <div className="button-row">
+              <Button variant="ghost" onClick={closePlayerProfile}>Назад</Button>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Данные">
+          {person ? (
+            <div className="stat-strip">
+              <span>репутация {person.reputation}</span>
+              <span>амбиции {person.ambition}</span>
+              <span>дисциплина {person.discipline}</span>
+              <span>год рождения {person.birthYear}</span>
+            </div>
+          ) : (
+            <p className="muted">Нет записи.</p>
+          )}
+        </Card>
+
+        <Card title="Рекрутинг">
+          {collegeCommitment ? (
+            <div className="stat-strip">
+              <span>{collegeCommitment.stars}★</span>
+              <span>рейтинг {collegeCommitment.prospectScore}</span>
+              <span>{collegeName}</span>
+            </div>
+          ) : (
+            <p className="muted">Нет профиля.</p>
+          )}
+        </Card>
+
+        <StatsTable player={player} />
+        <CareerCard careerEvents={careerEvents} />
+      </div>
+    );
+  }
+
+  if (target.kind === 'collegeGraduate') {
+    const player = target.player;
+    const favoriteKey = favoritePlayerIds.includes(player.sourcePlayerId) ? player.sourcePlayerId : player.id;
+    const isFavorite = favoritePlayerIds.includes(favoriteKey);
+    const person = (world.people ?? []).find((entry) => entry.id === player.personId) ?? null;
+    const sourceSchool = world.schools.find((entry) => entry.id === player.sourceSchoolId) ?? null;
+    const hometown = world.cities.find((entry) => entry.id === player.hometownCityId) ?? null;
+    const careerEvents = person?.careerEvents ?? [];
+    const collegeCommitment = getCommitmentForCollegePlayer(world, player.id);
+    const collegeName = collegeCommitment?.collegeName ?? player.finalCollegeName ?? '—';
+
+    return (
+      <div className="stack">
+        <Card title="Профиль игрока">
+          <div className="profile-header-row">
+            <div>
+              <div className="eyebrow">выпускник колледжа</div>
+              <h3 className="profile-title">{getFullName(player)}</h3>
+            </div>
+            <button
+              className={isFavorite ? 'favorite-star active' : 'favorite-star'}
+              onClick={() => toggleFavoritePlayer(favoriteKey)}
+              title={isFavorite ? 'Убрать из избранных' : 'Добавить в избранные'}
+            >
+              ★
+            </button>
+          </div>
+
+          <div className="stack compact-stack">
+            <div className="stat-strip">
+              <span>{player.position}</span>
+              <span>{formatClassYear(player.classYear)}</span>
+              <span>выпуск {player.graduationYear}</span>
               <span>общ {player.overall}</span>
               <span>пот {player.potential}</span>
               <span>{formatHeight(player.height)}</span>
