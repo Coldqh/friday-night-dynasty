@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { useGameStore } from '../store/useGameStore';
@@ -14,6 +16,7 @@ export function RankingsScreen() {
   const activeLeague = useGameStore((state) => state.activeLeague);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const openCollegeTeamProfile = useGameStore((state) => state.openCollegeTeamProfile);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   if (activeLeague === 'college') {
     const collegeTeamLookup = new Map((world.collegeTeams ?? []).map((team) => [team.id, team]));
@@ -25,37 +28,51 @@ export function RankingsScreen() {
 
     return (
       <div className="stack">
-        {Object.entries(grouped).map(([conference, entries]) => (
-          <Card title={conference} key={conference}>
-            <div className="table compact-table">
-              <div className="table-head grid-standings">
-                <span>#</span>
-                <span>команда</span>
-                <span>п-б</span>
-                <span>очк+</span>
-                <span>очк-</span>
-                <span>разн</span>
+        {Object.entries(grouped).map(([conference, entries]) => {
+          const isOpen = expanded[conference] ?? false;
+
+          return (
+            <Card title={`${conference} (${entries.length})`} key={conference}>
+              <div className="button-row">
+                <Button variant="ghost" onClick={() => setExpanded((state) => ({ ...state, [conference]: !isOpen }))}>
+                  {isOpen ? 'Свернуть' : 'Развернуть'}
+                </Button>
               </div>
 
-              {entries.map((entry) => (
-                <button
-                  className="table-row grid-standings table-row-button"
-                  key={entry.teamId}
-                  onClick={() => openCollegeTeamProfile(entry.teamId, 'overview', 'rankings')}
-                >
-                  <span>{entry.rank}</span>
-                  <span>{entry.teamName}</span>
-                  <span>
-                    {entry.wins}-{entry.losses}
-                  </span>
-                  <span>{entry.pointsFor}</span>
-                  <span>{entry.pointsAgainst}</span>
-                  <strong>{entry.pointDifferential}</strong>
-                </button>
-              ))}
-            </div>
-          </Card>
-        ))}
+              {isOpen ? (
+                <div className="table compact-table">
+                  <div className="table-head grid-standings">
+                    <span>#</span>
+                    <span>команда</span>
+                    <span>п-б</span>
+                    <span>очк+</span>
+                    <span>очк-</span>
+                    <span>разн</span>
+                  </div>
+
+                  {entries.map((entry) => (
+                    <button
+                      className="table-row grid-standings table-row-button"
+                      key={entry.teamId}
+                      onClick={() => openCollegeTeamProfile(entry.teamId, 'overview', 'rankings')}
+                    >
+                      <span>{entry.rank}</span>
+                      <span>{entry.teamName}</span>
+                      <span>
+                        {entry.wins}-{entry.losses}
+                      </span>
+                      <span>{entry.pointsFor}</span>
+                      <span>{entry.pointsAgainst}</span>
+                      <strong>{entry.pointDifferential}</strong>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">Дивизион свёрнут.</p>
+              )}
+            </Card>
+          );
+        })}
       </div>
     );
   }

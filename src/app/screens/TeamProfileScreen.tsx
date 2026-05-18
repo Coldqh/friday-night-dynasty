@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
 import { getRivalryRecord } from '../../core/rivalries/getRivalryRecord';
 import { getTeamHistorySnapshot } from '../../core/teams/getTeamHistorySnapshot';
@@ -7,6 +9,7 @@ import { getTeamIdentityProfile } from '../../core/teams/getTeamIdentityProfile'
 import { getTeamLeaders } from '../../core/teams/getTeamLeaders';
 import { getTeamRoster } from '../../core/teams/getTeamRoster';
 import { getTeamSchedule } from '../../core/teams/getTeamSchedule';
+import { Player } from '../../core/world/worldTypes';
 import { TeamProfileTab, useGameStore } from '../store/useGameStore';
 
 const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
@@ -15,6 +18,10 @@ const profileTabs: Array<{ id: TeamProfileTab; label: string }> = [
   { id: 'schedule', label: 'Календарь' },
   { id: 'history', label: 'История' }
 ];
+
+const ROSTER_PAGE_SIZE = 20;
+
+type RosterSortKey = 'position' | 'classYear' | 'overall' | 'potential' | 'age';
 
 function formatAllTimeRivalryRecord(teamName: string, rivalName: string, teamWins: number, rivalWins: number, ties: number) {
   return `${teamName} ${teamWins} — ${rivalName} ${rivalWins}${ties > 0 ? ` / ничьи ${ties}` : ''}`;
@@ -39,6 +46,49 @@ function formatLastGame(
   return winnerName ? `${record.lastGame.year} / ${winnerName} / ${score}` : `${record.lastGame.year} / ${score}`;
 }
 
+function classRank(classYear: Player['classYear']) {
+  const ranks: Record<Player['classYear'], number> = { SR: 4, JR: 3, SO: 2, FR: 1 };
+  return ranks[classYear];
+}
+
+function sortRoster(roster: Player[], sortKey: RosterSortKey, direction: 'asc' | 'desc') {
+  const directionMod = direction === 'asc' ? 1 : -1;
+
+  return [...roster].sort((left, right) => {
+    let result = 0;
+
+    if (sortKey === 'position') result = left.position.localeCompare(right.position);
+    if (sortKey === 'classYear') result = classRank(left.classYear) - classRank(right.classYear);
+    if (sortKey === 'overall') result = left.overall - right.overall;
+    if (sortKey === 'potential') result = left.potential - right.potential;
+    if (sortKey === 'age') result = left.age - right.age;
+
+    return result * directionMod || right.overall - left.overall || left.lastName.localeCompare(right.lastName);
+  });
+}
+
+function SortButton({
+  label,
+  sortKey,
+  currentSortKey,
+  direction,
+  onSort
+}: {
+  label: string;
+  sortKey: RosterSortKey;
+  currentSortKey: RosterSortKey;
+  direction: 'asc' | 'desc';
+  onSort: (key: RosterSortKey) => void;
+}) {
+  const marker = currentSortKey === sortKey ? (direction === 'asc' ? ' ↑' : ' ↓') : '';
+
+  return (
+    <button className="sort-header" onClick={() => onSort(sortKey)}>
+      {label}{marker}
+    </button>
+  );
+}
+
 export function TeamProfileScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedTeamId = useGameStore((state) => state.selectedTeamId);
@@ -47,10 +97,18 @@ export function TeamProfileScreen() {
   const closeTeamProfile = useGameStore((state) => state.closeTeamProfile);
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const [rosterPage, setRosterPage] = useState(0);
+  const [sortKey, setSortKey] = useState<RosterSortKey>('overall');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const team = world.teams.find((entry) => entry.id === selectedTeamId) ?? world.teams[0];
   const identity = getTeamIdentityProfile(world, team.id);
   const leaders = getTeamLeaders(world, team.id);
-  const roster = getTeamRoster(world, team.id).sort((left, right) => right.overall - left.overall);
+  const roster = useMemo(() => sortRoster(getTeamRoster(world, team.id), sortKey, sortDirection), [world, team.id, sortKey, sortDirection]);
+  const { pageItems: rosterItems, currentPage: currentRosterPage, totalPages: rosterTotalPages } = getPagedItems(
+    roster,
+    rosterPage,
+    ROSTER_PAGE_SIZE
+  );
   const schedule = getTeamSchedule(world, team.id);
   const history = getTeamHistorySnapshot(world, team.id);
   const standing = world.season.standings.find((entry) => entry.teamId === team.id);
@@ -76,6 +134,18 @@ export function TeamProfileScreen() {
     { label: 'главная звезда', player: leaders.topPlayer },
     { label: 'молодой талант', player: leaders.youngProspect }
   ];
+
+  function handleSort(key: RosterSortKey) {
+    setRosterPage(0);
+
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection(key === 'position' || key === 'classYear' ? 'asc' : 'desc');
+  }
 
   return (
     <div className="stack">
@@ -193,17 +263,17 @@ export function TeamProfileScreen() {
       )}
 
       {teamProfileTab === 'roster' && (
-        <Card title="Состав">
+        <Card title={`Состав (${roster.length})`}>
           <div className="table compact-table">
             <div className="table-head grid-profile-roster">
               <span>имя</span>
-              <span>поз</span>
-              <span>класс</span>
-              <span>общ</span>
-              <span>пот</span>
-              <span>возраст</span>
+              <SortButton label="поз" sortKey="position" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+              <SortButton label="класс" sortKey="classYear" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+              <SortButton label="общ" sortKey="overall" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+              <SortButton label="пот" sortKey="potential" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+              <SortButton label="возраст" sortKey="age" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
             </div>
-            {roster.map((player) => (
+            {rosterItems.map((player) => (
               <div className="table-row grid-profile-roster" key={player.id}>
                 <button className="table-row-button" onClick={() => openPlayerProfile(player.id, 'teamProfile')}>
                   {player.firstName} {player.lastName}
@@ -216,6 +286,7 @@ export function TeamProfileScreen() {
               </div>
             ))}
           </div>
+          <PaginationControls page={currentRosterPage} totalPages={rosterTotalPages} onPageChange={setRosterPage} />
         </Card>
       )}
 

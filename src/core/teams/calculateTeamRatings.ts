@@ -1,7 +1,7 @@
 import { Coach, Player, Team } from '../world/worldTypes';
 
 function avg(values: number[]): number {
-  if (values.length === 0) return 45;
+  if (values.length === 0) return 15;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
@@ -11,7 +11,7 @@ function top(players: Player[], count: number): Player[] {
 
 export function calculateTeamRatings(team: Team, players: Player[], coach: Coach) {
   const roster = players.filter((player) => player.teamId === team.id);
-  const qb = top(roster.filter((player) => player.position === 'QB'), 1)[0]?.overall ?? 45;
+  const qb = top(roster.filter((player) => player.position === 'QB'), 1)[0]?.overall ?? 15;
   const skill = avg(
     top(
       roster.filter((player) => ['RB', 'WR', 'TE'].includes(player.position)),
@@ -36,18 +36,29 @@ export function calculateTeamRatings(team: Team, players: Player[], coach: Coach
       5
     ).map((player) => player.overall)
   );
-  const kicker = top(roster.filter((player) => player.position === 'K'), 1)[0]?.overall ?? 40;
-  const programBoost = team.prestige * 0.12 + team.morale * 0.08;
+  const kicker = top(roster.filter((player) => player.position === 'K'), 1)[0]?.overall ?? 15;
+  const coachBoost = (coach.offense + coach.defense + coach.development) / 300;
+  const programBoost = (team.prestige + team.morale) / 200;
 
-  const offense = Math.round(qb * 0.3 + skill * 0.28 + line * 0.22 + coach.offense * 0.14 + programBoost * 0.06);
-  const defense = Math.round(front * 0.37 + secondary * 0.3 + coach.defense * 0.22 + team.prestige * 0.11);
+  const offense = Math.round(qb * 0.3 + skill * 0.3 + line * 0.24 + coach.offense * 0.025 + programBoost * 2);
+  const defense = Math.round(front * 0.42 + secondary * 0.36 + coach.defense * 0.035 + programBoost * 2);
   const overall = Math.round(
-    offense * 0.44 +
-      defense * 0.44 +
+    offense * 0.46 +
+      defense * 0.46 +
       kicker * 0.04 +
-      coach.development * 0.04 +
-      team.morale * 0.04
+      coachBoost * 2 +
+      programBoost * 1
   );
 
-  return { offense, defense, qb, line, skill, front, secondary, kicker, overall };
+  return {
+    offense: Math.max(0, Math.min(40, offense)),
+    defense: Math.max(0, Math.min(40, defense)),
+    qb,
+    line,
+    skill,
+    front,
+    secondary,
+    kicker,
+    overall: Math.max(0, Math.min(40, overall))
+  };
 }

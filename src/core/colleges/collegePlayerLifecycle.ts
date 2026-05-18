@@ -48,8 +48,8 @@ export function createCollegePlayerFromCommitment({
     position: player.position,
     height: player.height,
     weight: player.weight,
-    overall: clamp(player.overall + rng.int(1, 5), 1, 99),
-    potential: player.potential,
+    overall: clamp(30 + Math.round(player.overall * 0.75) + rng.int(1, 6), 30, 70),
+    potential: clamp(35 + Math.round(player.potential * 0.8) + rng.int(-2, 10), 35, 85),
     workEthic: player.workEthic,
     discipline: player.discipline,
     confidence: player.confidence,
@@ -182,14 +182,14 @@ export function developCollegePlayers({
       return;
     }
 
-    const development = Math.max(0, Math.round((player.potential - player.overall) * 0.08 + player.workEthic * 0.035 + rng.int(-1, 3)));
+    const development = Math.max(0, Math.round((player.potential - player.overall) * 0.07 + player.workEthic * 0.018 + rng.int(-1, 2)));
 
     returningPlayers.push({
       ...player,
       age: player.age + 1,
       classYear: nextCollegeClass(player.classYear),
       eligibilityRemaining: Math.max(0, player.eligibilityRemaining - 1),
-      overall: clamp(player.overall + development, 1, Math.max(player.overall, player.potential)),
+      overall: clamp(player.overall + development, 30, Math.min(70, Math.max(player.overall, player.potential))),
       confidence: clamp(player.confidence + rng.int(-2, 3), 1, 99),
       seasonStats: emptyStats()
     });

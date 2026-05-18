@@ -1,3 +1,4 @@
+import { firstNames, lastNames } from '../../content/names';
 import { emptyStats } from '../players/generatePlayers';
 import { makeId, SeededRng } from '../random/rng';
 import { City, CollegePlayer, CollegeTeam, Position } from '../world/worldTypes';
@@ -10,72 +11,6 @@ import {
   countCollegePositions,
   getCollegeRosterForTeam
 } from './collegeRosterPlan';
-
-const firstNames = [
-  'Marcus',
-  'Hunter',
-  'Carter',
-  'Tyler',
-  'Noah',
-  'Cole',
-  'Jordan',
-  'Austin',
-  'Derek',
-  'Wyatt',
-  'Jason',
-  'Evan',
-  'Logan',
-  'Brandon',
-  'Miles',
-  'Caleb',
-  'Nolan',
-  'Troy',
-  'Bryce',
-  'Mason',
-  'Colton',
-  'Garrett',
-  'Trevor',
-  'Dylan',
-  'Jalen',
-  'Andre',
-  'Malik',
-  'Isaiah',
-  'Camden',
-  'Parker'
-];
-
-const lastNames = [
-  'Hill',
-  'Parker',
-  'Bell',
-  'Wright',
-  'Griffin',
-  'Coleman',
-  'Hayes',
-  'Johnson',
-  'Brooks',
-  'Miller',
-  'Pierce',
-  'Ross',
-  'Reed',
-  'Turner',
-  'Walker',
-  'Foster',
-  'Bennett',
-  'Cooper',
-  'Morgan',
-  'Price',
-  'Russell',
-  'Sanders',
-  'Ward',
-  'Sullivan',
-  'Hughes',
-  'Ramirez',
-  'Carter',
-  'Nelson',
-  'Bailey',
-  'Powell'
-];
 
 const classYears: CollegePlayer['classYear'][] = [
   'FR', 'FR', 'FR', 'FR',
@@ -176,12 +111,13 @@ function getWeight(position: Position, rng: SeededRng) {
 
 function getBaseOverall(team: CollegeTeam, classYear: CollegePlayer['classYear'], rng: SeededRng) {
   const classBonus =
-    classYear === 'SR' ? rng.int(5, 10) :
-    classYear === 'JR' ? rng.int(3, 7) :
-    classYear === 'SO' ? rng.int(1, 5) :
-    rng.int(-3, 3);
+    classYear === 'SR' ? rng.int(7, 12) :
+    classYear === 'JR' ? rng.int(4, 9) :
+    classYear === 'SO' ? rng.int(2, 6) :
+    rng.int(-1, 3);
+  const prestigeBase = 30 + Math.round(team.prestige * 0.24);
 
-  return clamp(Math.round(team.prestige * 0.62 + rng.int(20, 35) + classBonus), 42, 91);
+  return clamp(prestigeBase + rng.int(-5, 7) + classBonus, 30, 70);
 }
 
 export function generateCollegePlayer({
@@ -200,7 +136,7 @@ export function generateCollegePlayer({
   index: number;
 }): CollegePlayer {
   const overall = getBaseOverall(team, classYear, rng);
-  const potential = clamp(overall + rng.int(4, 18), overall, 99);
+  const potential = clamp(overall + rng.int(4, 18), overall, 85);
   const firstName = rng.pick(firstNames);
   const lastName = rng.pick(lastNames);
 

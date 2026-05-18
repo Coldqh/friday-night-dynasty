@@ -1,44 +1,32 @@
-# Real data notes for v1.2.0
+# Real data notes for v1.2.2
 
-## College teams
+## Names
 
-The patch adds 136 FBS-style ESPN-visible programs across:
+The patch expands the name pool to:
 
-- ACC
-- Big Ten
-- Big 12
-- SEC
-- American
-- CUSA
-- MAC
-- Mountain West
-- Pac-12
-- Sun Belt
-- Independent
+- 1500 first names
+- 1500 last names
 
-## Rosters
-
-The game now creates full balanced rosters for every real program.
-
-These are not claimed to be exact current ESPN roster records. Exact current rosters need a maintained importer because rosters change constantly and are too large to safely hard-code by hand.
+The pool mixes common US names, African-American style variants, and Mexican/Latino names and surnames.
 
 ## Logos
 
-Official trademarked team logos are not bundled.
+Official ESPN/trademark PNG logos are not bundled.
 
-The patch includes local generated PNG badges for every team in:
+The game still supports `logoAsset`, and the generated PNG badges are stored in:
 
 ```text
 public/logos/college
 ```
 
-The data model uses `logoAsset`, so replacing the generated badges with licensed official files later only requires swapping PNG files with the same names.
+You can replace any generated badge with an official licensed PNG later using the same file name.
 
-## Playoff
+## Ratings
 
-College postseason now uses a 12-team playoff model:
+Rating scale is now staged:
 
-- five highest-ranked conference champions are guaranteed access;
-- next seven teams are at-large;
-- seeds 1-4 receive byes;
-- first round, quarterfinals, semifinals, final.
+- school players: 0-40 OVR
+- college players: 30-70 OVR
+- future NFL layer target: 60-100 OVR
+
+NFL is intentionally not added in this patch.

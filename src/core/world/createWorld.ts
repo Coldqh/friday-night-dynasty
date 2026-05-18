@@ -21,6 +21,20 @@ import {
   Team
 } from './worldTypes';
 
+function addRivalry(first: Team, second: Team) {
+  if (first.id === second.id) {
+    return;
+  }
+
+  if (first.rivalryIds.length < 3 && !first.rivalryIds.includes(second.id)) {
+    first.rivalryIds.push(second.id);
+  }
+
+  if (second.rivalryIds.length < 3 && !second.rivalryIds.includes(first.id)) {
+    second.rivalryIds.push(first.id);
+  }
+}
+
 function assignRivalries(teams: Team[]) {
   const teamsByState = new Map<string, Team[]>();
 
@@ -29,24 +43,35 @@ function assignRivalries(teams: Team[]) {
     const stateTeams = teamsByState.get(stateCode) ?? [];
     stateTeams.push(team);
     teamsByState.set(stateCode, stateTeams);
-  });
-
-  teams.forEach((team) => {
     team.rivalryIds = [];
   });
 
   teamsByState.forEach((stateTeams) => {
-    for (let index = 0; index < stateTeams.length - 1; index += 2) {
-      const first = stateTeams[index];
-      const second = stateTeams[index + 1];
+    const ordered = [...stateTeams].sort((left, right) => right.overallRating - left.overallRating || left.shortName.localeCompare(right.shortName));
 
-      if (!first || !second) {
-        continue;
-      }
+    ordered.forEach((team, index) => {
+      const next = ordered[(index + 1) % ordered.length];
+      const secondNext = ordered[(index + 2) % ordered.length];
+      const previous = ordered[(index - 1 + ordered.length) % ordered.length];
 
-      first.rivalryIds = [...new Set([...first.rivalryIds, second.id])];
-      second.rivalryIds = [...new Set([...second.rivalryIds, first.id])];
+      if (next) addRivalry(team, next);
+      if (ordered.length > 4 && secondNext && team.rivalryIds.length < 2) addRivalry(team, secondNext);
+      if (previous && team.rivalryIds.length < 1) addRivalry(team, previous);
+    });
+  });
+
+  const globalOrdered = [...teams].sort((left, right) => right.overallRating - left.overallRating || left.shortName.localeCompare(right.shortName));
+
+  globalOrdered.forEach((team, index) => {
+    let cursor = 1;
+
+    while (team.rivalryIds.length < 1 && cursor < globalOrdered.length) {
+      const candidate = globalOrdered[(index + cursor) % globalOrdered.length];
+      if (candidate) addRivalry(team, candidate);
+      cursor += 1;
     }
+
+    team.rivalryIds = team.rivalryIds.slice(0, 3);
   });
 }
 

@@ -6,8 +6,8 @@ export function getPlayerName(player: Pick<Player, 'firstName' | 'lastName'>) {
 
 export function getProspectScore(player: Player) {
   return Math.round(
-    player.overall * 0.42 +
-      player.potential * 0.36 +
+    player.overall * 1.05 +
+      player.potential * 0.95 +
       player.ambition * 0.08 +
       player.workEthic * 0.08 +
       player.leadership * 0.06

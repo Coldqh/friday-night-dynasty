@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear } from '../localization';
 import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
 import { getSeasonAwardWatch } from '../../core/awards/getSeasonAwardWatch';
@@ -8,8 +10,22 @@ import { getWeeklySlate } from '../../core/schedule/getWeeklySlate';
 import { canAdvanceWorldYear } from '../../core/world/simulateUnifiedWorld';
 import { useGameStore } from '../store/useGameStore';
 
+const COMMITMENTS_PAGE_SIZE = 8;
+
 export function getDashboardStatusPills(seasonStatus: string, teamCount: number) {
   return [seasonStatus, `${teamCount} команд`];
+}
+
+function getWorldWeekLabel(world: ReturnType<typeof useGameStore.getState>['world'], activeLeague: 'highSchool' | 'college') {
+  if (!world) {
+    return '—';
+  }
+
+  if (activeLeague === 'college') {
+    return world.collegeSeason?.championTeamId ? `${world.currentYear} / готово` : `${world.currentYear} / Н${(world.collegeSeason?.currentWeek ?? 0) + 1}`;
+  }
+
+  return world.phase === 'offseason' ? `${world.currentYear} / готово` : `${world.currentYear} / Н${world.season.currentWeek + 1}`;
 }
 
 export function DashboardScreen() {
@@ -19,9 +35,15 @@ export function DashboardScreen() {
   const simFullSeason = useGameStore((state) => state.simFullSeason);
   const advanceToNextSeason = useGameStore((state) => state.advanceToNextSeason);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const [commitmentPage, setCommitmentPage] = useState(0);
   const slate = getWeeklySlate(world);
   const awards = getSeasonAwardWatch(world).slice(0, 4);
-  const commitments = getRecentCommitments(world, 5);
+  const commitments = getRecentCommitments(world, 500);
+  const { pageItems: commitmentItems, currentPage: currentCommitmentPage, totalPages: commitmentTotalPages } = getPagedItems(
+    commitments,
+    commitmentPage,
+    COMMITMENTS_PAGE_SIZE
+  );
   const latestChampion = world.history.champions[world.history.champions.length - 1] ?? null;
   const topStandings = world.season.standings.slice(0, 5);
   const collegeStandings = getCollegeStandings(world).slice(0, 5);
@@ -32,6 +54,7 @@ export function DashboardScreen() {
 
   const controlCard = (
     <Card title="Управление">
+      <div className="control-week-label">{getWorldWeekLabel(world, activeLeague)}</div>
       {worldReadyForNextYear ? (
         <div className="button-row">
           <Button onClick={advanceToNextSeason}>Перейти к новому году</Button>
@@ -105,23 +128,33 @@ export function DashboardScreen() {
         )}
       </Card>
 
-      <Card title="Коммиты">
+      <Card title={`Коммиты (${commitments.length})`}>
         {commitments.length === 0 ? (
           <p className="muted">Нет.</p>
         ) : (
-          <div className="list">
-            {commitments.map((commitment) => (
-              <div className="list-row" key={commitment.id}>
-                <div>
-                  <strong>{commitment.playerName}</strong>
-                  <p className="muted">
-                    {commitment.position} / {commitment.fromTeamName} / {commitment.collegeName}
-                  </p>
-                </div>
-                <strong>{commitment.stars}★ / {commitment.prospectScore}</strong>
+          <>
+            <div className="table compact-table">
+              <div className="table-head grid-commitments">
+                <span>год</span>
+                <span>игрок</span>
+                <span>поз</span>
+                <span>школа</span>
+                <span>колледж</span>
+                <span>рейт</span>
               </div>
-            ))}
-          </div>
+              {commitmentItems.map((commitment) => (
+                <div className="table-row grid-commitments" key={commitment.id}>
+                  <span>{commitment.year}</span>
+                  <span>{commitment.playerName}</span>
+                  <span>{commitment.position}</span>
+                  <span>{commitment.fromTeamName}</span>
+                  <span>{commitment.collegeName}</span>
+                  <strong>{commitment.stars}★ / {commitment.prospectScore}</strong>
+                </div>
+              ))}
+            </div>
+            <PaginationControls page={currentCommitmentPage} totalPages={commitmentTotalPages} onPageChange={setCommitmentPage} />
+          </>
         )}
       </Card>
 

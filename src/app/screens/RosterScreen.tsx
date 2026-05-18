@@ -1,17 +1,14 @@
+import { useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { getCollegeStandings } from '../../core/colleges/getCollegeDisplayData';
+import { PaginationControls, getPagedItems } from '../components/PaginationControls';
+import { getCollegeRosterStrength } from '../../core/colleges/collegeRatings';
 import { useGameStore } from '../store/useGameStore';
+
+const PAGE_SIZE = 24;
 
 function getLogoSrc(path: string) {
   return path.startsWith('/') ? path.slice(1) : path;
-}
-
-function groupByConference<T extends { conference: string }>(items: T[]) {
-  return items.reduce<Record<string, T[]>>((groups, item) => {
-    groups[item.conference] = [...(groups[item.conference] ?? []), item];
-    return groups;
-  }, {});
 }
 
 export function RosterScreen() {
@@ -21,75 +18,73 @@ export function RosterScreen() {
   const openTeamProfile = useGameStore((state) => state.openTeamProfile);
   const selectCollegeTeam = useGameStore((state) => state.selectCollegeTeam);
   const openCollegeTeamProfile = useGameStore((state) => state.openCollegeTeamProfile);
+  const [page, setPage] = useState(0);
 
   if (activeLeague === 'college') {
-    const collegeTeams = getCollegeStandings(world);
-    const collegeTeamLookup = new Map((world.collegeTeams ?? []).map((team) => [team.id, team]));
-    const rows = collegeTeams.map((team) => {
-      const fullTeam = collegeTeamLookup.get(team.teamId);
-      return {
+    const rows = [...(world.collegeTeams ?? [])]
+      .map((team) => ({
         ...team,
-        conference: fullTeam?.conference ?? 'Independent',
-        logoAsset: fullTeam?.logoAsset ?? null
-      };
-    });
-    const grouped = groupByConference(rows);
+        rosterCount: (world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.id).length,
+        overall: getCollegeRosterStrength(team, world.collegePlayers ?? [])
+      }))
+      .sort((left, right) => right.overall - left.overall || left.shortName.localeCompare(right.shortName));
+    const { pageItems, currentPage, totalPages } = getPagedItems(rows, page, PAGE_SIZE);
 
     return (
-      <div className="stack">
-        {Object.entries(grouped).map(([conference, teams]) => (
-          <Card title={conference} key={conference}>
-            <div className="team-grid">
-              {teams.map((team) => {
-                const logo = team.logoAsset ? getLogoSrc(team.logoAsset) : null;
+      <Card title={`Команды (${rows.length})`}>
+        <div className="thin-list">
+          {pageItems.map((team) => {
+            const logo = team.logoAsset ? getLogoSrc(team.logoAsset) : null;
 
-                return (
-                  <div className="team-chip" key={team.teamId}>
-                    <button className="team-chip-button team-chip-with-logo" onClick={() => selectCollegeTeam(team.teamId)}>
-                      {logo ? <img className="team-logo" src={logo} alt="" /> : <span className="team-logo-placeholder">{team.teamName.slice(0, 2)}</span>}
-                      <span className="team-chip-text">
-                        <strong>{team.teamName}</strong>
-                        <span>
-                          {team.wins}-{team.losses} / очки {team.pointsFor}-{team.pointsAgainst} / разн {team.pointDifferential}
-                        </span>
-                        <span>игроков: {(world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.teamId).length}</span>
-                      </span>
-                    </button>
+            return (
+              <div className="thin-team-row" key={team.id}>
+                <button className="thin-team-main" onClick={() => selectCollegeTeam(team.id)}>
+                  {logo ? <img className="team-logo tiny" src={logo} alt="" /> : <span className="team-logo-placeholder tiny">{team.shortName.slice(0, 2)}</span>}
+                  <span className="thin-team-name">{team.shortName}</span>
+                  <span>{team.conference ?? 'Independent'}</span>
+                  <strong className="ovr-value">OVR {team.overall}</strong>
+                  <span>{team.wins}-{team.losses}</span>
+                  <span>игроков {team.rosterCount}</span>
+                </button>
 
-                    <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.teamId, 'overview', 'roster')}>
-                      Профиль программы
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        ))}
-      </div>
+                <Button variant="ghost" onClick={() => openCollegeTeamProfile(team.id, 'overview', 'roster')}>
+                  Профиль
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
+      </Card>
     );
   }
 
+  const rows = [...world.teams].sort((left, right) => right.overallRating - left.overallRating || left.shortName.localeCompare(right.shortName));
+  const { pageItems, currentPage, totalPages } = getPagedItems(rows, page, PAGE_SIZE);
+
   return (
-    <Card title="Команды">
-      <div className="team-grid">
-        {world.teams.map((team) => (
-          <div className="team-chip" key={team.id}>
-            <button className="team-chip-button" onClick={() => selectTeam(team.id)}>
-              <strong>{team.shortName}</strong>
-              <span>
-                {team.schoolName} / {team.cityName}
-              </span>
-              <span>
-                {team.wins}-{team.losses} / рейтинг {team.overallRating}
-              </span>
+    <Card title={`Команды (${rows.length})`}>
+      <div className="thin-list">
+        {pageItems.map((team) => (
+          <div className="thin-team-row" key={team.id}>
+            <button className="thin-team-main" onClick={() => selectTeam(team.id)}>
+              <span className="team-logo-placeholder tiny">{team.mascot.slice(0, 2)}</span>
+              <span className="thin-team-name">{team.shortName}</span>
+              <span>{team.cityName}</span>
+              <strong className="ovr-value">OVR {team.overallRating}</strong>
+              <span>{team.wins}-{team.losses}</span>
+              <span>{team.offenseRating}/{team.defenseRating}</span>
             </button>
 
             <Button variant="ghost" onClick={() => openTeamProfile(team.id, 'overview', 'roster')}>
-              Профиль команды
+              Профиль
             </Button>
           </div>
         ))}
       </div>
+
+      <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
     </Card>
   );
 }

@@ -1,9 +1,12 @@
+import { useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear, formatDefenseStyle, formatOffenseStyle, formatStage } from '../localization';
 import { getCollegeRosterStrength } from '../../core/colleges/collegeRatings';
 import { getCollegeRivalryRecord } from '../../core/colleges/collegeRivalries';
 import { getCollegeTeamSchedule } from '../../core/colleges/getCollegeDisplayData';
+import { CollegePlayer } from '../../core/world/worldTypes';
 import { CollegeTeamProfileTab, useGameStore } from '../store/useGameStore';
 
 function getLogoSrc(path: string) {
@@ -17,6 +20,52 @@ const profileTabs: Array<{ id: CollegeTeamProfileTab; label: string }> = [
   { id: 'history', label: 'История' }
 ];
 
+const ROSTER_PAGE_SIZE = 20;
+type RosterSortKey = 'position' | 'classYear' | 'overall' | 'potential' | 'age';
+
+function classRank(classYear: CollegePlayer['classYear']) {
+  const ranks: Record<CollegePlayer['classYear'], number> = { SR: 4, JR: 3, SO: 2, FR: 1 };
+  return ranks[classYear];
+}
+
+function sortRoster(roster: CollegePlayer[], sortKey: RosterSortKey, direction: 'asc' | 'desc') {
+  const directionMod = direction === 'asc' ? 1 : -1;
+
+  return [...roster].sort((left, right) => {
+    let result = 0;
+
+    if (sortKey === 'position') result = left.position.localeCompare(right.position);
+    if (sortKey === 'classYear') result = classRank(left.classYear) - classRank(right.classYear);
+    if (sortKey === 'overall') result = left.overall - right.overall;
+    if (sortKey === 'potential') result = left.potential - right.potential;
+    if (sortKey === 'age') result = left.age - right.age;
+
+    return result * directionMod || right.overall - left.overall || left.lastName.localeCompare(right.lastName);
+  });
+}
+
+function SortButton({
+  label,
+  sortKey,
+  currentSortKey,
+  direction,
+  onSort
+}: {
+  label: string;
+  sortKey: RosterSortKey;
+  currentSortKey: RosterSortKey;
+  direction: 'asc' | 'desc';
+  onSort: (key: RosterSortKey) => void;
+}) {
+  const marker = currentSortKey === sortKey ? (direction === 'asc' ? ' ↑' : ' ↓') : '';
+
+  return (
+    <button className="sort-header" onClick={() => onSort(sortKey)}>
+      {label}{marker}
+    </button>
+  );
+}
+
 export function CollegeTeamProfileScreen() {
   const world = useGameStore((state) => state.world)!;
   const selectedCollegeTeamId = useGameStore((state) => state.selectedCollegeTeamId);
@@ -25,6 +74,9 @@ export function CollegeTeamProfileScreen() {
   const closeCollegeTeamProfile = useGameStore((state) => state.closeCollegeTeamProfile);
   const openCollegeTeamProfile = useGameStore((state) => state.openCollegeTeamProfile);
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const [rosterPage, setRosterPage] = useState(0);
+  const [sortKey, setSortKey] = useState<RosterSortKey>('overall');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const team = (world.collegeTeams ?? []).find((entry) => entry.id === selectedCollegeTeamId) ?? (world.collegeTeams ?? [])[0];
   const college = team ? (world.colleges ?? []).find((entry) => entry.id === team.collegeId) ?? null : null;
 
@@ -37,9 +89,13 @@ export function CollegeTeamProfileScreen() {
     );
   }
 
-  const roster = (world.collegePlayers ?? [])
-    .filter((player) => player.collegeTeamId === team.id)
-    .sort((left, right) => right.overall - left.overall || right.potential - left.potential);
+  const rawRoster = (world.collegePlayers ?? []).filter((player) => player.collegeTeamId === team.id);
+  const roster = useMemo(() => sortRoster(rawRoster, sortKey, sortDirection), [rawRoster, sortKey, sortDirection]);
+  const { pageItems: rosterItems, currentPage: currentRosterPage, totalPages: rosterTotalPages } = getPagedItems(
+    roster,
+    rosterPage,
+    ROSTER_PAGE_SIZE
+  );
   const schedule = getCollegeTeamSchedule(world, team.id);
   const standings = world.collegeSeason?.standings ?? [];
   const standing = standings.find((entry) => entry.teamId === team.id);
@@ -53,6 +109,18 @@ export function CollegeTeamProfileScreen() {
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+  function handleSort(key: RosterSortKey) {
+    setRosterPage(0);
+
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection(key === 'position' || key === 'classYear' ? 'asc' : 'desc');
+  }
 
   return (
     <div className="stack">
@@ -104,7 +172,6 @@ export function CollegeTeamProfileScreen() {
               <span>баланс {standing ? `${standing.wins}-${standing.losses}` : `${team.wins}-${team.losses}`}</span>
               <span>очки {standing ? `${standing.pointsFor}-${standing.pointsAgainst}` : `${team.pointsFor}-${team.pointsAgainst}`}</span>
               <span>разница {standing?.pointDifferential ?? team.pointsFor - team.pointsAgainst}</span>
-              
             </div>
           </Card>
 
@@ -133,32 +200,35 @@ export function CollegeTeamProfileScreen() {
       )}
 
       {collegeTeamProfileTab === 'roster' && (
-        <Card title="Состав">
+        <Card title={`Состав (${roster.length})`}>
           {roster.length === 0 ? (
             <p className="muted">Нет игроков.</p>
           ) : (
-            <div className="table compact-table">
-              <div className="table-head grid-profile-roster">
-                <span>имя</span>
-                <span>поз</span>
-                <span>курс</span>
-                <span>общ</span>
-                <span>пот</span>
-                <span>допуск</span>
-              </div>
-              {roster.map((player) => (
-                <div className="table-row grid-profile-roster" key={player.id}>
-                  <button className="table-row-button" onClick={() => openPlayerProfile(player.id, 'collegeTeamProfile')}>
-                    {player.firstName} {player.lastName}
-                  </button>
-                  <span>{player.position}</span>
-                  <span>{formatClassYear(player.classYear)}</span>
-                  <strong>{player.overall}</strong>
-                  <strong>{player.potential}</strong>
-                  <span>{player.eligibilityRemaining}</span>
+            <>
+              <div className="table compact-table">
+                <div className="table-head grid-profile-roster">
+                  <span>имя</span>
+                  <SortButton label="поз" sortKey="position" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortButton label="класс" sortKey="classYear" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortButton label="общ" sortKey="overall" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortButton label="пот" sortKey="potential" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortButton label="возраст" sortKey="age" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
                 </div>
-              ))}
-            </div>
+                {rosterItems.map((player) => (
+                  <div className="table-row grid-profile-roster" key={player.id}>
+                    <button className="table-row-button" onClick={() => openPlayerProfile(player.id, 'collegeTeamProfile')}>
+                      {player.firstName} {player.lastName}
+                    </button>
+                    <span>{player.position}</span>
+                    <span>{formatClassYear(player.classYear)}</span>
+                    <strong>{player.overall}</strong>
+                    <strong>{player.potential}</strong>
+                    <span>{player.age}</span>
+                  </div>
+                ))}
+              </div>
+              <PaginationControls page={currentRosterPage} totalPages={rosterTotalPages} onPageChange={setRosterPage} />
+            </>
           )}
         </Card>
       )}

@@ -33,6 +33,19 @@ export function emptyStats(): PlayerStats {
   };
 }
 
+function classBonus(classYear: ClassYear) {
+  switch (classYear) {
+    case 'SR':
+      return 4;
+    case 'JR':
+      return 3;
+    case 'SO':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 export function generatePlayersForTeam({
   rng,
   team,
@@ -45,13 +58,13 @@ export function generatePlayersForTeam({
   city: City;
 }): Player[] {
   const players: Player[] = [];
-  const programBoost = Math.round((school.prestige + city.footballCulture - 110) / 8);
+  const programBoost = Math.round((school.prestige + city.footballCulture - 110) / 14);
 
   ROSTER_PLAN.forEach(([position, count]) => {
     for (let index = 0; index < count; index += 1) {
       const classYear = rng.pick(classYears);
-      const base = clamp(rng.int(38, 76) + programBoost, 35, 88);
-      const potential = clamp(base + rng.int(6, 24), base + 2, 99);
+      const base = clamp(rng.int(8, 30) + programBoost + classBonus(classYear), 0, 40);
+      const potential = clamp(base + rng.int(3, 12), base, 40);
       const selectedTraits = rng.shuffle(traits).slice(0, rng.int(1, 2));
       const personId = makeId('person', rng);
 

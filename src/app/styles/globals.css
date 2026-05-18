@@ -585,3 +585,103 @@ button:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+.control-week-label {
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.page-indicator {
+  color: #ffffff;
+  min-width: 72px;
+  text-align: center;
+}
+
+.sort-header {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sort-header:hover {
+  color: #ffffff;
+}
+
+.thin-list {
+  display: grid;
+  gap: 8px;
+}
+
+.thin-team-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.thin-team-main {
+  display: grid;
+  grid-template-columns: 42px minmax(140px, 1.35fr) minmax(80px, 0.8fr) 72px 52px minmax(70px, 0.6fr);
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.thin-team-name {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.ovr-value {
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.team-logo.tiny,
+.team-logo-placeholder.tiny {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .thin-team-row {
+    grid-template-columns: 1fr;
+  }
+
+  .thin-team-main {
+    grid-template-columns: 34px 1fr 64px;
+  }
+
+  .thin-team-main span:nth-child(3),
+  .thin-team-main span:nth-child(5),
+  .thin-team-main span:nth-child(6) {
+    display: none;
+  }
+}

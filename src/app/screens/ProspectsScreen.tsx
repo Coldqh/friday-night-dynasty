@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Card } from '../components/Card';
+import { PaginationControls, getPagedItems } from '../components/PaginationControls';
 import { formatClassYear } from '../localization';
 import { getSeniorProspects } from '../../core/prospects/getSeniorProspects';
 import { useGameStore } from '../store/useGameStore';
+
+const PAGE_SIZE = 25;
 
 function renderStars(stars: number) {
   return '★'.repeat(stars);
@@ -10,14 +14,16 @@ function renderStars(stars: number) {
 export function ProspectsScreen() {
   const world = useGameStore((state) => state.world)!;
   const openPlayerProfile = useGameStore((state) => state.openPlayerProfile);
+  const [page, setPage] = useState(0);
   const prospects = getSeniorProspects(world);
+  const { pageItems, currentPage, totalPages } = getPagedItems(prospects, page, PAGE_SIZE);
   const fiveStars = prospects.filter((entry) => entry.stars >= 5).length;
   const fourStars = prospects.filter((entry) => entry.stars === 4).length;
   const committed = prospects.filter((entry) => entry.status === 'коммит').length;
 
   return (
     <div className="stack">
-      <Card title="Проспекты">
+      <Card title={`Проспекты (${prospects.length})`}>
         <div className="stat-strip">
           <span>SR {prospects.length}</span>
           <span>5★ {fiveStars}</span>
@@ -30,35 +36,38 @@ export function ProspectsScreen() {
         {prospects.length === 0 ? (
           <p className="muted">Нет игроков SR.</p>
         ) : (
-          <div className="table compact-table">
-            <div className="table-head grid-prospects">
-              <span>игрок</span>
-              <span>команда</span>
-              <span>поз</span>
-              <span>курс</span>
-              <span>звёзды</span>
-              <span>общ</span>
-              <span>пот</span>
-              <span>рейт</span>
-            </div>
+          <>
+            <div className="table compact-table">
+              <div className="table-head grid-prospects">
+                <span>игрок</span>
+                <span>команда</span>
+                <span>поз</span>
+                <span>курс</span>
+                <span>звёзды</span>
+                <span>общ</span>
+                <span>пот</span>
+                <span>рейт</span>
+              </div>
 
-            {prospects.map((entry) => (
-              <button
-                className="table-row grid-prospects table-row-button"
-                key={entry.playerId}
-                onClick={() => openPlayerProfile(entry.playerId, 'prospects')}
-              >
-                <span>{entry.playerName}</span>
-                <span>{entry.teamName}</span>
-                <span>{entry.position}</span>
-                <span>{formatClassYear(entry.classYear)}</span>
-                <strong>{renderStars(entry.stars)}</strong>
-                <span>{entry.overall}</span>
-                <span>{entry.potential}</span>
-                <strong>{entry.score}</strong>
-              </button>
-            ))}
-          </div>
+              {pageItems.map((entry) => (
+                <button
+                  className="table-row grid-prospects table-row-button"
+                  key={entry.playerId}
+                  onClick={() => openPlayerProfile(entry.playerId, 'prospects')}
+                >
+                  <span>{entry.playerName}</span>
+                  <span>{entry.teamName}</span>
+                  <span>{entry.position}</span>
+                  <span>{formatClassYear(entry.classYear)}</span>
+                  <strong>{renderStars(entry.stars)}</strong>
+                  <span>{entry.overall}</span>
+                  <span>{entry.potential}</span>
+                  <strong>{entry.score}</strong>
+                </button>
+              ))}
+            </div>
+            <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
+          </>
         )}
       </Card>
     </div>

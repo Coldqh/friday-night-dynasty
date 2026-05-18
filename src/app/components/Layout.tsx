@@ -23,49 +23,19 @@ export const collegeNavigationTabs: Array<{ id: AppScreen; label: string }> = [
 
 export const navigationTabs = highSchoolNavigationTabs;
 
-function getWeekLabel({
-  activeLeague,
-  world
-}: {
-  activeLeague: 'highSchool' | 'college';
-  world: ReturnType<typeof useGameStore.getState>['world'];
-}) {
-  if (!world) {
-    return 'Н1';
-  }
-
-  if (activeLeague === 'college') {
-    if (world.collegeSeason?.championTeamId) {
-      return 'готово';
-    }
-
-    return `Н${(world.collegeSeason?.currentWeek ?? 0) + 1}`;
-  }
-
-  if (world.phase === 'offseason') {
-    return 'готово';
-  }
-
-  return `Н${world.season.currentWeek + 1}`;
-}
-
 export function Layout({ children }: { children: ReactNode }) {
   const screen = useGameStore((state) => state.screen);
   const setScreen = useGameStore((state) => state.setScreen);
   const world = useGameStore((state) => state.world);
   const activeLeague = useGameStore((state) => state.activeLeague);
   const setActiveLeague = useGameStore((state) => state.setActiveLeague);
-  const weekLabel = getWeekLabel({ activeLeague, world });
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <div>
           <div className="eyebrow">Friday Night Dynasty / {GAME_VERSION_LABEL}</div>
-          <h1>{world?.state.name ?? 'Новый штат'}</h1>
-        </div>
-        <div className="year-pill">
-          {world?.currentYear} / {weekLabel}
+          <h1>{world?.state.name ?? 'Новый мир'}</h1>
         </div>
       </header>
 
@@ -74,13 +44,13 @@ export function Layout({ children }: { children: ReactNode }) {
           className={activeLeague === 'highSchool' ? 'filter-chip active' : 'filter-chip'}
           onClick={() => setActiveLeague('highSchool')}
         >
-          Уровень I
+          Школа
         </button>
         <button
           className={activeLeague === 'college' ? 'filter-chip active' : 'filter-chip'}
           onClick={() => setActiveLeague('college')}
         >
-          Уровень II
+          Колледж
         </button>
       </div>
 
